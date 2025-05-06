@@ -168,9 +168,11 @@
     }
 
     .map-container {
-  width: 25%;
   display: flex;
+  flex-direction: column;
   align-items: stretch;
+  width: 25%;
+  min-width: 200px;
 }
 
     #map {
@@ -221,7 +223,7 @@
     .forecast-content {
       display: none;
       padding: 10px;
-    }
+      height: auto; overflow: visible; }
 
     table {
       width: 100%;
@@ -288,9 +290,11 @@
     }
 
     .map-container {
-  width: 25%;
   display: flex;
+  flex-direction: column;
   align-items: stretch;
+  width: 25%;
+  min-width: 200px;
 }
 
     #map {
@@ -341,6 +345,13 @@
   <!-- Pravý sloupec: Mapa -->
   <div class="map-container">
     <div id="map"></div>
+<div id="windyWrapper" style="width: 100%; margin-top: 10px; display: none;">
+  <iframe id="windyFrame" width="100%" style="border-radius: 10px; display: block;" 
+    src="https://embed.windy.com/embed2.html?lat=50.08&lon=14.43&zoom=6&level=surface&overlay=rain&menu=&message=&marker=&calendar=now&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default" 
+    frameborder="0">
+  </iframe>
+</div>
+
   </div>
 </div>
 
@@ -565,6 +576,39 @@ entries
   window.addEventListener('load', resizeMapToSquare);
   window.addEventListener('resize', resizeMapToSquare);
 </script>
+
+
+
+<script>
+  function updateWindyWidget(lat, lon) {
+    const windy = document.getElementById('windyFrame');
+    if (windy) {
+      windy.src = `https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&zoom=6&level=surface&overlay=rain&menu=&message=&marker=&calendar=now&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default`;
+    }
+  }
+
+  function resizeWindyToMatchMap() {
+    const mapDiv = document.getElementById('map');
+    const windyDiv = document.getElementById('windyFrame');
+    if (mapDiv && windyDiv) {
+      const height = mapDiv.offsetHeight;
+      windyDiv.style.height = height + 'px';
+    }
+  }
+
+  window.addEventListener('load', resizeWindyToMatchMap);
+  window.addEventListener('resize', resizeWindyToMatchMap);
+
+  const originalInitMap = window.initMap;
+  window.initMap = function(lat, lon) {
+    originalInitMap(lat, lon);
+    updateWindyWidget(lat, lon);
+    setTimeout(resizeWindyToMatchMap, 300);
+    const windyWrap = document.getElementById('windyWrapper');
+    if (windyWrap) windyWrap.style.display = 'block';
+  };
+</script>
+
 
 </body>
 </html>
