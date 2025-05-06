@@ -175,9 +175,8 @@
     }
 
     #map {
-      aspect-ratio: 1 / 1;
       width: 100%;
-      height: auto;
+      aspect-ratio: 1 / 1;
       border-radius: 10px;
     }
 
@@ -297,9 +296,8 @@
     }
 
     #map {
-      aspect-ratio: 1 / 1;
       width: 100%;
-      height: auto;
+      aspect-ratio: 1 / 1;
       border-radius: 10px;
     }
 
@@ -378,7 +376,11 @@
     return '☀️';
   }
 
-  function getDayName(dateStr) {
+  
+function getDayName(dateStr) {
+  const today = new Date().toISOString().split('T')[0];
+  if (dateStr === today) return "Dnes";
+
     const days = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'];
     const date = new Date(dateStr);
     return days[date.getDay()];
@@ -508,7 +510,16 @@
       const scrollContainer = document.createElement('div');
       scrollContainer.className = 'forecast-scroll';
 
-      entries.forEach(e => {
+      
+entries
+      .filter(e => {
+        if (date === new Date().toISOString().split('T')[0]) {
+          const currentHour = new Date().getHours();
+          return parseInt(e.time.split(':')[0]) >= currentHour;
+        }
+        return true;
+      })
+      .forEach(e => {
         const card = document.createElement('div');
         card.className = 'forecast-card';
         const icon = getWeatherIcon(e.cloud, e.rain);
