@@ -168,17 +168,16 @@
     }
 
     .map-container {
-      flex: 1 1 25%;
-      min-width: 200px;
-      display: flex;
-      align-items: stretch;
-    }
+  width: 25%;
+  display: flex;
+  align-items: stretch;
+}
 
     #map {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      border-radius: 10px;
-    }
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+}
 
     .info-container {
       flex: 1 1 55%;
@@ -289,17 +288,16 @@
     }
 
     .map-container {
-      flex: 1 1 25%;
-      min-width: 200px;
-      display: flex;
-      align-items: stretch;
-    }
+  width: 25%;
+  display: flex;
+  align-items: stretch;
+}
 
     #map {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      border-radius: 10px;
-    }
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+}
 
     #locationInfoBox {
       position: sticky;
@@ -553,5 +551,20 @@ entries
   
 </script>
 <script src="moon_phase.js"></script>
+
+<script>
+  function resizeMapToSquare() {
+    const mapDiv = document.getElementById('map');
+    if (mapDiv) {
+      const width = mapDiv.offsetWidth;
+      mapDiv.style.height = `${width}px`;
+      if (window.map) map.invalidateSize();
+    }
+  }
+
+  window.addEventListener('load', resizeMapToSquare);
+  window.addEventListener('resize', resizeMapToSquare);
+</script>
+
 </body>
 </html>
