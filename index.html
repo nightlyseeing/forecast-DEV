@@ -345,12 +345,23 @@
   <!-- Pravý sloupec: Mapa -->
   <div class="map-container">
     <div id="map"></div>
-<div id="windyWrapper" style="width: 100%; margin-top: 10px; display: none;">
-  <iframe id="windyFrame" width="100%" style="border-radius: 10px; display: block;" 
-    src="https://embed.windy.com/embed2.html?lat=50.08&lon=14.43&zoom=6&level=surface&overlay=rain&menu=&message=&marker=&calendar=now&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default" 
+
+<div id="windyWrapper" style="width: 100%; margin-top: 10px; display: none; position: relative;">
+  <div id="windyOverlayBlocker" style="position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;"></div>
+  <iframe id="windyFrame" width="100%" style="border-radius: 10px; display: block; position:relative; z-index:1;" 
+    src="https://embed.windy.com/embed2.html?lat=50.08&lon=14.43&zoom=11&level=surface&overlay=satellite&menu=&message=&marker=&calendar=now&type=satellite&location=coordinates&detail=&metricWind=default&metricTemp=default" 
     frameborder="0">
   </iframe>
 </div>
+<script>
+  // Kliknutím aktivuj interakci, jinak scroll zůstane neaktivní
+  const windyWrapper = document.getElementById("windyWrapper");
+  const blocker = document.getElementById("windyOverlayBlocker");
+  blocker.addEventListener("click", () => {
+    blocker.style.display = "none";
+  });
+</script>
+
 
   </div>
 </div>
@@ -583,7 +594,7 @@ entries
   function updateWindyWidget(lat, lon) {
     const windy = document.getElementById('windyFrame');
     if (windy) {
-      windy.src = `https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&zoom=6&level=surface&overlay=rain&menu=&message=&marker=&calendar=now&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default`;
+      windy.src = `https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&zoom=11&level=surface&overlay=satellite&menu=&message=&marker=&calendar=now&type=satellite&location=coordinates&detail=&metricWind=default&metricTemp=default`;
     }
   }
 
