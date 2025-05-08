@@ -1,13 +1,15 @@
+
 <!DOCTYPE html>
+
 <html lang="cs">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Astronomická předpověď</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Astronomická předpověď</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
     :root {
       --primary: #4b3f72;
       --secondary: #2e8b57;
@@ -311,46 +313,72 @@
       margin-bottom: 10px;
     }
 
-</style>
-</head>
+
+    .layout {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .info-container {
+      flex: 1 1 60%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .map-container {
+      flex: 1 1 40%;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .map-section-item {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .map-section-item iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    </style>
+</link></head>
 <body>
-  <div class="starry-bg"></div>
-
-  <h1>Astronomická předpověď</h1>
-  <div class="controls"><h2 id="cityDisplay">Zadejte město nebo použijte GPS</h2></div>
-
-  <div class="controls">
-    <div class="input-wrapper">
-      <input type="text" id="cityInput" placeholder="Zadejte město..." oninput="autocompleteCities(); document.querySelector('.clear-btn').style.display = this.value ? 'block' : 'none';" />
-      <button class="clear-btn" onclick="document.getElementById('cityInput').value=''; this.style.display='none'; document.getElementById('suggestions').style.display='none';">×</button>
-      <ul id="suggestions"></ul>
-    </div>
-    <button onclick="manualSearch()">🔍 Vyhledat</button>
-    <button onclick="getLocation()">📍 Moje poloha</button>
-  </div>
-
+<div class="starry-bg"></div>
+<h1>Astronomická předpověď</h1>
+<div class="controls"><h2 id="cityDisplay">Zadejte město nebo použijte GPS</h2></div>
+<div class="controls">
+<div class="input-wrapper">
+<input id="cityInput" oninput="autocompleteCities(); document.querySelector('.clear-btn').style.display = this.value ? 'block' : 'none';" placeholder="Zadejte město..." type="text"/>
+<button class="clear-btn" onclick="document.getElementById('cityInput').value=''; this.style.display='none'; document.getElementById('suggestions').style.display='none';">×</button>
+<ul id="suggestions"></ul>
+</div>
+<button onclick="manualSearch()">🔍 Vyhledat</button>
+<button onclick="getLocation()">📍 Moje poloha</button>
+</div>
 <div class="layout">
-  <!-- Levý sloupec: Info + předpověď -->
-  <div class="info-container">
-    <div class="moon-phase" id="locationInfoBox">
-      <strong><u><span style="font-size: 1.2em;">Informace o místě:</span></u></strong>
-      <div><strong>Název:</strong> <span id="info-name">-</span></div>
-      <div><strong>GPS:</strong> <span id="info-gps">-</span></div>
-    </div>
-    <div class="spinner" id="spinner"></div>
-    <div id="forecast"></div>
-  </div>
-
-  <!-- Pravý sloupec: Mapa -->
-  <div class="map-container">
-    <div id="map"></div>
-
-<div id="windyWrapper" style="width: 100%; margin-top: 10px; display: none; position: relative;">
-  <div id="windyOverlayBlocker" style="position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;"></div>
-  <iframe id="windyFrame" width="100%" style="border-radius: 10px; display: block; position:relative; z-index:1;" 
-    src="https://embed.windy.com/embed2.html?lat=50.08&lon=14.43&zoom=11&level=surface&overlay=satellite&menu=&message=&marker=&calendar=now&type=satellite&location=coordinates&detail=&metricWind=default&metricTemp=default" 
-    frameborder="0">
-  </iframe>
+<!-- Levý sloupec: Info + předpověď -->
+<div class="info-container">
+<div class="moon-phase" id="locationInfoBox">
+<strong><u><span style="font-size: 1.2em;">Informace o místě:</span></u></strong>
+<div><strong>Název:</strong> <span id="info-name">-</span></div>
+<div><strong>GPS:</strong> <span id="info-gps">-</span></div>
+</div>
+<div class="spinner" id="spinner"></div>
+<div id="forecast"></div>
+</div>
+<!-- Pravý sloupec: Mapa -->
+<div class="map-container">
+<div class="map-section-item" id="map"></div>
+<div class="map-section-item" id="windyWrapper" style="width: 100%; margin-top: 10px; display: none; position: relative;">
+<div id="windyOverlayBlocker" style="position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;"></div>
+<iframe frameborder="0" id="windyFrame" src="https://embed.windy.com/embed2.html?lat=50.08&amp;lon=14.43&amp;zoom=11&amp;level=surface&amp;overlay=satellite&amp;menu=&amp;message=&amp;marker=&amp;calendar=now&amp;type=satellite&amp;location=coordinates&amp;detail=&amp;metricWind=default&amp;metricTemp=default" style="border-radius: 10px; display: block; position:relative; z-index:1;" width="100%">
+</iframe>
 </div>
 <script>
   // Kliknutím aktivuj interakci, jinak scroll zůstane neaktivní
@@ -360,13 +388,9 @@
     blocker.style.display = "none";
   });
 </script>
-
-
-  </div>
 </div>
-
-
- <script>
+</div>
+<script>
   let selectedCity = null;
   let map = null;
   let marker = null;
@@ -572,7 +596,6 @@ entries
   
 </script>
 <script src="moon_phase.js"></script>
-
 <script>
   function resizeMapToSquare() {
     const mapDiv = document.getElementById('map');
@@ -586,9 +609,6 @@ entries
   window.addEventListener('load', resizeMapToSquare);
   window.addEventListener('resize', resizeMapToSquare);
 </script>
-
-
-
 <script>
   function updateWindyWidget(lat, lon) {
     const windy = document.getElementById('windyFrame');
@@ -618,7 +638,17 @@ entries
     if (windyWrap) windyWrap.style.display = 'block';
   };
 </script>
-
-
-</body>
+<script>
+function syncMapAndWidgetHeight() {
+  const mapDiv = document.getElementById('map');
+  const windyDiv = document.getElementById('windyFrame');
+  if (mapDiv && windyDiv) {
+    const height = mapDiv.offsetWidth;
+    mapDiv.style.height = height + 'px';
+    windyDiv.style.height = height + 'px';
+  }
+}
+window.addEventListener('load', syncMapAndWidgetHeight);
+window.addEventListener('resize', syncMapAndWidgetHeight);
+</script></body>
 </html>
