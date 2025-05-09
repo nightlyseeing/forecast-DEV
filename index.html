@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 
 <html lang="cs">
@@ -7,8 +6,8 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Astronomická předpověď</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&amp;display=swap" rel="stylesheet"/>
-<link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+
 <style>
     :root {
       --primary: #4b3f72;
@@ -374,7 +373,7 @@
 </div>
 <!-- Pravý sloupec: Mapa -->
 <div class="map-container">
-<div class="map-section-item" id="map"></div>
+
 <div class="map-section-item" id="windyWrapper" style="width: 100%; margin-top: 10px; display: none; position: relative;">
 <div id="windyOverlayBlocker" style="position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;"></div>
 <iframe frameborder="0" id="windyFrame" src="https://embed.windy.com/embed2.html?lat=50.08&amp;lon=14.43&amp;zoom=11&amp;level=surface&amp;overlay=satellite&amp;menu=&amp;message=&amp;marker=&amp;calendar=now&amp;type=satellite&amp;location=coordinates&amp;detail=&amp;metricWind=default&amp;metricTemp=default" style="border-radius: 10px; display: block; position:relative; z-index:1;" width="100%">
@@ -631,12 +630,11 @@ entries
 
   const originalInitMap = window.initMap;
   window.initMap = function(lat, lon) {
-    originalInitMap(lat, lon);
-    updateWindyWidget(lat, lon);
-    setTimeout(resizeWindyToMatchMap, 300);
-    const windyWrap = document.getElementById('windyWrapper');
-    if (windyWrap) windyWrap.style.display = 'block';
-  };
+      updateWindyWidget(lat, lon);
+      setTimeout(resizeWindyToMatchMap, 300);
+      const windyWrap = document.getElementById('windyWrapper');
+      if (windyWrap) windyWrap.style.display = 'block';
+    };
 </script>
 <script>
 function syncMapAndWidgetHeight() {
