@@ -475,6 +475,24 @@ body {
   blocker.addEventListener("click", () => {
     blocker.style.display = "none";
   });
+
+function centerTime(contentId, targetTime) {
+  const scrollContainer = document.querySelector(`#${contentId} .forecast-scroll`);
+  if (!scrollContainer) return;
+  const cards = scrollContainer.querySelectorAll('.forecast-card');
+
+  for (const card of cards) {
+    const time = card.querySelector('span strong')?.textContent;
+    if (time === targetTime) {
+      const containerWidth = scrollContainer.offsetWidth;
+      const cardOffset = card.offsetLeft;
+      const cardWidth = card.offsetWidth;
+      scrollContainer.scrollLeft = cardOffset - (containerWidth / 2) + (cardWidth / 2);
+      break;
+    }
+  }
+}
+
 </script>
 </div>
 </div>
@@ -629,7 +647,14 @@ function getDayName(dateStr) {
       const header = document.createElement('h3');
       const contentId = `day-${idx}`;
       const dayName = getDayName(date);
-      header.innerHTML = `<span id="${contentId}-icon">⬆️</span> ${dayName}, ${date}`;
+      header.innerHTML = `
+  <span id="${contentId}-icon">⬆️</span> ${dayName}, ${date}
+  
+  <button onclick="event.stopPropagation(); centerTime('${contentId}', '12:00')">Poledne</button>
+  <button onclick="event.stopPropagation(); centerTime('${contentId}', '00:00')">Půlnoc</button>
+  <button onclick="event.stopPropagation(); centerTime('${contentId}', '${new Date().toTimeString().slice(0,5)}')">Nyní</button>
+
+`;
       header.onclick = () => toggleForecast(contentId);
       section.appendChild(header);
 
