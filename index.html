@@ -704,14 +704,25 @@ Object.entries(days).forEach(([date, entries], idx) => {
         const card = document.createElement('div');
         card.className = 'forecast-card';
         const icon = getWeatherIcon(e.cloud, e.rain);
-        card.innerHTML = `
+        
+let qualityColor;
+if (e.cloud <= 25) {
+  qualityColor = 'green';
+} else if (e.cloud <= 75) {
+  qualityColor = 'orange';
+} else {
+  qualityColor = 'red';
+}
+
+card.innerHTML = `
           <span><strong>${e.time}</strong></span>
           <span>${icon}</span>
           <span>${e.temp}°C</span>
           <span>☁️ ${e.cloud}%</span>
           <span>🌧️ ${e.rain} mm</span>
           <span>💨 ${e.wind} km/h</span>
-        `;
+          <div style="width: 100%; height: 8px; background-color: ${qualityColor}; border-radius: 4px; margin-top: 4px;"></div>
+    `;
         scrollContainer.appendChild(card);
       });
 
