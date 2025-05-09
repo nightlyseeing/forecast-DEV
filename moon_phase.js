@@ -1,4 +1,3 @@
-
 const moonPhases = [
   { name: "Nov", icon: "🌑" },
   { name: "Dorůstající srpek", icon: "🌒" },
