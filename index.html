@@ -482,6 +482,12 @@ body {
 <strong><u><span style="font-size: 1.2em;">📍 Informace o místě</span></u></strong>
 <div><strong>🌆 Název:</strong> <span id="info-name">-</span></div>
 <div><strong>🌐 GPS:</strong> <span id="info-gps">-</span></div>
+
+<div style="margin-top: 8px;">
+<a href="#" id="bortle-link" style="color:#00ffc3; font-weight:bold; text-decoration:underline;" target="_blank">
+    🌌 Zobrazit Bortleovu třídu
+  </a>
+</div>
 </div>
 <div class="spinner" id="spinner"></div>
 <div id="forecast"></div>
@@ -825,7 +831,25 @@ function syncMapAndWidgetHeight() {
 }
 window.addEventListener('load', syncMapAndWidgetHeight);
 window.addEventListener('resize', syncMapAndWidgetHeight);
-</script></body>
+</script>
+<script>
+  function updateBortleLink(lat, lon) {
+    const link = document.getElementById('bortle-link');
+    if (link && lat && lon) {
+      link.href = `https://www.lightpollutionmap.info/#zoom=9&lat=${lat}&lon=${lon}`;
+    }
+  }
+
+  // Extend updateLocationInfo to update the link
+  const originalUpdateLocationInfo = window.updateLocationInfo;
+  window.updateLocationInfo = function(city) {
+    originalUpdateLocationInfo(city);
+    if (city.latitude && city.longitude) {
+      updateBortleLink(city.latitude.toFixed(4), city.longitude.toFixed(4));
+    }
+  }
+</script>
+</body>
 </html>
 <style>
 .controls button:hover {
