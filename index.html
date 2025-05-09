@@ -6,8 +6,6 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Astronomická předpověď</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&amp;display=swap" rel="stylesheet"/>
-
-
 <style>
     :root {
       --primary: #4b3f72;
@@ -345,19 +343,66 @@
       height: 100%;
       border: none;
     }
-    </style>
-</link></head>
+    
+  h1 {
+    margin: 10px 0 5px 0;
+    font-size: 1.8em;
+  }
+  .controls {
+    margin-bottom: 10px;
+  }
+  body {
+    padding: 10px;
+  }
+
+  #cityInput {
+    padding: 6px 30px 6px 8px;
+    width: 240px;
+  }
+  .controls button {
+    padding: 6px 10px;
+    font-size: 0.9em;
+  }
+
+  body {
+    background: radial-gradient(ellipse at bottom, #1b2c45 0%, #0d0f1a 100%);
+    animation: bg-fade 20s ease-in-out infinite alternate;
+  }
+  @keyframes bg-fade {
+    0% { background: radial-gradient(ellipse at bottom, #1b2c45 0%, #0d0f1a 100%); }
+    100% { background: radial-gradient(ellipse at bottom, #223b5f 0%, #151826 100%); }
+  }
+
+  .input-wrapper {
+    box-shadow: 0 0 10px rgba(0,255,195,0.4);
+    border-radius: 10px;
+    background: rgba(0, 255, 195, 0.05);
+    padding: 5px;
+  }
+  #cityInput {
+    font-size: 1em;
+    font-weight: bold;
+    border: 2px solid #00ffc3;
+    background-color: #111;
+    color: #00ffc3;
+    transition: box-shadow 0.3s ease;
+  }
+  #cityInput:focus {
+    outline: none;
+    box-shadow: 0 0 12px #00ffc3;
+  }
+</style>
+</head>
 <body>
 <div class="starry-bg"></div>
 <h1>Astronomická předpověď</h1>
-<div class="controls"><h2 id="cityDisplay">Zadejte město nebo použijte GPS</h2></div>
+<div class="controls"><h2 id="cityDisplay" style="display:none;"></h2></div>
 <div class="controls">
 <div class="input-wrapper">
 <input id="cityInput" oninput="autocompleteCities(); document.querySelector('.clear-btn').style.display = this.value ? 'block' : 'none';" placeholder="Zadejte město..." type="text"/>
 <button class="clear-btn" onclick="document.getElementById('cityInput').value=''; this.style.display='none'; document.getElementById('suggestions').style.display='none';">×</button>
 <ul id="suggestions"></ul>
 </div>
-<button onclick="manualSearch()">🔍 Vyhledat</button>
 <button onclick="getLocation()">📍 Moje poloha</button>
 </div>
 <div class="layout">
@@ -373,7 +418,6 @@
 </div>
 <!-- Pravý sloupec: Mapa -->
 <div class="map-container">
-
 <div class="map-section-item" id="windyWrapper" style="width: 100%; margin-top: 10px; display: none; position: relative;">
 <div id="windyOverlayBlocker" style="position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;"></div>
 <iframe frameborder="0" id="windyFrame" src="https://embed.windy.com/embed2.html?lat=50.08&amp;lon=14.43&amp;zoom=11&amp;level=surface&amp;overlay=satellite&amp;menu=&amp;message=&amp;marker=&amp;calendar=now&amp;type=satellite&amp;location=coordinates&amp;detail=&amp;metricWind=default&amp;metricTemp=default" style="border-radius: 10px; display: block; position:relative; z-index:1;" width="100%">
@@ -439,9 +483,10 @@ function getDayName(dateStr) {
       const li = document.createElement('li');
       li.textContent = `${city.name}, ${city.country}`;
       li.onclick = () => {
-        selectedCity = city;
-        document.getElementById('cityInput').value = `${city.name}, ${city.country}`;
-        document.getElementById('cityDisplay').textContent = `${city.name}, ${city.country}`;
+  selectedCity = city;
+  document.getElementById('cityInput').value = `${city.name}, ${city.country}`;
+  document.getElementById('cityDisplay').textContent = `${city.name}, ${city.country}`;
+  updateLocationInfo(city);
         suggestions.style.display = 'none';
         initMap(city.latitude, city.longitude);
         fetchForecast(city.latitude, city.longitude);
@@ -589,7 +634,9 @@ entries
     const country = city.country || '';
     const lat = typeof city.latitude === 'number' ? city.latitude.toFixed(4) : '-';
     const lon = typeof city.longitude === 'number' ? city.longitude.toFixed(4) : '-';
-    document.getElementById('info-name').textContent = country ? `${name}, ${country}` : name;
+    document.getElementById('info-name').innerHTML = country
+  ? `<span style="color:#00ffc3; font-weight:bold;">${name}</span>, ${country}`
+  : `<span style="color:#00ffc3; font-weight:bold;">${name}</span>`;
     document.getElementById('info-gps').textContent = `${lat}, ${lon}`;
   }
   
