@@ -618,20 +618,39 @@ function getDayName(dateStr) {
     }
   }
 
-  async function fetchForecast(lat, lon) {
-    showSpinner(true);
-    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,cloudcover,precipitation,windspeed_10m&timezone=Europe/Prague`);
-    const data = await res.json();
-    showSpinner(false);
-    const { time, temperature_2m, cloudcover, precipitation, windspeed_10m } = data.hourly;
-    const forecastDiv = document.getElementById('forecast');
-    forecastDiv.innerHTML = '';
+  
+async function fetchForecast(lat, lon) {
+  showSpinner(true);
+  const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,cloudcover,precipitation,windspeed_10m&timezone=Europe/Prague`);
+  const data = await res.json();
+  showSpinner(false);
+  const { time, temperature_2m, cloudcover, precipitation, windspeed_10m } = data.hourly;
+  const forecastDiv = document.getElementById('forecast');
+  forecastDiv.innerHTML = '';
 
-    const days = {};
-    for (let i = 0; i < time.length; i++) {
-      const [date, hour] = time[i].split('T');
-      if (!days[date]) days[date] = [];
-      days[date].push({
+  const days = {};
+
+  for (let i = 0; i < time.length; i++) {
+    const [date, hour] = time[i].split('T');
+    const hourNum = parseInt(hour.split(':')[0]);
+
+    // Hlavní den
+    if (!days[date]) days[date] = [];
+    days[date].push({
+      time: hour,
+      temp: temperature_2m[i],
+      cloud: cloudcover[i],
+      rain: precipitation[i],
+      wind: windspeed_10m[i]
+    });
+
+    // Přidání časů do předchozího dne (pro rozšíření na 36 hodin)
+    if (hourNum < 12) {
+      const prevDate = new Date(date);
+      prevDate.setDate(prevDate.getDate() - 1);
+      const prevDateStr = prevDate.toISOString().split('T')[0];
+      if (!days[prevDateStr]) days[prevDateStr] = [];
+      days[prevDateStr].push({
         time: hour,
         temp: temperature_2m[i],
         cloud: cloudcover[i],
@@ -639,36 +658,41 @@ function getDayName(dateStr) {
         wind: windspeed_10m[i]
       });
     }
+  }
 
-    Object.entries(days).forEach(([date, entries], idx) => {
-      const section = document.createElement('div');
-      section.className = 'forecast-day';
-
-      const header = document.createElement('h3');
-      const contentId = `day-${idx}`;
-      const dayName = getDayName(date);
-      header.innerHTML = `
-  <span id="${contentId}-icon">⬆️</span> ${dayName}, ${date}
   
-  <button onclick="event.stopPropagation(); centerTime('${contentId}', '12:00')">Poledne</button>
-  <button onclick="event.stopPropagation(); centerTime('${contentId}', '00:00')">Půlnoc</button>
-  <button onclick="event.stopPropagation(); centerTime('${contentId}', '${new Date().toTimeString().slice(0,5)}')">Nyní</button>
 
-`;
-      header.onclick = () => toggleForecast(contentId);
-      section.appendChild(header);
+Object.entries(days).forEach(([date, entries], idx) => {
+  // Zobraz den pouze pokud má alespoň jednu hodinu od 12:00 dál
+  if (!entries.some(e => {
+    const h = parseInt(e.time.split(':')[0]);
+    return h >= 12;
+  })) return;
 
-      const content = document.createElement('div');
-      content.className = 'forecast-content';
-      content.id = contentId;
-      content.style.display = 'block';
 
-      
-      const scrollContainer = document.createElement('div');
-      scrollContainer.className = 'forecast-scroll';
+    const section = document.createElement('div');
+    section.className = 'forecast-day';
 
-      
-entries
+    const header = document.createElement('h3');
+    const contentId = `day-${idx}`;
+    const dayName = getDayName(date);
+    header.innerHTML = `
+      <span id="${contentId}-icon">⬆️</span> ${dayName}, ${date}
+      <button onclick="event.stopPropagation(); centerTime('${contentId}', '12:00')">Poledne</button>
+      <button onclick="event.stopPropagation(); centerTime('${contentId}', '23:00')">Půlnoc</button>
+      `;
+    header.onclick = () => toggleForecast(contentId);
+    section.appendChild(header);
+
+    const content = document.createElement('div');
+    content.className = 'forecast-content';
+    content.id = contentId;
+    content.style.display = 'block';
+
+    const scrollContainer = document.createElement('div');
+    scrollContainer.className = 'forecast-scroll';
+
+    entries
       .filter(e => {
         if (date === new Date().toISOString().split('T')[0]) {
           const currentHour = new Date().getHours();
@@ -691,12 +715,12 @@ entries
         scrollContainer.appendChild(card);
       });
 
-      content.appendChild(scrollContainer);
+    content.appendChild(scrollContainer);
+    section.appendChild(content);
+    forecastDiv.appendChild(section);
+  });
+}
 
-      section.appendChild(content);
-      forecastDiv.appendChild(section);
-    });
-  }
 
   
   function updateLocationInfo(city) {
