@@ -16,8 +16,34 @@
     z-index: 9999;
     box-shadow: 0 0 8px rgba(0,255,195,0.6);
   }
-</style>
 
+
+
+#locationInfoBox {
+  font-size: 1.05em;
+  border: 1px solid #00ffc3;
+  box-shadow: 0 0 8px rgba(0,255,195,0.2);
+  padding: 16px;
+  background: rgba(0, 255, 195, 0.03);
+}
+
+#locationInfoBox strong {
+  color: #00ffc3;
+  font-size: 1.2em;
+}
+
+#info-name {
+  font-size: 1.2em;
+  color: #e0e0e0;
+  font-weight: bold;
+  text-shadow: 0 0 3px #00ffc3;
+}
+
+#info-gps {
+  font-size: 1.1em;
+  color: #bbbbbb;
+}
+</style>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Astronomická předpověď</title>
@@ -438,7 +464,6 @@ body {
 </head>
 <body>
 <div class="version-tag">Verze 0.1</div>
-
 <div class="starry-bg"></div>
 <h1 style="font-size:2.2em; text-shadow: 0 0 15px #00ffc3;">🪐 Astronomická předpověď</h1>
 <div class="controls">
@@ -454,9 +479,9 @@ body {
 <!-- Levý sloupec: Info + předpověď -->
 <div class="info-container">
 <div class="moon-phase" id="locationInfoBox">
-<strong><u><span style="font-size: 1.2em;">Informace o místě:</span></u></strong>
-<div><strong>Název:</strong> <span id="info-name">-</span></div>
-<div><strong>GPS:</strong> <span id="info-gps">-</span></div>
+<strong><u><span style="font-size: 1.2em;">📍 Informace o místě</span></u></strong>
+<div><strong>🌆 Název:</strong> <span id="info-name">-</span></div>
+<div><strong>🌐 GPS:</strong> <span id="info-gps">-</span></div>
 </div>
 <div class="spinner" id="spinner"></div>
 <div id="forecast"></div>
