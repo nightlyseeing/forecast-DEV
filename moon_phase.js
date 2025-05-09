@@ -1,23 +1,12 @@
 const moonPhases = [
-  { name: "Nov", icon: "🌑" },
-  { name: "Dorůstající srpek", icon: "🌒" },
-  { name: "První čtvrť", icon: "🌓" },
-  { name: "Dorůstající měsíc", icon: "🌔" },
-  { name: "Úplněk", icon: "🌕" },
-  { name: "Couvající měsíc", icon: "🌖" },
-  { name: "Poslední čtvrť", icon: "🌗" },
-  { name: "Couvající srpek", icon: "🌘" }
+  "Nov", "Dorůstající srpek", "První čtvrť", "Dorůstající měsíc",
+  "Úplněk", "Couvající měsíc", "Poslední čtvrť", "Couvající srpek"
 ];
 
 function getPhaseIndex(value) {
-  if (value < 0.0625 || value >= 0.9375) return 0; // Nov
-  if (value < 0.1875) return 1; // Dorůstající srpek
-  if (value < 0.3125) return 2; // První čtvrť
-  if (value < 0.4375) return 3; // Dorůstající měsíc
-  if (value < 0.5625) return 4; // Úplněk
-  if (value < 0.6875) return 5; // Couvající měsíc
-  if (value < 0.8125) return 6; // Poslední čtvrť
-  return 7; // Couvající srpek
+  // Rozdělíme fázi do 8 kategorií (0.0 - 1.0)
+  const phase = value % 1;
+  return Math.floor(phase * 8);
 }
 
 async function fetchMoonPhase(lat, lon) {
@@ -28,14 +17,23 @@ async function fetchMoonPhase(lat, lon) {
     const data = await res.json();
     const phaseValue = data.moon_phase;
     const index = getPhaseIndex(phaseValue);
-    const { name, icon } = moonPhases[index];
+    const name = moonPhases[index];
+
+    // Odpovídající SVG z veřejného repozitáře
+    const spriteIndex = Math.round(phaseValue * 29); // 0–29
+    const imageUrl = `https://cdn.jsdelivr.net/gh/yyatsenkov/moon-phase-icons@main/icons/moon_${spriteIndex}.svg`;
 
     const container = document.getElementById("locationInfoBox");
     const moonInfo = document.createElement("div");
     moonInfo.className = "moon-dynamic";
     moonInfo.innerHTML = `
-      <div><strong>Fáze Měsíce:</strong> ${icon} ${name} (${Math.round(phaseValue * 100)}%)</div>
-      <div><strong>Východ:</strong> ${data.moonrise} &nbsp;&nbsp; <strong>Západ:</strong> ${data.moonset}</div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <img src="${imageUrl}" alt="Fáze Měsíce" style="width:64px; height:64px;">
+        <div>
+          <div><strong>Fáze Měsíce:</strong> ${name} (${Math.round(phaseValue * 100)}%)</div>
+          <div><strong>Východ:</strong> ${data.moonrise} &nbsp;&nbsp; <strong>Západ:</strong> ${data.moonset}</div>
+        </div>
+      </div>
     `;
 
     const old = container.querySelector('.moon-dynamic');
