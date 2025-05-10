@@ -488,56 +488,58 @@ body {
     🌌 Zobrazit Bortleovu třídu
   </a>
 
-  <div id="planet-visibility" style="margin-top: 16px;">
-    <h3 style="margin-bottom: 8px;">🔭 Viditelnost planet</h3>
-    <div id="planet-log" style="font-size: 0.9em; color:#ccc;">Zjišťuji data...</div>
-    <table style="width: 100%; margin-top: 8px; font-size: 0.9em; border: 1px solid #444;">
-      <thead><tr><th>Planeta</th><th>Výška (°)</th><th>Azimut (°)</th></tr></thead>
-      <tbody id="planet-table"></tbody>
-    </table>
-  </div>
-  <script>
-  (async function() {
-    const APP_ID = "e948315a-4e0c-4eb5-a6f4-6c9610b824fb";
-    const APP_SECRET = "34316d626e97a68291812891728d8850f792d43a1f8aa6d87d116c9b6c818a36e5915333feec73e8643b5d88f13458ccadfd602fa434b20e051a2a2b020a8081a752e9db2fc494087b29d0909a3aeb390a438816747d066ea943269387b08f5271df8c31ef98d309068b20b857e60c69";
-    const log = (msg) => { document.getElementById('planet-log').textContent = msg; };
+<div class="moon-phase" style="margin-top: 20px;" id="planet-box">
+  <h3 style="margin-bottom: 8px;">🔭 Viditelné planety dnes večer</h3>
+  <div id="planet-log" style="font-size: 0.9em; color:#ccc;">Zjišťuji polohu a pozice...</div>
+  <table style="width: 100%; margin-top: 8px; font-size: 0.9em; border: 1px solid #444;">
+    <thead><tr><th>Planeta</th><th>Výška (°)</th><th>Azimut (°)</th></tr></thead>
+    <tbody id="planet-table"><tr><td colspan="3">Načítání...</td></tr></tbody>
+  </table>
+</div>
+<script type="module">
+  import * as Astronomy from 'https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.0/astronomy.module.js';
 
+  const log = (msg) => document.getElementById("planet-log").textContent = msg;
+
+  (async function() {
     try {
-      log("🔐 Získávám token...");
-      const authRes = await fetch("https://api.astronomyapi.com/api/v2/authenticate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ "app_id": APP_ID, "app_secret": APP_SECRET })
-      });
-      const authData = await authRes.json();
-      const token = authData.data.token;
-      log("📍 Zjišťuji polohu...");
       const pos = await new Promise((resolve) => {
         navigator.geolocation.getCurrentPosition(
           p => resolve({ lat: p.coords.latitude, lon: p.coords.longitude }),
           () => resolve({ lat: 50.0755, lon: 14.4378 })
         );
       });
-      const today = new Date().toISOString().split("T")[0];
-      log("📡 Načítám data z API...");
-      const res = await fetch(`https://api.astronomyapi.com/api/v2/bodies/positions?latitude=${pos.lat}&longitude=${pos.lon}&from_date=${today}&to_date=${today}&elevation=0`, {
-        headers: { Authorization: "Bearer " + token }
-      });
-      const data = await res.json();
+
+      log(`📍 Poloha: ${pos.lat.toFixed(2)}, ${pos.lon.toFixed(2)}`);
+
       const tbody = document.getElementById("planet-table");
       tbody.innerHTML = "";
-      data.data.table.rows[0].cells.forEach(p => {
-        const name = p.name;
-        const alt = p.position.horizonal.altitude.toFixed(1);
-        const az = p.position.horizonal.azimuth.toFixed(1);
-        tbody.innerHTML += `<tr><td>${name}</td><td>${alt}</td><td>${az}</td></tr>`;
-      });
-      log("✅ Data načtena.");
+
+      const observer = new Astronomy.Observer(pos.lat, pos.lon, 0);
+      const date = new Date();
+      date.setHours(22, 0, 0, 0);
+
+      const planets = ["Mercury", "Venus", "Mars", "Jupiter", "Saturn"];
+      let anyVisible = false;
+
+      for (const body of planets) {
+        const hor = Astronomy.Horizon(date, observer, body, "normal");
+        if (hor.altitude > 5) {
+          tbody.innerHTML += `<tr><td>${body}</td><td>${hor.altitude.toFixed(1)}</td><td>${hor.azimuth.toFixed(1)}</td></tr>`;
+          anyVisible = true;
+        }
+      }
+
+      if (!anyVisible) {
+        tbody.innerHTML = "<tr><td colspan='3'>Žádné planety nejsou dobře viditelné.</td></tr>";
+      }
+
+      log("✅ Hotovo.");
     } catch (e) {
-      log("❌ Chyba při načítání planet: " + e.message);
+      log("❌ Chyba: " + e.message);
     }
   })();
-  </script>
+</script>
 </div>
 </div>
 <div class="spinner" id="spinner"></div>
