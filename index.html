@@ -461,6 +461,7 @@ body {
     box-shadow: 0 0 12px #00ffc3;
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.0/astronomy.js" defer></script>
 </head>
 <body>
 <div class="version-tag">Verze 0.1</div>
@@ -496,50 +497,7 @@ body {
     <tbody id="planet-table"><tr><td colspan="3">Načítání...</td></tr></tbody>
   </table>
 </div>
-<script type="module">
-  import * as Astronomy from 'https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.0/astronomy.module.js';
 
-  const log = (msg) => document.getElementById("planet-log").textContent = msg;
-
-  (async function() {
-    try {
-      const pos = await new Promise((resolve) => {
-        navigator.geolocation.getCurrentPosition(
-          p => resolve({ lat: p.coords.latitude, lon: p.coords.longitude }),
-          () => resolve({ lat: 50.0755, lon: 14.4378 })
-        );
-      });
-
-      log(`📍 Poloha: ${pos.lat.toFixed(2)}, ${pos.lon.toFixed(2)}`);
-
-      const tbody = document.getElementById("planet-table");
-      tbody.innerHTML = "";
-
-      const observer = new Astronomy.Observer(pos.lat, pos.lon, 0);
-      const date = new Date();
-      date.setHours(22, 0, 0, 0);
-
-      const planets = ["Mercury", "Venus", "Mars", "Jupiter", "Saturn"];
-      let anyVisible = false;
-
-      for (const body of planets) {
-        const hor = Astronomy.Horizon(date, observer, body, "normal");
-        if (hor.altitude > 5) {
-          tbody.innerHTML += `<tr><td>${body}</td><td>${hor.altitude.toFixed(1)}</td><td>${hor.azimuth.toFixed(1)}</td></tr>`;
-          anyVisible = true;
-        }
-      }
-
-      if (!anyVisible) {
-        tbody.innerHTML = "<tr><td colspan='3'>Žádné planety nejsou dobře viditelné.</td></tr>";
-      }
-
-      log("✅ Hotovo.");
-    } catch (e) {
-      log("❌ Chyba: " + e.message);
-    }
-  })();
-</script>
 </div>
 </div>
 <div class="spinner" id="spinner"></div>
@@ -638,6 +596,7 @@ function getDayName(dateStr) {
         initMap(city.latitude, city.longitude);
         fetchForecast(city.latitude, city.longitude);
         fetchMoonPhase(city.latitude, city.longitude);
+        fetchPlanets(city.latitude, city.longitude);
         updateLocationInfo(city);
       };
       suggestions.appendChild(li);
@@ -670,6 +629,7 @@ function getDayName(dateStr) {
       updateLocationInfo({ name, country: '', latitude: lat, longitude: lon });
       fetchForecast(lat, lon);
       fetchMoonPhase(lat, lon);
+      fetchPlanets(lat, lon);
       updateLocationInfo({ name, country: '', latitude: lat, longitude: lon });
     }, err => alert("Nepodařilo se zjistit polohu."));
   }
@@ -818,7 +778,42 @@ card.innerHTML = `
 
 
   
-  function updateLocationInfo(city) {
+  
+function fetchPlanets(lat, lon) {
+  const log = (msg) => document.getElementById("planet-log").textContent = msg;
+
+  try {
+    log(`📍 Poloha: ${lat.toFixed(2)}, ${lon.toFixed(2)}`);
+    const tbody = document.getElementById("planet-table");
+    tbody.innerHTML = "";
+
+    const observer = new Astronomy.Observer(lat, lon, 0);
+    const date = new Date();
+    date.setHours(22, 0, 0, 0);
+
+    const planets = ["Mercury", "Venus", "Mars", "Jupiter", "Saturn"];
+    let anyVisible = false;
+
+    for (const body of planets) {
+      const hor = Astronomy.Horizon(date, observer, body, "normal");
+      if (hor.altitude > 5) {
+        tbody.innerHTML += `<tr><td>${body}</td><td>${hor.altitude.toFixed(1)}</td><td>${hor.azimuth.toFixed(1)}</td></tr>`;
+        anyVisible = true;
+      }
+    }
+
+    if (!anyVisible) {
+      tbody.innerHTML = "<tr><td colspan='3'>Žádné planety nejsou dobře viditelné.</td></tr>";
+    }
+
+    log("✅ Hotovo.");
+  } catch (e) {
+    log("❌ Chyba: " + e.message);
+  }
+}
+
+
+function updateLocationInfo(city) {
     const name = city.name || '-';
     const country = city.country || '';
     const lat = typeof city.latitude === 'number' ? city.latitude.toFixed(4) : '-';
@@ -902,6 +897,9 @@ window.addEventListener('resize', syncMapAndWidgetHeight);
     }
   }
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.0/astronomy.js"></script>
+
 </body>
 </html>
 <style>
