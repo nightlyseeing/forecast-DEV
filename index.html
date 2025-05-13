@@ -934,6 +934,20 @@ window.fetchMoonPhase = function(lat, lon) {
     }
   });
 };
+</script><script>
+function waitForMoonFunction(callback) {
+  if (typeof fetchMoonPhase === "function") {
+    callback();
+  } else {
+    setTimeout(() => waitForMoonFunction(callback), 100);
+  }
+}
+
+const originalUpdateLocationInfo = window.updateLocationInfo;
+window.updateLocationInfo = function(city) {
+  originalUpdateLocationInfo(city);
+  waitForMoonFunction(() => fetchMoonPhase(city.latitude, city.longitude));
+};
 </script></body>
 </html>
 <style>
