@@ -486,7 +486,6 @@ body {
 <a href="#" id="bortle-link" style="color:#00ffc3; font-weight:bold; text-decoration:underline;" target="_blank">
     🌌 Zobrazit Bortleovu třídu
   </a>
-
 <div id="moon-phase-display" style="margin-top: 8px; font-size: 1.05em;">
 <strong>🌙 Fáze Měsíce:</strong> <span id="moon-phase-label">Načítám...</span>
 </div>
@@ -914,6 +913,26 @@ window.fetchPlanets = function(lat, lon) {
 const originalFetchMoonPhase = window.fetchMoonPhase;
 window.fetchMoonPhase = function(lat, lon) {
   waitForAstronomy(() => originalFetchMoonPhase(lat, lon));
+};
+</script><script>
+function waitForAstronomyAndMoon(callback) {
+  if (typeof Astronomy !== "undefined" && typeof displayMoonPhase === "function") {
+    callback();
+  } else {
+    setTimeout(() => waitForAstronomyAndMoon(callback), 100);
+  }
+}
+
+const originalFetchMoonPhase = window.fetchMoonPhase;
+window.fetchMoonPhase = function(lat, lon) {
+  waitForAstronomyAndMoon(() => {
+    try {
+      originalFetchMoonPhase(lat, lon);
+    } catch (e) {
+      const label = document.getElementById("moon-phase-label");
+      if (label) label.textContent = "❌ Chyba při výpočtu.";
+    }
+  });
 };
 </script></body>
 </html>
