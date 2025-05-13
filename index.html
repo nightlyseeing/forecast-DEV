@@ -821,7 +821,6 @@ function updateLocationInfo(city) {
   }
   
 </script>
-
 <script>
   function resizeMapToSquare() {
     const mapDiv = document.getElementById('map');
@@ -893,7 +892,26 @@ window.addEventListener('resize', syncMapAndWidgetHeight);
     }
   }
 </script>
-<script src="moon_phase.js"></script></body>
+<script src="moon_phase.js"></script><script>
+function waitForAstronomy(callback) {
+  if (typeof Astronomy !== "undefined") {
+    callback();
+  } else {
+    setTimeout(() => waitForAstronomy(callback), 100);
+  }
+}
+
+// Override functions to use delayed execution
+const originalFetchPlanets = window.fetchPlanets;
+window.fetchPlanets = function(lat, lon) {
+  waitForAstronomy(() => originalFetchPlanets(lat, lon));
+};
+
+const originalFetchMoonPhase = window.fetchMoonPhase;
+window.fetchMoonPhase = function(lat, lon) {
+  waitForAstronomy(() => originalFetchMoonPhase(lat, lon));
+};
+</script></body>
 </html>
 <style>
 .controls button:hover {
