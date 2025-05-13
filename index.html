@@ -461,7 +461,6 @@ body {
     box-shadow: 0 0 12px #00ffc3;
   }
 </style>
-
 <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.0/astronomy.js"></script></head>
 <body>
 <div class="version-tag">Verze 0.1</div>
@@ -822,7 +821,7 @@ function updateLocationInfo(city) {
   }
   
 </script>
-<script src="moon_phase.js"></script>
+
 <script>
   function resizeMapToSquare() {
     const mapDiv = document.getElementById('map');
@@ -894,8 +893,7 @@ window.addEventListener('resize', syncMapAndWidgetHeight);
     }
   }
 </script>
-
-</body>
+<script src="moon_phase.js"></script></body>
 </html>
 <style>
 .controls button:hover {
