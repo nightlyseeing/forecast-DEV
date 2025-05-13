@@ -461,7 +461,7 @@ body {
     box-shadow: 0 0 12px #00ffc3;
   }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.0/astronomy.js" defer></script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.0/astronomy.js"></script>
 </head>
 <body>
 <div class="version-tag">Verze 0.1</div>
@@ -483,21 +483,18 @@ body {
 <strong><u><span style="font-size: 1.2em;">📍 Informace o místě</span></u></strong>
 <div><strong>🌆 Název:</strong> <span id="info-name">-</span></div>
 <div><strong>🌐 GPS:</strong> <span id="info-gps">-</span></div>
-
 <div style="margin-top: 8px;">
 <a href="#" id="bortle-link" style="color:#00ffc3; font-weight:bold; text-decoration:underline;" target="_blank">
     🌌 Zobrazit Bortleovu třídu
   </a>
-
-<div class="moon-phase" style="margin-top: 20px;" id="planet-box">
-  <h3 style="margin-bottom: 8px;">🔭 Viditelné planety dnes večer</h3>
-  <div id="planet-log" style="font-size: 0.9em; color:#ccc;">Zjišťuji polohu a pozice...</div>
-  <table style="width: 100%; margin-top: 8px; font-size: 0.9em; border: 1px solid #444;">
-    <thead><tr><th>Planeta</th><th>Výška (°)</th><th>Azimut (°)</th></tr></thead>
-    <tbody id="planet-table"><tr><td colspan="3">Načítání...</td></tr></tbody>
-  </table>
+<div class="moon-phase" id="planet-box" style="margin-top: 20px;">
+<h3 style="margin-bottom: 8px;">🔭 Viditelné planety dnes večer</h3>
+<div id="planet-log" style="font-size: 0.9em; color:#ccc;"></div>
+<table style="width: 100%; margin-top: 8px; font-size: 0.9em; border: 1px solid #444;">
+<thead><tr><th>Planeta</th><th>Výška (°)</th><th>Azimut (°)</th></tr></thead>
+<tbody id="planet-table"></tbody>
+</table>
 </div>
-
 </div>
 </div>
 <div class="spinner" id="spinner"></div>
@@ -897,9 +894,7 @@ window.addEventListener('resize', syncMapAndWidgetHeight);
     }
   }
 </script>
-
 <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.0/astronomy.js"></script>
-
 </body>
 </html>
 <style>
