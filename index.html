@@ -923,7 +923,7 @@ async function fetchMoonPhase(lat, lon) {
     const res = await fetch(url);
     const data = await res.json();
     const phase = data.moon_phase || "Neznámá fáze";
-    document.getElementById("moon-phase-label").textContent = phase;
+    document.getElementById("moon-phase-label").textContent = `${phase} ${getMoonEmojiFromName(phase)}`;
   } catch (err) {
     console.error("Chyba při načítání fáze měsíce:", err);
     document.getElementById("moon-phase-label").textContent = "Chyba načítání";
@@ -1027,6 +1027,20 @@ window.fetchForecast = async function(lat, lon) {
   await originalFetchForecast(lat, lon);
   addMoonPhasesToHeaders();
 };
+
+
+
+function getMoonEmojiFromName(name) {
+  const nameLower = name.toLowerCase().replace(/_/g, " ");
+  if (nameLower.includes("new moon")) return "🌑";
+  if (nameLower.includes("waxing crescent")) return "🌒";
+  if (nameLower.includes("first quarter")) return "🌓";
+  if (nameLower.includes("waxing gibbous")) return "🌔";
+  if (nameLower.includes("full moon")) return "🌕";
+  if (nameLower.includes("waning gibbous")) return "🌖";
+  if (nameLower.includes("last quarter")) return "🌗";
+  if (nameLower.includes("waning crescent")) return "🌘";
+  return "🌙";
+}
+
 </script>
-
-
