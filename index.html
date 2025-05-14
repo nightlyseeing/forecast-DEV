@@ -489,7 +489,7 @@ body {
 <div id="moon-phase-display" style="margin-top: 8px; font-size: 1.05em;">
 <strong>🌙 Fáze Měsíce:</strong> <span id="moon-phase-label">—</span>
 </div>
-<div class="moon-phase" id="planet-box" style="margin-top: 20px;">
+<div class="moon-phase" id="planet-box" style="display:none;" style="margin-top: 20px;">
 <h3 style="margin-bottom: 8px;">🔭 Viditelné planety dnes večer</h3>
 <div id="planet-log" style="font-size: 0.9em; color:#ccc;"></div>
 <table style="width: 100%; margin-top: 8px; font-size: 0.9em; border: 1px solid #444;">
@@ -1021,6 +1021,63 @@ function addMoonPhasesToHeaders() {
 }
 
 // Patch fetchForecast to inject moon phase call
+const originalFetchForecast = window.fetchForecast;
+window.fetchForecast = async function(lat, lon) {
+  await fetchMoonPhasesForecast(lat, lon);
+  await originalFetchForecast(lat, lon);
+  addMoonPhasesToHeaders();
+};
+</script>
+
+
+<script>
+let moonPhasesByDate = {};
+
+async function fetchMoonPhasesForecast(lat, lon) {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=moon_phase&timezone=Europe%2FPrague`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const dates = data.daily.time;
+    const phases = data.daily.moon_phase;
+
+    for (let i = 0; i < dates.length; i++) {
+      const phaseValue = phases[i];
+      const emoji = getMoonEmoji(phaseValue);
+      moonPhasesByDate[dates[i]] = emoji;
+    }
+  } catch (err) {
+    console.error("Chyba při načítání měsíčních fází:", err);
+  }
+}
+
+function getMoonEmoji(phase) {
+  if (phase === 0 || phase === 1) return "🌑";
+  if (phase > 0 && phase < 0.25) return "🌒";
+  if (phase === 0.25) return "🌓";
+  if (phase > 0.25 && phase < 0.5) return "🌔";
+  if (phase === 0.5) return "🌕";
+  if (phase > 0.5 && phase < 0.75) return "🌖";
+  if (phase === 0.75) return "🌗";
+  return "🌘";
+}
+
+function addMoonPhasesToHeaders() {
+  const headers = document.querySelectorAll(".forecast-day h3");
+  headers.forEach(header => {
+    const match = header.textContent.match(/\d{4}-\d{2}-\d{2}/);
+    if (match) {
+      const date = match[0];
+      const emoji = moonPhasesByDate[date];
+      if (emoji && !header.textContent.includes(emoji)) {
+        header.innerHTML = header.innerHTML.replace(date, date + " " + emoji);
+      }
+    }
+  });
+}
+
+// Patch fetchForecast to inject moon phase call and render
 const originalFetchForecast = window.fetchForecast;
 window.fetchForecast = async function(lat, lon) {
   await fetchMoonPhasesForecast(lat, lon);
