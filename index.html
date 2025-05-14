@@ -914,7 +914,24 @@ const originalFetchMoonPhase = window.fetchMoonPhase;
 window.fetchMoonPhase = function(lat, lon) {
   waitForAstronomy(() => originalFetchMoonPhase(lat, lon));
 };
-</script></body>
+</script>
+<script>
+async function fetchMoonPhase(lat, lon) {
+  const apiKey = "781aa2d69af74745906e01cc68c84207";
+  const url = `https://api.ipgeolocation.io/astronomy?apiKey=${apiKey}&lat=${lat}&long=${lon}`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const phase = data.moon_phase || "Neznámá fáze";
+    document.getElementById("moon-phase-label").textContent = phase;
+  } catch (err) {
+    console.error("Chyba při načítání fáze měsíce:", err);
+    document.getElementById("moon-phase-label").textContent = "Chyba načítání";
+  }
+}
+</script>
+
+</body>
 </html>
 <style>
 .controls button:hover {
