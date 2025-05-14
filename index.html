@@ -477,28 +477,18 @@ body {
 </div>
 <div class="layout">
 <!-- Levý sloupec: Info + předpověď -->
-<div class="info-container">
-<div class="moon-phase" id="locationInfoBox">
+<div class="info-container"><div style="display: flex; gap: 20px;"><div class="moon-phase" id="locationInfoBox" style=" width: 50%;">
 <strong><u><span style="font-size: 1.2em;">📍 Informace o místě</span></u></strong>
 <div><strong>🌆 Název:</strong> <span id="info-name">-</span></div>
 <div><strong>🌐 GPS:</strong> <span id="info-gps">-</span></div>
 <div style="margin-top: 8px;">
-<a href="#" id="bortle-link" style="color:#00ffc3; font-weight:bold; text-decoration:underline;" target="_blank">
-    🌌 Zobrazit Bortleovu třídu
-  </a>
-<div id="moon-phase-display" style="margin-top: 8px; font-size: 1.05em;">
+
+</div>
+</div><div class="moon-phase" id="astroInfoBox" style=" width: 50%;"><strong>🔭 Astronomické informace</strong><div id="moon-phase-display" style="margin-top: 8px; font-size: 1.05em;">
 <strong>🌙 Fáze Měsíce:</strong> <span id="moon-phase-label">—</span>
-</div>
-<div class="moon-phase" id="planet-box" style="display:none;" style="margin-top: 20px;">
-<h3 style="margin-bottom: 8px;">🔭 Viditelné planety dnes večer</h3>
-<div id="planet-log" style="font-size: 0.9em; color:#ccc;"></div>
-<table style="width: 100%; margin-top: 8px; font-size: 0.9em; border: 1px solid #444;">
-<thead><tr><th>Planeta</th><th>Výška (°)</th><th>Azimut (°)</th></tr></thead>
-<tbody id="planet-table"><tr><td colspan="3">Zatím nejsou viditelné žádné planety nad horizontem (po 22:00).</td></tr></tbody>
-</table>
-</div>
-</div>
-</div>
+</div><a href="#" id="bortle-link" style="color:#00ffc3; font-weight:bold; text-decoration:underline;" target="_blank">
+    🌌 Zobrazit Bortleovu třídu
+  </a></div></div>
 <div class="spinner" id="spinner"></div>
 <div id="forecast"></div>
 </div>
@@ -930,8 +920,6 @@ async function fetchMoonPhase(lat, lon) {
   }
 }
 </script>
-
-
 <script>
 async function fetchPlanets(lat, lon) {
   const apiKey = "781aa2d69af74745906e01cc68c84207";
@@ -973,8 +961,6 @@ async function fetchPlanets(lat, lon) {
   }
 }
 </script>
-
-
 <script>
 let moonPhasesByDate = {};
 
@@ -1043,4 +1029,4 @@ function getMoonEmojiFromName(name) {
   return "🌙";
 }
 
-</script>
+</script></body></html>
