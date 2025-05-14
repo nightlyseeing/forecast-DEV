@@ -931,6 +931,49 @@ async function fetchMoonPhase(lat, lon) {
 }
 </script>
 
+
+<script>
+async function fetchPlanets(lat, lon) {
+  const apiKey = "781aa2d69af74745906e01cc68c84207";
+  const url = `https://api.ipgeolocation.io/astronomy?apiKey=${apiKey}&lat=${lat}&long=${lon}`;
+  const log = (msg) => document.getElementById("planet-log").textContent = msg;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const tbody = document.getElementById("planet-table");
+    tbody.innerHTML = "";
+
+    const planets = [
+      { name: "Mercury", altitude: data.mercury_altitude, azimuth: data.mercury_azimuth },
+      { name: "Venus", altitude: data.venus_altitude, azimuth: data.venus_azimuth },
+      { name: "Mars", altitude: data.mars_altitude, azimuth: data.mars_azimuth },
+      { name: "Jupiter", altitude: data.jupiter_altitude, azimuth: data.jupiter_azimuth },
+      { name: "Saturn", altitude: data.saturn_altitude, azimuth: data.saturn_azimuth }
+    ];
+
+    let anyVisible = false;
+
+    for (const planet of planets) {
+      if (planet.altitude > 5) {
+        const row = `<tr><td>${planet.name}</td><td>${parseFloat(planet.altitude).toFixed(1)}</td><td>${parseFloat(planet.azimuth).toFixed(1)}</td></tr>`;
+        tbody.innerHTML += row;
+        anyVisible = true;
+      }
+    }
+
+    if (!anyVisible) {
+      tbody.innerHTML = "<tr><td colspan='3'>Žádné planety nejsou dobře viditelné.</td></tr>";
+    }
+
+    log("✅ Hotovo.");
+  } catch (e) {
+    log("❌ Chyba při načítání planet: " + e.message);
+  }
+}
+</script>
+
 </body>
 </html>
 <style>
