@@ -1,6 +1,4 @@
-
 <!DOCTYPE html>
-
 <html lang="cs">
 <head>
 <style>
@@ -505,7 +503,38 @@ body {
     box-shadow: 0 0 12px #00ffc3;
   }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.0/astronomy.js"></script></head>
+<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.0/astronomy.js"></script><style>
+.scroll-left, .scroll-right {
+  background-color: rgba(0, 255, 195, 0.2);
+  border: 1px solid #00ffc3;
+  color: white;
+  font-size: 1.2em;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 20;
+}
+</style><style>
+.scroll-left, .scroll-right {
+  background-color: rgba(0, 255, 195, 0.3);
+  border: 1px solid #00ffc3;
+  color: white;
+  font-size: 1.4em;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 20;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.scroll-left {
+  left: -30px;
+}
+.scroll-right {
+  right: -30px;
+}
+</style></head>
 <body>
 <div class="version-tag">Verze 0.1</div>
 <div class="starry-bg"></div>
@@ -521,13 +550,13 @@ body {
 </div>
 <div class="layout">
 <!-- Levý sloupec: Info + předpověď -->
-<div class="info-container"><div style="display: flex; gap: 20px; position: sticky; top: 0; z-index: 10; background: var(--panel-bg); align-items: stretch;"><div class="moon-phase" class="info-box" style="font-size: 1.05em; border: 1px solid #00ffc3; box-shadow: 0 0 8px rgba(0,255,195,0.2); padding: 16px; background: rgba(0, 255, 195, 0.03); flex: 1;">
+<div class="info-container"><div style="display: flex; gap: 20px; position: sticky; top: 0; z-index: 10; background: var(--panel-bg); align-items: stretch;"><div class="moon-phase" style="font-size: 1.05em; border: 1px solid #00ffc3; box-shadow: 0 0 8px rgba(0,255,195,0.2); padding: 16px; background: rgba(0, 255, 195, 0.03); flex: 1;">
 <strong>📍 Informace o místě</strong>
 <div><strong>🌆 Název:</strong> <span id="info-name">-</span></div>
 <div><strong>🌐 GPS:</strong> <span id="info-gps">-</span></div>
 <div style="margin-top: 8px;">
 </div>
-</div><div class="moon-phase" class="info-box" style="font-size: 1.05em; border: 1px solid #00ffc3; box-shadow: 0 0 8px rgba(0,255,195,0.2); padding: 16px; background: rgba(0, 255, 195, 0.03); flex: 1;">
+</div><div class="moon-phase" style="font-size: 1.05em; border: 1px solid #00ffc3; box-shadow: 0 0 8px rgba(0,255,195,0.2); padding: 16px; background: rgba(0, 255, 195, 0.03); flex: 1;">
 <strong>🔭 Astronomické informace</strong>
 <div id="moon-phase-display" style="margin-top: 8px; font-size: 1.05em;">
 <strong>🌙 Fáze Měsíce:</strong> <span id="moon-phase-label">—</span>
@@ -535,42 +564,13 @@ body {
     🌌 Zobrazit Bortleovu třídu
   </a></div></div><div style="display: flex; gap: 20px;"></div>
 <div class="spinner" id="spinner"></div>
-<div id="forecast"></div>
+<div class="map-section-item" id="windyWrapper" style="width: 100%; height: 400px; margin: 20px 0; position: relative; z-index: 2; background: #111;">
+<div id="windyOverlayBlocker" style="position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;"></div>
+<iframe frameborder="0" id="windyFrame" src="https://embed.windy.com/embed2.html?lat=50.08&amp;lon=14.43&amp;zoom=11&amp;level=surface&amp;overlay=satellite&amp;menu=&amp;message=&amp;marker=&amp;calendar=now&amp;type=satellite&amp;location=coordinates&amp;detail=&amp;metricWind=default&amp;metricTemp=default" style="border-radius: 10px; display: block; position:relative; z-index:1;; height: 100%;; height: 100%; position: relative; z-index: 1;" width="100%">
+</iframe>
+</div><div id="forecast"></div>
 </div>
 <!-- Pravý sloupec: Mapa -->
-<div class="map-container">
-<div class="map-section-item" id="windyWrapper" style="width: 100%; margin-top: 10px; display: none; position: relative;">
-<div id="windyOverlayBlocker" style="position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;"></div>
-<iframe frameborder="0" id="windyFrame" src="https://embed.windy.com/embed2.html?lat=50.08&amp;lon=14.43&amp;zoom=11&amp;level=surface&amp;overlay=satellite&amp;menu=&amp;message=&amp;marker=&amp;calendar=now&amp;type=satellite&amp;location=coordinates&amp;detail=&amp;metricWind=default&amp;metricTemp=default" style="border-radius: 10px; display: block; position:relative; z-index:1;" width="100%">
-</iframe>
-</div>
-<script>
-  // Kliknutím aktivuj interakci, jinak scroll zůstane neaktivní
-  const windyWrapper = document.getElementById("windyWrapper");
-  const blocker = document.getElementById("windyOverlayBlocker");
-  blocker.addEventListener("click", () => {
-    blocker.style.display = "none";
-  });
-
-function centerTime(contentId, targetTime) {
-  const scrollContainer = document.querySelector(`#${contentId} .forecast-scroll`);
-  if (!scrollContainer) return;
-  const cards = scrollContainer.querySelectorAll('.forecast-card');
-
-  for (const card of cards) {
-    const time = card.querySelector('span strong')?.textContent;
-    if (time === targetTime) {
-      const containerWidth = scrollContainer.offsetWidth;
-      const cardOffset = card.offsetLeft;
-      const cardWidth = card.offsetWidth;
-      scrollContainer.scrollLeft = cardOffset - (containerWidth / 2) + (cardWidth / 2);
-      break;
-    }
-  }
-}
-
-</script>
-</div>
 </div>
 <script>
   let selectedCity = null;
@@ -897,7 +897,7 @@ function updateLocationInfo(city) {
       updateWindyWidget(lat, lon);
       setTimeout(resizeWindyToMatchMap, 300);
       const windyWrap = document.getElementById('windyWrapper');
-      if (windyWrap) windyWrap.style.display = 'block';
+      if (windyWrap) { windyWrap.style.display = 'block'; windyWrap.style.height = '400px'; }
     };
 </script>
 <script>
@@ -1075,4 +1075,58 @@ function getMoonEmojiFromName(name) {
   return "🌙";
 }
 
+</script><script>
+function centerTime(contentId, targetTime) {
+  const scrollContainer = document.querySelector(`#${contentId} .forecast-scroll`);
+  if (!scrollContainer) return;
+  const cards = scrollContainer.querySelectorAll('.forecast-card');
+
+  for (let i = 0; i < cards.length; i++) {
+    const card = cards[i];
+    const strong = card.querySelector('strong');
+    if (!strong) continue;
+    const time = strong.textContent.trim();
+    if (time === targetTime) {
+      const containerWidth = scrollContainer.clientWidth;
+      const cardOffset = card.offsetLeft;
+      const cardWidth = card.offsetWidth;
+      scrollContainer.scrollTo({
+        left: cardOffset - (containerWidth / 2) + (cardWidth / 2),
+        behavior: 'smooth'
+      });
+      break;
+    }
+  }
+}
+</script><script>
+// Upravíme initMap aby vždy ukázala widget správně
+const originalInitMap = window.initMap;
+window.initMap = function(lat, lon) {
+  const windyWrap = document.getElementById('windyWrapper');
+  if (windyWrap) {
+    windyWrap.style.display = 'block';
+    windyWrap.style.height = '400px';
+  }
+  updateWindyWidget(lat, lon);
+  setTimeout(resizeWindyToMatchMap, 300);
+};
+</script><script>
+document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll('.forecast-scroll-wrapper').forEach(wrapper => {
+    const scrollArea = wrapper.querySelector('.forecast-scroll');
+    const left = wrapper.querySelector('.scroll-left');
+    const right = wrapper.querySelector('.scroll-right');
+
+    if (left && scrollArea) {
+      left.addEventListener('click', () => {
+        scrollArea.scrollBy({ left: -250, behavior: 'smooth' });
+      });
+    }
+    if (right && scrollArea) {
+      right.addEventListener('click', () => {
+        scrollArea.scrollBy({ left: 250, behavior: 'smooth' });
+      });
+    }
+  });
+});
 </script></body></html>
