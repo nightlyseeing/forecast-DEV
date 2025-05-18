@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 
 <html lang="cs">
@@ -19,7 +20,27 @@
 
 
 
-#locationInfoBox {
+.info-box {
+  font-size: 1.05em;
+  border: 1px solid #3e5363;
+  box-shadow: 0 0 4px rgba(255,255,255,0.05);
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.info-box strong {
+  font-size: 1.2em;
+  color: #00ffc3;
+  text-shadow: 0 0 3px #00ffc3;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.info-box div {
+  margin-bottom: 6px;
+}
   font-size: 1.05em;
   border: 1px solid #00ffc3;
   box-shadow: 0 0 8px rgba(0,255,195,0.2);
@@ -32,12 +53,15 @@
   font-size: 1.2em;
 }
 
+
 #info-name {
-  font-size: 1.2em;
-  color: #e0e0e0;
+  font-size: 1.05em;
+  color: #00ffc3;
   font-weight: bold;
-  text-shadow: 0 0 3px #00ffc3;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  text-shadow: none;
 }
+
 
 #info-gps {
   font-size: 1.1em;
@@ -60,7 +84,7 @@
 
     
 body {
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(to bottom, #0b0c1a, #1b2c3a);
   background-size: 400% 400%;
   animation: gradientShift 60s ease infinite;
@@ -354,7 +378,27 @@ body {
   border-radius: 10px;
 }
 
-    #locationInfoBox {
+    .info-box {
+  font-size: 1.05em;
+  border: 1px solid #3e5363;
+  box-shadow: 0 0 4px rgba(255,255,255,0.05);
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.info-box strong {
+  font-size: 1.2em;
+  color: #00ffc3;
+  text-shadow: 0 0 3px #00ffc3;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.info-box div {
+  margin-bottom: 6px;
+}
       position: sticky;
       top: 0;
       background: var(--panel-bg);
@@ -421,7 +465,7 @@ body {
 
   
 body {
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(to bottom, #0b0c1a, #1b2c3a);
   background-size: 400% 400%;
   animation: gradientShift 60s ease infinite;
@@ -477,14 +521,14 @@ body {
 </div>
 <div class="layout">
 <!-- Levý sloupec: Info + předpověď -->
-<div class="info-container"><div style="display: flex; gap: 20px; position: sticky; top: 0; z-index: 10; background: var(--panel-bg); align-items: stretch;"><div class="moon-phase" id="locationInfoBox" style="font-size: 1.05em; border: 1px solid #00ffc3; box-shadow: 0 0 8px rgba(0,255,195,0.2); padding: 16px; background: rgba(0, 255, 195, 0.03); flex: 1;">
-<strong><u><span style="font-size: 1.2em;">📍 Informace o místě</span></u></strong>
+<div class="info-container"><div style="display: flex; gap: 20px; position: sticky; top: 0; z-index: 10; background: var(--panel-bg); align-items: stretch;"><div class="moon-phase" class="info-box" style="font-size: 1.05em; border: 1px solid #00ffc3; box-shadow: 0 0 8px rgba(0,255,195,0.2); padding: 16px; background: rgba(0, 255, 195, 0.03); flex: 1;">
+<strong>📍 Informace o místě</strong>
 <div><strong>🌆 Název:</strong> <span id="info-name">-</span></div>
 <div><strong>🌐 GPS:</strong> <span id="info-gps">-</span></div>
 <div style="margin-top: 8px;">
 </div>
-</div><div class="moon-phase" id="astroInfoBox" style="font-size: 1.05em; border: 1px solid #00ffc3; box-shadow: 0 0 8px rgba(0,255,195,0.2); padding: 16px; background: rgba(0, 255, 195, 0.03); flex: 1;">
-<strong><u><span style="font-size: 1.2em; color: #00ffc3; text-shadow: 0 0 3px #00ffc3;">🔭 Astronomické informace</span></u></strong>
+</div><div class="moon-phase" class="info-box" style="font-size: 1.05em; border: 1px solid #00ffc3; box-shadow: 0 0 8px rgba(0,255,195,0.2); padding: 16px; background: rgba(0, 255, 195, 0.03); flex: 1;">
+<strong>🔭 Astronomické informace</strong>
 <div id="moon-phase-display" style="margin-top: 8px; font-size: 1.05em;">
 <strong>🌙 Fáze Měsíce:</strong> <span id="moon-phase-label">—</span>
 </div><a href="#" id="bortle-link" style="display: none; color:#00ffc3; font-weight:bold; text-decoration:underline;" target="_blank">
