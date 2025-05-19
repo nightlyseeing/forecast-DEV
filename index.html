@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -505,30 +504,91 @@ body {
   }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.0/astronomy.js"></script><style>
+
+
+
 .scroll-left, .scroll-right {
-  background-color: rgba(0, 255, 195, 0.2);
-  border: 1px solid #00ffc3;
+  background: none;
+  border: none;
   color: white;
-  font-size: 1.2em;
-  padding: 6px 10px;
-  border-radius: 6px;
+  font-size: 1.05em;
+  padding: 4px 6px;
   cursor: pointer;
-  z-index: 20;
-}
-</style><style>
-.scroll-left, .scroll-right {
-  background-color: rgba(0, 255, 195, 0.3);
-  border: 1px solid #00ffc3;
-  color: white;
-  font-size: 1.4em;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  z-index: 20;
+  z-index: 10;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
+  opacity: 0.5;
 }
+.forecast-scroll-wrapper {
+  position: relative;
+}
+.forecast-scroll {
+  position: relative;
+}
+.scroll-left {
+  left: 2px;
+}
+.scroll-right {
+  right: 2px;
+}
+    
+.forecast-scroll-wrapper {
+  position: relative;
+}
+.scroll-left {
+  left: 6px;
+}
+.scroll-right {
+  right: 6px;
+}
+    
+.scroll-left { left: -18px; }
+.scroll-right { right: -18px; }
+    
+</style><style>
+
+
+
+.scroll-left, .scroll-right {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.05em;
+  padding: 4px 6px;
+  cursor: pointer;
+  z-index: 10;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.5;
+}
+.forecast-scroll-wrapper {
+  position: relative;
+}
+.forecast-scroll {
+  position: relative;
+}
+.scroll-left {
+  left: 2px;
+}
+.scroll-right {
+  right: 2px;
+}
+    
+.forecast-scroll-wrapper {
+  position: relative;
+}
+.scroll-left {
+  left: 6px;
+}
+.scroll-right {
+  right: 6px;
+}
+    
+.scroll-left { left: -18px; }
+.scroll-right { right: -18px; }
+    
 .scroll-left {
   left: -30px;
 }
@@ -772,8 +832,28 @@ Object.entries(days).forEach(([date, entries], idx) => {
     content.id = contentId;
     content.style.display = 'block';
 
-    const scrollContainer = document.createElement('div');
-    scrollContainer.className = 'forecast-scroll';
+    
+const wrapper = document.createElement('div');
+wrapper.className = 'forecast-scroll-wrapper';
+wrapper.style.position = 'relative';
+
+const leftBtn = document.createElement('button');
+leftBtn.className = 'scroll-left';
+leftBtn.innerHTML = '◀';
+leftBtn.onclick = () => scrollContainer.scrollBy({ left: -250, behavior: 'smooth' });
+
+const rightBtn = document.createElement('button');
+rightBtn.className = 'scroll-right';
+rightBtn.innerHTML = '▶';
+rightBtn.onclick = () => scrollContainer.scrollBy({ left: 250, behavior: 'smooth' });
+
+const scrollContainer = document.createElement('div');
+scrollContainer.className = 'forecast-scroll';
+
+wrapper.appendChild(leftBtn);
+wrapper.appendChild(scrollContainer);
+wrapper.appendChild(rightBtn);
+
 
     entries
       .filter(e => {
@@ -809,7 +889,7 @@ card.innerHTML = `
         scrollContainer.appendChild(card);
       });
 
-    content.appendChild(scrollContainer);
+    content.appendChild(wrapper);
     section.appendChild(content);
     forecastDiv.appendChild(section);
   });
@@ -1116,15 +1196,100 @@ window.initMap = function(lat, lon) {
   setTimeout(resizeWindyToMatchMap, 300);
 };
 </script><script>
-document.addEventListener("DOMContentLoaded", function() {
+
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll('.forecast-scroll-wrapper').forEach(wrapper => {
     const scrollArea = wrapper.querySelector('.forecast-scroll');
     const left = wrapper.querySelector('.scroll-left');
     const right = wrapper.querySelector('.scroll-right');
 
-    if (left && scrollArea) {
-      left.addEventListener('click', () => {
-        scrollArea.scrollBy({ left: -250, behavior: 'smooth' });
+    let scrollInterval = null;
+
+    function updateArrowVisibility() {
+      const scrollLeft = scrollArea.scrollLeft;
+      const maxScrollLeft = scrollArea.scrollWidth - scrollArea.clientWidth;
+      left.style.display = scrollLeft > 2 ? 'block' : 'none';
+      right.style.display = (maxScrollLeft - scrollLeft) > 2 ? 'block' : 'none';
+    }
+
+    function startScroll(direction) {
+      if (scrollInterval) clearInterval(scrollInterval);
+      scrollInterval = setInterval(() => {
+        scrollArea.scrollBy({ left: direction * 20, behavior: 'auto' });
+        updateArrowVisibility();
+      }, 16);
+    }
+
+    function stopScroll() {
+      if (scrollInterval) clearInterval(scrollInterval);
+      scrollInterval = null;
+    }
+
+    left.addEventListener('mousedown', () => startScroll(-1));
+    right.addEventListener('mousedown', () => startScroll(1));
+    left.addEventListener('mouseup', stopScroll);
+    right.addEventListener('mouseup', stopScroll);
+    left.addEventListener('mouseleave', stopScroll);
+    right.addEventListener('mouseleave', stopScroll);
+
+    left.addEventListener('touchstart', () => startScroll(-1));
+    right.addEventListener('touchstart', () => startScroll(1));
+    left.addEventListener('touchend', stopScroll);
+    right.addEventListener('touchend', stopScroll);
+
+    scrollArea.addEventListener('scroll', updateArrowVisibility);
+    window.addEventListener('resize', () => setTimeout(updateArrowVisibility, 300));
+
+    setTimeout(updateArrowVisibility, 800);
+  });
+});
+
+        updateArrowVisibility();
+      };
+      const start = () => interval = setInterval(step, 20);
+      const stop = () => clearInterval(interval);
+
+      element.addEventListener('mousedown', start);
+      element.addEventListener('mouseup', stop);
+      element.addEventListener('mouseleave', stop);
+      element.addEventListener('touchstart', start);
+      element.addEventListener('touchend', stop);
+    }
+
+    scrollSmooth(left, -1);
+    scrollSmooth(right, 1);
+
+    scrollArea.addEventListener('scroll', updateArrowVisibility);
+    window.addEventListener('resize', () => setTimeout(updateArrowVisibility, 200));
+
+    setTimeout(updateArrowVisibility, 600);
+  });
+});
+
+    });
+
+    right.addEventListener('click', () => {
+      scrollArea.scrollBy({ left: 250, behavior: 'smooth' });
+    });
+
+    // Initial visibility check with delay to allow layout to render
+    setTimeout(updateArrowVisibility, 500);
+  });
+});
+
+      });
+    }
+    if (right && scrollArea) {
+      right.addEventListener('click', () => {
+        scrollArea.scrollBy({ left: 250, behavior: 'smooth' });
+      });
+    }
+  });
+});
+
       });
     }
     if (right && scrollArea) {
