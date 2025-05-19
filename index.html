@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -397,7 +398,7 @@ body {
 .info-box div {
   margin-bottom: 6px;
 }
-      position: sticky;
+      
       top: 0;
       background: var(--panel-bg);
       z-index: 10;
@@ -550,7 +551,7 @@ body {
 </div>
 <div class="layout">
 <!-- Levý sloupec: Info + předpověď -->
-<div class="info-container"><div style="display: flex; gap: 20px; position: sticky; top: 0; z-index: 10; background: var(--panel-bg); align-items: stretch;"><div class="moon-phase" style="font-size: 1.05em; border: 1px solid #00ffc3; box-shadow: 0 0 8px rgba(0,255,195,0.2); padding: 16px; background: rgba(0, 255, 195, 0.03); flex: 1;">
+<div class="info-container"><div style="display: flex; gap: 20px; background: var(--panel-bg); align-items: stretch;"><div class="moon-phase" style="font-size: 1.05em; border: 1px solid #00ffc3; box-shadow: 0 0 8px rgba(0,255,195,0.2); padding: 16px; background: rgba(0, 255, 195, 0.03); flex: 1;">
 <strong>📍 Informace o místě</strong>
 <div><strong>🌆 Název:</strong> <span id="info-name">-</span></div>
 <div><strong>🌐 GPS:</strong> <span id="info-gps">-</span></div>
@@ -564,11 +565,15 @@ body {
     🌌 Zobrazit Bortleovu třídu
   </a></div></div><div style="display: flex; gap: 20px;"></div>
 <div class="spinner" id="spinner"></div>
-<div class="map-section-item" id="windyWrapper" style="width: 100%; height: 400px; margin: 20px 0; position: relative; z-index: 2; background: #111;">
-<div id="windyOverlayBlocker" style="position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;"></div>
-<iframe frameborder="0" id="windyFrame" src="https://embed.windy.com/embed2.html?lat=50.08&amp;lon=14.43&amp;zoom=11&amp;level=surface&amp;overlay=satellite&amp;menu=&amp;message=&amp;marker=&amp;calendar=now&amp;type=satellite&amp;location=coordinates&amp;detail=&amp;metricWind=default&amp;metricTemp=default" style="border-radius: 10px; display: block; position:relative; z-index:1;; height: 100%;; height: 100%; position: relative; z-index: 1;" width="100%">
-</iframe>
-</div><div id="forecast"></div>
+
+<div id="windyBlockContainer" style="width: 100%; height: 400px; margin: 20px 0; background: #111; border-radius: 10px; overflow: hidden;">
+  <iframe frameborder="0" id="windyFrame"
+    src="https://embed.windy.com/embed2.html?lat=50.08&lon=14.43&zoom=11&level=surface&overlay=satellite&menu=&message=&marker=&calendar=now&type=satellite&location=coordinates&detail=&metricWind=default&metricTemp=default"
+    style="width: 100%; height: 100%; border: none; border-radius: 10px;">
+  </iframe>
+</div>
+
+<div id="forecast"></div>
 </div>
 <!-- Pravý sloupec: Mapa -->
 </div>
@@ -896,8 +901,8 @@ function updateLocationInfo(city) {
   window.initMap = function(lat, lon) {
       updateWindyWidget(lat, lon);
       setTimeout(resizeWindyToMatchMap, 300);
-      const windyWrap = document.getElementById('windyWrapper');
-      if (windyWrap) { windyWrap.style.display = 'block'; windyWrap.style.height = '400px'; }
+      const windyWrap = document.getElementById('windyBlockContainer');
+      if (windyWrap) { windyWrap.style.display = 'block'; windyWrap.style.height = '400px'; console.log('Windy shown'); }
     };
 </script>
 <script>
@@ -1102,7 +1107,7 @@ function centerTime(contentId, targetTime) {
 // Upravíme initMap aby vždy ukázala widget správně
 const originalInitMap = window.initMap;
 window.initMap = function(lat, lon) {
-  const windyWrap = document.getElementById('windyWrapper');
+  const windyWrap = document.getElementById('windyBlockContainer');
   if (windyWrap) {
     windyWrap.style.display = 'block';
     windyWrap.style.height = '400px';
