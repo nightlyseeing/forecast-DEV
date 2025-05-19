@@ -298,6 +298,81 @@
     padding: 6px 12px;
   }
 }
+
+.top-bar {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 9999;
+}
+
+.menu-container {
+  position: relative;
+}
+
+.menu-toggle {
+  background: #00ffc3;
+  color: #000;
+  font-weight: bold;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 8px rgba(0,255,195,0.6);
+}
+
+.menu-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #1f2833;
+  border-radius: 8px;
+  margin-top: 6px;
+  min-width: 200px;
+  box-shadow: 0px 8px 16px rgba(0,0,0,0.6);
+}
+
+.menu-item {
+  padding: 10px 16px;
+  color: #00ffc3;
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  background-color: #2e8b57;
+  color: white;
+}
+
+.submenu {
+  display: none;
+  border-top: 1px solid #3e5363;
+}
+
+.submenu a {
+  display: block;
+  padding: 10px 16px;
+  color: #00ffc3;
+  text-decoration: none;
+}
+
+.submenu a:hover {
+  background-color: #2e8b57;
+  color: white;
+}
+
+.version-tag {
+  background: #00ffc3;
+  color: #000;
+  font-weight: bold;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.9em;
+  box-shadow: 0 0 8px rgba(0,255,195,0.6);
+}
 </style>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -811,22 +886,23 @@ body {
 </style></head>
 <body>
 
-
-<div class="menu-wrapper">
-  <details>
-    <summary class="menu-button">📋 Menu</summary>
-    <div class="menu-content">
-      <div class="submenu-group">
-        <button class="submenu-button" onclick="toggleSubmenu(event)">🗺️ Mapy ▸</button>
-        <div class="submenu-content">
-          <a href="https://www.lightpollutionmap.info" target="_blank">💡 Light Pollution Map</a>
-          <a href="https://www.windy.com" target="_blank">🌬️ Windy</a>
-        </div>
+<div class="top-bar">
+  <div class="version-tag">Verze 0.1</div>
+  <div class="menu-container">
+    <button class="menu-toggle" onclick="toggleMenu()">📋 Menu</button>
+    <div class="menu-dropdown" id="mainMenu">
+      <div class="menu-item" onclick="toggleSubMenu()">🗺️ Mapy ▸</div>
+      <div class="submenu" id="mapySubmenu">
+        <a href="https://www.lightpollutionmap.info" target="_blank">💡 Light Pollution Map</a>
+        <a href="https://www.windy.com" target="_blank">🌬️ Windy</a>
       </div>
     </div>
-  </details>
+  </div>
 </div>
-<div class="version-tag">Verze 0.1</div>
+
+
+
+
 
 
 
@@ -1570,6 +1646,30 @@ function toggleSubmenu(e) {
     content.style.display = content.style.display === 'block' ? 'none' : 'block';
   }
 }
+</script>
+
+
+<script>
+function toggleMenu() {
+  const menu = document.getElementById("mainMenu");
+  menu.style.display = menu.style.display === "block" ? "none" : "block";
+  document.getElementById("mapySubmenu").style.display = "none";
+}
+
+function toggleSubMenu() {
+  const submenu = document.getElementById("mapySubmenu");
+  submenu.style.display = submenu.style.display === "block" ? "none" : "block";
+}
+
+// Auto-hide menu on outside click
+document.addEventListener("click", function(event) {
+  const menu = document.getElementById("mainMenu");
+  const toggle = document.querySelector(".menu-toggle");
+  if (!menu.contains(event.target) && !toggle.contains(event.target)) {
+    menu.style.display = "none";
+    document.getElementById("mapySubmenu").style.display = "none";
+  }
+});
 </script>
 
 </body></html>
