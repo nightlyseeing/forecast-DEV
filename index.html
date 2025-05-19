@@ -526,25 +526,17 @@ body {
 .forecast-scroll {
   position: relative;
 }
-.scroll-left {
-  left: 2px;
-}
-.scroll-right {
-  right: 2px;
-}
+.scroll-left { left: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
+.scroll-right { right: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
     
 .forecast-scroll-wrapper {
   position: relative;
 }
-.scroll-left {
-  left: 6px;
-}
-.scroll-right {
-  right: 6px;
-}
+.scroll-left { left: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
+.scroll-right { right: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
     
-.scroll-left { left: -18px; }
-.scroll-right { right: -18px; }
+.scroll-left { left: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
+.scroll-right { right: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
     
 </style><style>
 
@@ -569,32 +561,20 @@ body {
 .forecast-scroll {
   position: relative;
 }
-.scroll-left {
-  left: 2px;
-}
-.scroll-right {
-  right: 2px;
-}
+.scroll-left { left: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
+.scroll-right { right: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
     
 .forecast-scroll-wrapper {
   position: relative;
 }
-.scroll-left {
-  left: 6px;
-}
-.scroll-right {
-  right: 6px;
-}
+.scroll-left { left: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
+.scroll-right { right: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
     
-.scroll-left { left: -18px; }
-.scroll-right { right: -18px; }
+.scroll-left { left: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
+.scroll-right { right: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
     
-.scroll-left {
-  left: -30px;
-}
-.scroll-right {
-  right: -30px;
-}
+.scroll-left { left: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
+.scroll-right { right: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
 </style></head>
 <body>
 <div class="version-tag">Verze 0.1</div>
@@ -625,13 +605,6 @@ body {
     🌌 Zobrazit Bortleovu třídu
   </a></div></div><div style="display: flex; gap: 20px;"></div>
 <div class="spinner" id="spinner"></div>
-
-<div id="windyBlockContainer" style="width: 100%; height: 400px; margin: 20px 0; background: #111; border-radius: 10px; overflow: hidden;">
-  <iframe frameborder="0" id="windyFrame"
-    src="https://embed.windy.com/embed2.html?lat=50.08&lon=14.43&zoom=11&level=surface&overlay=satellite&menu=&message=&marker=&calendar=now&type=satellite&location=coordinates&detail=&metricWind=default&metricTemp=default"
-    style="width: 100%; height: 100%; border: none; border-radius: 10px;">
-  </iframe>
-</div>
 
 <div id="forecast"></div>
 </div>
@@ -1183,18 +1156,6 @@ function centerTime(contentId, targetTime) {
     }
   }
 }
-</script><script>
-// Upravíme initMap aby vždy ukázala widget správně
-const originalInitMap = window.initMap;
-window.initMap = function(lat, lon) {
-  const windyWrap = document.getElementById('windyBlockContainer');
-  if (windyWrap) {
-    windyWrap.style.display = 'block';
-    windyWrap.style.height = '400px';
-  }
-  updateWindyWidget(lat, lon);
-  setTimeout(resizeWindyToMatchMap, 300);
-};
 </script><script>
 
 
