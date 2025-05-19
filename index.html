@@ -961,7 +961,8 @@ function getDayName(dateStr) {
   }
 
   async function getLocation() {
-    navigator.geolocation.getCurrentPosition(async pos => {
+  document.getElementById("cityInput").value = "";
+  navigator.geolocation.getCurrentPosition(async pos => {
       const lat = pos.coords.latitude;
       const lon = pos.coords.longitude;
       const name = await reverseGeocode(lat, lon);
