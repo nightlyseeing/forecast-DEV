@@ -1,9 +1,20 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  .version-tag { position: fixed; top: 10px; right: 10px; background: #00ffc3; color: #000; font-weight: bold; padding: 4px 10px; border-radius: 8px; font-size: 0.9em; z-index: 9999; box-shadow: 0 0 8px rgba(0,255,195,0.6); }
+  .version-tag {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: #00ffc3;
+    color: #000;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    z-index: 9999;
+    box-shadow: 0 0 8px rgba(0,255,195,0.6);
+  }
 
 
 
@@ -53,325 +64,6 @@
 #info-gps {
   font-size: 1.1em;
   color: #bbbbbb;
-}
-
-.weather-emoji { font-size: 2.2em; display: block; margin: 4px 0; }
-
-.mapy-menu {
-  position: fixed;
-  top: 10px;
-  right: 120px;
-  z-index: 9999;
-  font-size: 0.9em;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-.mapy-button {
-  background: #00ffc3;
-  color: #000;
-  font-weight: bold;
-  padding: 4px 10px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  box-shadow: 0 0 8px rgba(0,255,195,0.6);
-}
-.mapy-content {
-  display: none;
-  position: absolute;
-  background-color: #1f2833;
-  min-width: 180px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.6);
-  border-radius: 8px;
-  overflow: hidden;
-  margin-top: 4px;
-}
-.mapy-content a {
-  color: #00ffc3;
-  padding: 10px 16px;
-  text-decoration: none;
-  display: block;
-}
-.mapy-content a:hover {
-  background-color: #2e8b57;
-  color: white;
-}
-
-
-.menu-wrapper { position: fixed; top: 10px; left: 10px; z-index: 9999; font-size: 0.9em; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
-.menu-button {
-  background: #00ffc3;
-  color: #000;
-  font-weight: bold;
-  padding: 4px 10px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  box-shadow: 0 0 8px rgba(0,255,195,0.6);
-}
-.menu-content {
-  display: none;
-  position: absolute;
-  right: 0;
-  background-color: #1f2833;
-  min-width: 200px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.6);
-  border-radius: 8px;
-  overflow: hidden;
-  margin-top: 4px;
-}
-.menu-content a, .version-info {
-  color: #00ffc3;
-  padding: 10px 16px;
-  text-decoration: none;
-  display: block;
-}
-.menu-content a:hover {
-  background-color: #2e8b57;
-  color: white;
-}
-
-.submenu {
-  position: relative;
-}
-.submenu-button {
-  background: none;
-  border: none;
-  color: #00ffc3;
-  padding: 10px 16px;
-  text-align: left;
-  width: 100%;
-  cursor: pointer;
-  font-size: 1em;
-}
-.submenu-content {
-  display: none;
-  position: absolute;
-  left: 100%;
-  top: 0;
-  background-color: #1f2833;
-  min-width: 200px;
-  box-shadow: 0px 8px 16px rgba(0,0,0,0.6);
-  border-radius: 8px;
-}
-.submenu-content a {
-  color: #00ffc3;
-  padding: 10px 16px;
-  text-decoration: none;
-  display: block;
-}
-.submenu-content a:hover {
-  background-color: #2e8b57;
-  color: white;
-}
-
-
-.version-tag:hover::after {
-  content: "V.01\A Vyhledání místa\A Předpověď na 7 dní\A Fáze měsíce";
-  white-space: pre;
-  position: absolute;
-  top: 110%;
-  right: 0;
-  background-color: #1f2833;
-  color: #00ffc3;
-  font-size: 0.85em;
-  padding: 8px 10px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0,255,195,0.3);
-  z-index: 9999;
-}
-
-.menu-wrapper {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  z-index: 9999;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.menu-button {
-  background: #00ffc3;
-  color: #000;
-  font-weight: bold;
-  padding: 6px 12px;
-  border-radius: 8px;
-  box-shadow: 0 0 8px rgba(0,255,195,0.6);
-  cursor: pointer;
-  list-style: none;
-}
-
-.menu-content {
-  background-color: #1f2833;
-  padding: 4px 0;
-  border-radius: 8px;
-  margin-top: 6px;
-  min-width: 200px;
-}
-
-.submenu-button {
-  background: none;
-  border: none;
-  color: #00ffc3;
-  padding: 10px 16px;
-  text-align: left;
-  width: 100%;
-  cursor: pointer;
-  font-size: 0.95em;
-  list-style: none;
-}
-
-.submenu-content {
-  padding: 0;
-  margin: 0;
-  background-color: #1f2833;
-  border-top: 1px solid #3e5363;
-  border-radius: 0 0 8px 8px;
-}
-
-.submenu-content a {
-  display: block;
-  padding: 10px 16px;
-  color: #00ffc3;
-  text-decoration: none;
-}
-
-.submenu-content a:hover {
-  background-color: #2e8b57;
-  color: white;
-}
-
-.submenu-group {
-  position: relative;
-}
-.submenu-button {
-  background: none;
-  border: none;
-  color: #00ffc3;
-  padding: 10px 16px;
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-  font-size: 0.95em;
-}
-.submenu-content {
-  display: none;
-  background-color: #1f2833;
-  border-top: 1px solid #3e5363;
-  border-radius: 0 0 8px 8px;
-}
-.submenu-content a {
-  display: block;
-  padding: 10px 16px;
-  color: #00ffc3;
-  text-decoration: none;
-}
-.submenu-content a:hover {
-  background-color: #2e8b57;
-  color: white;
-}
-
-@media (max-width: 600px) {
-  .menu-wrapper {
-    left: 10px;
-    right: 10px;
-    top: 10px;
-    width: calc(100% - 20px);
-  }
-  .menu-button {
-    width: 100%;
-    font-size: 1em;
-  }
-  .menu-content {
-    width: 100%;
-    min-width: unset;
-    border-radius: 10px;
-  }
-  .submenu-button, .submenu-content a {
-    font-size: 1em;
-    padding: 12px 16px;
-  }
-  .version-tag {
-    top: auto;
-    bottom: 10px;
-    left: 10px;
-    right: auto;
-    font-size: 0.8em;
-    padding: 6px 12px;
-  }
-}
-
-.top-bar {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  right: 10px;
-  display: flex;
-  justify-content: space-between;
-  z-index: 9999;
-}
-
-.menu-container {
-  position: relative;
-}
-
-.menu-toggle {
-  background: #00ffc3;
-  color: #000;
-  font-weight: bold;
-  padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  border: none;
-  box-shadow: 0 0 8px rgba(0,255,195,0.6);
-}
-
-.menu-dropdown {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background-color: #1f2833;
-  border-radius: 8px;
-  margin-top: 6px;
-  min-width: 200px;
-  box-shadow: 0px 8px 16px rgba(0,0,0,0.6);
-}
-
-.menu-item {
-  padding: 10px 16px;
-  color: #00ffc3;
-  cursor: pointer;
-}
-
-.menu-item:hover {
-  background-color: #2e8b57;
-  color: white;
-}
-
-.submenu {
-  display: none;
-  border-top: 1px solid #3e5363;
-}
-
-.submenu a {
-  display: block;
-  padding: 10px 16px;
-  color: #00ffc3;
-  text-decoration: none;
-}
-
-.submenu a:hover {
-  background-color: #2e8b57;
-  color: white;
-}
-
-.version-tag {
-  background: #00ffc3;
-  color: #000;
-  font-weight: bold;
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 0.9em;
-  box-shadow: 0 0 8px rgba(0,255,195,0.6);
 }
 </style>
 <meta charset="utf-8"/>
@@ -812,117 +504,39 @@ body {
   }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.0/astronomy.js"></script><style>
-
-
-
 .scroll-left, .scroll-right {
-  background: none;
-  border: none;
+  background-color: rgba(0, 255, 195, 0.2);
+  border: 1px solid #00ffc3;
   color: white;
-  font-size: 1.05em;
-  padding: 4px 6px;
+  font-size: 1.2em;
+  padding: 6px 10px;
+  border-radius: 6px;
   cursor: pointer;
-  z-index: 10;
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  opacity: 0.5;
+  z-index: 20;
 }
-.forecast-scroll-wrapper {
-  position: relative;
-}
-.forecast-scroll {
-  position: relative;
-}
-.scroll-left { left: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
-.scroll-right { right: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
-    
-.forecast-scroll-wrapper {
-  position: relative;
-}
-.scroll-left { left: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
-.scroll-right { right: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
-    
-.scroll-left { left: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
-.scroll-right { right: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
-    
 </style><style>
-
-
-
 .scroll-left, .scroll-right {
-  background: none;
-  border: none;
+  background-color: rgba(0, 255, 195, 0.3);
+  border: 1px solid #00ffc3;
   color: white;
-  font-size: 1.05em;
-  padding: 4px 6px;
+  font-size: 1.4em;
+  padding: 6px 10px;
+  border-radius: 6px;
   cursor: pointer;
-  z-index: 10;
+  z-index: 20;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  opacity: 0.5;
 }
-.forecast-scroll-wrapper {
-  position: relative;
+.scroll-left {
+  left: -30px;
 }
-.forecast-scroll {
-  position: relative;
+.scroll-right {
+  right: -30px;
 }
-.scroll-left { left: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
-.scroll-right { right: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
-    
-.forecast-scroll-wrapper {
-  position: relative;
-}
-.scroll-left { left: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
-.scroll-right { right: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
-    
-.scroll-left { left: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
-.scroll-right { right: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
-    
-.scroll-left { left: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
-.scroll-right { right: 6px; background: none; border: none; color: white; font-size: 1.6em; padding: 6px 10px; cursor: pointer; z-index: 10; position: absolute; top: 50%; transform: translateY(-50%); opacity: 0.6; text-shadow: 0 0 6px rgba(255,255,255,0.3); }
 </style></head>
 <body>
-
-<div class="top-bar">
-  <div class="version-tag">Verze 0.1</div>
-  <div class="menu-container">
-    <button class="menu-toggle" onclick="toggleMenu()">📋 Menu</button>
-    <div class="menu-dropdown" id="mainMenu">
-      <div class="menu-item" onclick="toggleSubMenu()">🗺️ Mapy ▸</div>
-      <div class="submenu" id="mapySubmenu">
-        <a href="https://www.lightpollutionmap.info" target="_blank">💡 Light Pollution Map</a>
-        <a href="https://www.windy.com" target="_blank">🌬️ Windy</a>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
-
-
-
-
-
-    </div>
-  </div>
-</div>
-
-
-
-
-
-</div>
-  </div>
-</div>
-
-
-
-</div>
-
+<div class="version-tag">Verze 0.1</div>
 <div class="starry-bg"></div>
 <h1 style="font-size:2.2em; text-shadow: 0 0 15px #00ffc3;">🪐 Astronomická předpověď</h1>
 <div class="controls">
@@ -949,7 +563,21 @@ body {
 </div><a href="#" id="bortle-link" style="display: none; color:#00ffc3; font-weight:bold; text-decoration:underline;" target="_blank">
     🌌 Zobrazit Bortleovu třídu
   </a></div></div><div style="display: flex; gap: 20px;"></div>
+
+<div style="display: flex; justify-content: center; margin: 20px 0;">
+  <div id="windyWrapper" style="width: 25vw; aspect-ratio: 1 / 1; border-radius: 10px; overflow: hidden;">
+    <iframe
+      id="windyFrame"
+      frameborder="0"
+      scrolling="no"
+      src="https://embed.windy.com/embed2.html?lat=50.08&lon=14.43&zoom=8&level=surface&overlay=wind&menu=&message=&marker=&calendar=now&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default"
+      style="width: 100%; height: 100%; pointer-events: none; border: none;"
+    ></iframe>
+  </div>
+</div>
 <div class="spinner" id="spinner"></div>
+
+
 
 <div id="forecast"></div>
 </div>
@@ -1037,8 +665,7 @@ function getDayName(dateStr) {
   }
 
   async function getLocation() {
-  document.getElementById("cityInput").value = "";
-  navigator.geolocation.getCurrentPosition(async pos => {
+    navigator.geolocation.getCurrentPosition(async pos => {
       const lat = pos.coords.latitude;
       const lon = pos.coords.longitude;
       const name = await reverseGeocode(lat, lon);
@@ -1151,28 +778,8 @@ Object.entries(days).forEach(([date, entries], idx) => {
     content.id = contentId;
     content.style.display = 'block';
 
-    
-const wrapper = document.createElement('div');
-wrapper.className = 'forecast-scroll-wrapper';
-wrapper.style.position = 'relative';
-
-const leftBtn = document.createElement('button');
-leftBtn.className = 'scroll-left';
-leftBtn.innerHTML = '◀';
-leftBtn.onclick = () => scrollContainer.scrollBy({ left: -250, behavior: 'smooth' });
-
-const rightBtn = document.createElement('button');
-rightBtn.className = 'scroll-right';
-rightBtn.innerHTML = '▶';
-rightBtn.onclick = () => scrollContainer.scrollBy({ left: 250, behavior: 'smooth' });
-
-const scrollContainer = document.createElement('div');
-scrollContainer.className = 'forecast-scroll';
-
-wrapper.appendChild(leftBtn);
-wrapper.appendChild(scrollContainer);
-wrapper.appendChild(rightBtn);
-
+    const scrollContainer = document.createElement('div');
+    scrollContainer.className = 'forecast-scroll';
 
     entries
       .filter(e => {
@@ -1208,7 +815,7 @@ card.innerHTML = `
         scrollContainer.appendChild(card);
       });
 
-    content.appendChild(wrapper);
+    content.appendChild(scrollContainer);
     section.appendChild(content);
     forecastDiv.appendChild(section);
   });
@@ -1503,100 +1110,27 @@ function centerTime(contentId, targetTime) {
   }
 }
 </script><script>
-
-
-
-
-document.addEventListener("DOMContentLoaded", function () {
+// Upravíme initMap aby vždy ukázala widget správně
+const originalInitMap = window.initMap;
+window.initMap = function(lat, lon) {
+  const windyWrap = document.getElementById('windyBlockContainer');
+  if (windyWrap) {
+    windyWrap.style.display = 'block';
+    windyWrap.style.height = '400px';
+  }
+  updateWindyWidget(lat, lon);
+  setTimeout(resizeWindyToMatchMap, 300);
+};
+</script><script>
+document.addEventListener("DOMContentLoaded", function() {
   document.querySelectorAll('.forecast-scroll-wrapper').forEach(wrapper => {
     const scrollArea = wrapper.querySelector('.forecast-scroll');
     const left = wrapper.querySelector('.scroll-left');
     const right = wrapper.querySelector('.scroll-right');
 
-    let scrollInterval = null;
-
-    function updateArrowVisibility() {
-      const scrollLeft = scrollArea.scrollLeft;
-      const maxScrollLeft = scrollArea.scrollWidth - scrollArea.clientWidth;
-      left.style.display = scrollLeft > 2 ? 'block' : 'none';
-      right.style.display = (maxScrollLeft - scrollLeft) > 2 ? 'block' : 'none';
-    }
-
-    function startScroll(direction) {
-      if (scrollInterval) clearInterval(scrollInterval);
-      scrollInterval = setInterval(() => {
-        scrollArea.scrollBy({ left: direction * 20, behavior: 'auto' });
-        updateArrowVisibility();
-      }, 16);
-    }
-
-    function stopScroll() {
-      if (scrollInterval) clearInterval(scrollInterval);
-      scrollInterval = null;
-    }
-
-    left.addEventListener('mousedown', () => startScroll(-1));
-    right.addEventListener('mousedown', () => startScroll(1));
-    left.addEventListener('mouseup', stopScroll);
-    right.addEventListener('mouseup', stopScroll);
-    left.addEventListener('mouseleave', stopScroll);
-    right.addEventListener('mouseleave', stopScroll);
-
-    left.addEventListener('touchstart', () => startScroll(-1));
-    right.addEventListener('touchstart', () => startScroll(1));
-    left.addEventListener('touchend', stopScroll);
-    right.addEventListener('touchend', stopScroll);
-
-    scrollArea.addEventListener('scroll', updateArrowVisibility);
-    window.addEventListener('resize', () => setTimeout(updateArrowVisibility, 300));
-
-    setTimeout(updateArrowVisibility, 800);
-  });
-});
-
-        updateArrowVisibility();
-      };
-      const start = () => interval = setInterval(step, 20);
-      const stop = () => clearInterval(interval);
-
-      element.addEventListener('mousedown', start);
-      element.addEventListener('mouseup', stop);
-      element.addEventListener('mouseleave', stop);
-      element.addEventListener('touchstart', start);
-      element.addEventListener('touchend', stop);
-    }
-
-    scrollSmooth(left, -1);
-    scrollSmooth(right, 1);
-
-    scrollArea.addEventListener('scroll', updateArrowVisibility);
-    window.addEventListener('resize', () => setTimeout(updateArrowVisibility, 200));
-
-    setTimeout(updateArrowVisibility, 600);
-  });
-});
-
-    });
-
-    right.addEventListener('click', () => {
-      scrollArea.scrollBy({ left: 250, behavior: 'smooth' });
-    });
-
-    // Initial visibility check with delay to allow layout to render
-    setTimeout(updateArrowVisibility, 500);
-  });
-});
-
-      });
-    }
-    if (right && scrollArea) {
-      right.addEventListener('click', () => {
-        scrollArea.scrollBy({ left: 250, behavior: 'smooth' });
-      });
-    }
-  });
-});
-
+    if (left && scrollArea) {
+      left.addEventListener('click', () => {
+        scrollArea.scrollBy({ left: -250, behavior: 'smooth' });
       });
     }
     if (right && scrollArea) {
@@ -1607,69 +1141,20 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 </script>
-
-
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const menuButton = document.querySelector('.menu-button');
-    const menuContent = document.querySelector('.menu-content');
-    const submenuButton = document.querySelector('.submenu-button');
-    const submenuContent = document.querySelector('.submenu-content');
-
-    if (menuButton && menuContent) {
-      menuButton.addEventListener('click', function(e) {
-        e.stopPropagation();
-        menuContent.style.display = menuContent.style.display === 'block' ? 'none' : 'block';
-      });
-      document.addEventListener('click', function() {
-        menuContent.style.display = 'none';
-        submenuContent.style.display = 'none';
-      });
-    }
-
-    if (submenuButton && submenuContent) {
-      submenuButton.addEventListener('click', function(e) {
-        e.stopPropagation();
-        submenuContent.style.display = submenuContent.style.display === 'block' ? 'none' : 'block';
-      });
-    }
-  });
-</script>
-
-
-
-<script>
-function toggleSubmenu(e) {
-  e.stopPropagation();
-  const content = e.target.nextElementSibling;
-  if (content) {
-    content.style.display = content.style.display === 'block' ? 'none' : 'block';
+function updateWindyWidget(lat, lon) {
+  const windy = document.getElementById('windyFrame');
+  if (windy) {
+    windy.src = `https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&zoom=8&level=surface&overlay=wind&menu=&message=&marker=&calendar=now&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default`;
+  }
+}
+const originalUpdateLocationInfo = window.updateLocationInfo;
+window.updateLocationInfo = function(city) {
+  originalUpdateLocationInfo(city);
+  if (city.latitude && city.longitude) {
+    updateWindyWidget(city.latitude, city.longitude);
   }
 }
 </script>
-
-
-<script>
-function toggleMenu() {
-  const menu = document.getElementById("mainMenu");
-  menu.style.display = menu.style.display === "block" ? "none" : "block";
-  document.getElementById("mapySubmenu").style.display = "none";
-}
-
-function toggleSubMenu() {
-  const submenu = document.getElementById("mapySubmenu");
-  submenu.style.display = submenu.style.display === "block" ? "none" : "block";
-}
-
-// Auto-hide menu on outside click
-document.addEventListener("click", function(event) {
-  const menu = document.getElementById("mainMenu");
-  const toggle = document.querySelector(".menu-toggle");
-  if (!menu.contains(event.target) && !toggle.contains(event.target)) {
-    menu.style.display = "none";
-    document.getElementById("mapySubmenu").style.display = "none";
-  }
-});
-</script>
-
-</body></html>
+</body>
+</html>
