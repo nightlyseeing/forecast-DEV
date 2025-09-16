@@ -3,11 +3,10 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Astronomická předpověď – v0.2.2-p3</title>
+<title>Astronomická předpověď – v0.2.2‑p4</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<!-- Astronomy Engine for accurate planet positions -->
 <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.0/astronomy.min.js"></script>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet"/>
@@ -28,18 +27,29 @@
   .has-submenu{position:relative}
   .has-submenu:hover>.submenu{display:block}
   .version-tag{position:relative;background:var(--accent);color:#000;font-weight:bold;padding:6px 12px;border-radius:12px;box-shadow:var(--shadow)}
-  .version-tag:hover::after{content:"V.0.2.2-p3\A • Windy: bez zoomu, aktivace PKM\A • Planety: přesné AE v 22:00 (fallback API)";white-space:pre;position:absolute;top:115%;right:0;background:var(--panel);color:var(--accent);font-size:.9em;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 0 16px rgba(0,255,195,.4);min-width:300px}
+  .version-tag:hover::after{content:"v0.2.2‑p4\\A • Mapa vpravo, stejná výška jako info\\A • Zoom jen po PKM\\A • Planety opraveny (AE @22:00, fallback API)";white-space:pre;position:absolute;top:115%;right:0;background:var(--panel);color:var(--accent);font-size:.9em;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 0 16px rgba(0,255,195,.4);min-width:320px}
   .controls{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
   .input-wrapper{position:relative}
   #cityInput{width:360px;max-width:100%;padding:10px 36px 10px 12px;border-radius:10px;border:2px solid var(--accent);background:#111;color:#00ffc3;font-weight:700;box-shadow:var(--shadow)}
   .btn{background:#7a6cb6;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;box-shadow:0 0 10px rgba(122,108,182,.5)}
   #suggestions{position:absolute;top:100%;left:0;right:0;background:#121212;border:1px solid var(--border);border-radius:10px;list-style:none;padding:0;margin:6px 0 0 0;display:none;overflow:hidden;z-index:30}
   #suggestions li{padding:10px 12px;cursor:pointer;color:var(--text)} #suggestions li:hover{background:#243442}
-  .layout{display:flex;gap:16px;align-items:stretch;flex-wrap:wrap}
-  .info-container{flex:1 1 100%;display:flex;flex-direction:column;gap:16px;min-width:300px}
+
+  /* TOP ROW: left info + right map */
+  .top-row{display:grid;grid-template-columns: minmax(300px, 1fr) minmax(280px, 1fr);gap:16px;align-items:start}
+  .left-col{display:flex;flex-direction:column;gap:16px}
+  .right-col{position:relative}
   .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;box-shadow:0 2px 12px rgba(0,0,0,.5)}
   .panel strong{color:var(--accent)}
   .kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 10px}
+
+  /* Map panel on the right */
+  #mapPanel{padding:0;overflow:hidden}
+  #map{width:100%;height:100%}
+  .zoom-badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:4px 8px;border-radius:999px;font-size:.85em;border:1px solid rgba(255,255,255,.2);z-index:2}
+  .map-tip{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:6px 8px;border-radius:8px;font-size:.9em;border:1px solid rgba(255,255,255,.2);z-index:2}
+
+  /* Forecast */
   .forecast-day{border:1px solid var(--border);border-radius:10px;overflow:hidden}
   .forecast-day h3{margin:0;padding:10px;background:#4b3f72;color:#fff;display:flex;align-items:center;gap:8px;cursor:pointer}
   .forecast-content{display:none;padding:10px}
@@ -53,20 +63,6 @@
   .footer{text-align:center;opacity:.8;margin-top:10px;font-size:.95em}
   .small{font-size:.92em;opacity:.9}
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#243442;border:1px solid var(--border);margin:4px 6px 0 0}
-  /* bottom maps row */
-  .maps-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px}
-  .map-cell{flex:1 1 calc(50% - 8px);min-width:260px}
-  .square{position:relative;width:100%;}
-  .square::before{content:"";display:block;padding-top:100%;} /* 1:1 */
-  .square-inner{position:absolute;inset:0;border-radius:12px;overflow:hidden}
-  #map{width:100%;height:100%}
-  /* WINDY: prevent page capture until activated */
-  .windy-guard{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:transparent;cursor:default; z-index:3;}
-  .windy-guard.active{display:none;}
-  #windyFrame{width:100%;height:100%;border:none;pointer-events:none;} /* blocked until activated */
-  .map-overlay{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:6px 8px;border-radius:8px;font-size:.9em;border:1px solid rgba(255,255,255,.2);z-index:2}
-  .zoom-badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:4px 8px;border-radius:999px;font-size:.85em;border:1px solid rgba(255,255,255,.2);z-index:2}
-  .windy-badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:4px 8px;border-radius:999px;font-size:.85em;border:1px solid rgba(255,255,255,.2);z-index:2}
 </style>
 </head>
 <body>
@@ -84,7 +80,7 @@
       </div>
     </div>
   </div>
-  <div class="version-tag">Verze 0.2.2-p3</div>
+  <div class="version-tag">v0.2.2‑p4</div>
 </div>
 
 <h1>🪐 Astronomická předpověď</h1>
@@ -97,8 +93,9 @@
   <button class="btn" onclick="getLocation()">📍 Moje poloha</button>
 </div>
 
-<div class="layout">
-  <div class="info-container">
+<!-- TOP ROW: left = info, right = map (equal height) -->
+<div class="top-row">
+  <div class="left-col" id="leftTop">
     <div class="panel">
       <strong>📍 Informace o místě</strong>
       <div class="kv" style="margin-top:8px;">
@@ -122,34 +119,19 @@
         <div id="planets-list"></div>
       </div>
     </div>
-
-    <div class="spinner" id="spinner"></div>
-    <div id="forecast"></div>
   </div>
-</div>
 
-<!-- Bottom: two square maps at 50% width -->
-<div class="maps-row">
-  <div class="map-cell">
-    <div class="panel square">
-      <div class="square-inner">
-        <div id="map"></div>
-        <div id="mapZoomBadge" class="zoom-badge">Zoom: vypnuto</div>
-        <div class="map-overlay">Klikni <b>pravým</b> na mapu pro zapnutí/vypnutí zoomu</div>
-      </div>
-    </div>
-  </div>
-  <div class="map-cell">
-    <div class="panel square">
-      <div class="square-inner">
-        <div class="windy-badge" id="windyBadge">Interakce: vypnuta</div>
-        <div id="windyGuard" class="windy-guard" title="Klikni pravým pro zapnutí interakce"></div>
-        <iframe id="windyFrame" src=""></iframe>
-        <div class="map-overlay">Klikni <b>pravým</b> pro zapnutí/vypnutí interakce</div>
-      </div>
+  <div class="right-col">
+    <div class="panel" id="mapPanel">
+      <div id="map"></div>
+      <div id="mapZoomBadge" class="zoom-badge">Zoom: vypnuto</div>
+      <div class="map-tip">Klikni <b>pravým</b> na mapu pro zapnutí/vypnutí zoomu</div>
     </div>
   </div>
 </div>
+
+<div class="spinner" id="spinner" style="margin-top:16px;"></div>
+<div id="forecast" style="margin-top:8px;"></div>
 
 <div class="footer">
   Zdroj fází: ipgeolocation.io • Počasí a geokódování: Open-Meteo • Planety: Astronomy Engine (fallback ipgeolocation) • Mapa: Leaflet & OSM
@@ -169,21 +151,37 @@ function showSpinner(b){$("spinner").style.display=b?"block":"none"}
 function getDayName(d){const today=new Date().toISOString().split('T')[0];if(d===today)return"Dnes";const arr=['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'];return arr[new Date(d).getDay()]}
 function getWeatherIcon(c,r){if(r>2)return'🌧️';if(r>0)return'🌦️';if(c>75)return'☁️';if(c>25)return'🌤️';return'☀️'}
 
+/* Layout sync: keep right map equal to left info height */
+function syncMapHeight(){
+  const left=document.getElementById("leftTop");
+  const mapPanel=document.getElementById("mapPanel");
+  const mapDiv=document.getElementById("map");
+  if(!left||!mapPanel||!mapDiv) return;
+  const h=left.getBoundingClientRect().height;
+  mapPanel.style.height = h + "px";
+  mapDiv.style.height = h + "px";
+  if(window._leafletMap){ setTimeout(()=> window._leafletMap.invalidateSize(), 100); }
+}
+const leftObserver = new MutationObserver(()=> syncMapHeight());
+leftObserver.observe(document.getElementById("leftTop"), {subtree:true, childList:true, characterData:true});
+window.addEventListener("resize", syncMapHeight);
+
 /* Geocoding & selection */
 let selectedCity=null;
-async function autocompleteCities(){const v=$("cityInput").value.trim();const s=$("suggestions");if(v.length<2){s.style.display="none";return}const res=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(v)}&count=6&language=cs&format=json`);const data=await res.json();s.innerHTML="";(data.results||[]).forEach(c=>{const li=document.createElement("li");li.textContent=`${c.name}, ${c.country}`;li.onclick=()=>{selectedCity=c;$("cityInput").value=`${c.name}, ${c.country}`;updateLocationInfo(c);initMap(c.latitude,c.longitude);fetchForecast(c.latitude,c.longitude);fetchMoonPhase(c.latitude,c.longitude);fetchPlanets(c.latitude,c.longitude);updateWindyWidget(c.latitude,c.longitude);s.style.display="none"};s.appendChild(li)});s.style.display=s.children.length?"block":"none"}
+async function autocompleteCities(){const v=$("cityInput").value.trim();const s=$("suggestions");if(v.length<2){s.style.display="none";return}const res=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(v)}&count=6&language=cs&format=json`);const data=await res.json();s.innerHTML="";(data.results||[]).forEach(c=>{const li=document.createElement("li");li.textContent=`${c.name}, ${c.country}`;li.onclick=()=>{selectedCity=c;$("cityInput").value=`${c.name}, ${c.country}`;updateLocationInfo(c);initMap(c.latitude,c.longitude);fetchForecast(c.latitude,c.longitude);fetchMoonPhase(c.latitude,c.longitude);fetchPlanets(c.latitude,c.longitude);s.style.display="none"};s.appendChild(li)});s.style.display=s.children.length?"block":"none"}
 
-async function getLocation(){if(!navigator.geolocation)return alert("Váš prohlížeč nepodporuje geolokaci.");navigator.geolocation.getCurrentPosition(async p=>{const lat=p.coords.latitude,lon=p.coords.longitude;const name=await reverseGeocode(lat,lon);const c={name,country:"",latitude:lat,longitude:lon};selectedCity=c;updateLocationInfo(c);initMap(lat,lon);fetchForecast(lat,lon);fetchMoonPhase(lat,lon);fetchPlanets(lat,lon);updateWindyWidget(lat,lon)},e=>alert("Nepodařilo se zjistit polohu."))}
+async function getLocation(){if(!navigator.geolocation)return alert("Váš prohlížeč nepodporuje geolokaci.");navigator.geolocation.getCurrentPosition(async p=>{const lat=p.coords.latitude,lon=p.coords.longitude;const name=await reverseGeocode(lat,lon);const c={name,country:"",latitude:lat,longitude:lon};selectedCity=c;updateLocationInfo(c);initMap(lat,lon);fetchForecast(lat,lon);fetchMoonPhase(lat,lon);fetchPlanets(lat,lon)},e=>alert("Nepodařilo se zjistit polohu."))}
 
-async function reverseGeocode(lat,lon){try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`);const d=await r.json();return d.address?.city||d.address?.town||d.address?.village||d.address?.municipality||d.display_name||`${lat.toFixed(4)}, ${lon.toFixed(4)}` }catch{return `${lat.toFixed(4)}, ${lon.toFixed(4)}`} } 
+async function reverseGeocode(lat,lon){try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`);const d=await r.json();return d.address?.city||d.address?.town||d.address?.village||d.address?.municipality||d.display_name||`${lat.toFixed(4)}, ${lon.toFixed(4)}`}catch{return `${lat.toFixed(4)}, ${lon.toFixed(4)}`}} 
 
 function updateLocationInfo(c){const name=c.name||"-";const country=c.country||"";const lat=typeof c.latitude==="number"?c.latitude:null;const lon=typeof c.longitude==="number"?c.longitude:null;$("info-name").innerHTML=country?`<span style="color:#00ffc3;font-weight:bold;">${name}</span>, ${country}`:`<span style="color:#00ffc3;font-weight:bold;">${name}</span>`;$("info-gps").textContent=(lat!=null&&lon!=null)?`${lat.toFixed(4)}, ${lon.toFixed(4)}`:"—";const link=$("bortle-link");if(lat!=null&&lon!=null){link.href=`https://www.lightpollutionmap.info/#zoom=9&lat=${lat}&lon=${lon}`;link.style.display="inline"}else{link.style.display="none"}}
 
-/* Map + Windy (bottom) */
+/* Map on the right */
 let map=null,marker=null,zoomEnabled=false,zoomControl=null;
 function initMap(lat,lon){
+  syncMapHeight();
   if(!map){
-    map=L.map('map', { zoomControl:false, scrollWheelZoom:false, touchZoom:false, doubleClickZoom:false, boxZoom:false, keyboard:false, dragging:true }).setView([lat,lon],10);
+    map=window._leafletMap = L.map('map', { zoomControl:false, scrollWheelZoom:false, touchZoom:false, doubleClickZoom:false, boxZoom:false, keyboard:false, dragging:true }).setView([lat,lon],10);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
     marker=L.marker([lat,lon]).addTo(map);
     map.on('contextmenu', function(){
@@ -203,47 +201,14 @@ function initMap(lat,lon){
     map.setView([lat,lon], 10);
     marker.setLatLng([lat,lon]);
   }
-  setTimeout(()=> map.invalidateSize(), 200);
+  setTimeout(()=> { map.invalidateSize(); syncMapHeight(); }, 150);
 }
-function updateWindyWidget(lat,lon){ $("windyFrame").src=`https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&zoom=11&level=surface&overlay=satellite&menu=&message=&marker=&calendar=now&type=satellite&location=coordinates&detail=&metricWind=default&metricTemp=default` }
-const windyGuard = () => $("windyGuard");
-function toggleWindyInteraction(){
-  const guard = windyGuard();
-  const iframe = $("windyFrame");
-  const badge = $("windyBadge");
-  const active = guard.classList.toggle("active");
-  iframe.style.pointerEvents = active ? "auto" : "none";
-  badge.textContent = active ? "Interakce: zapnuta" : "Interakce: vypnuta";
-}
-document.addEventListener("contextmenu", (e)=>{
-  // If right-click occurs inside Windy square, toggle interaction and prevent default context menu.
-  const guard = windyGuard();
-  if(guard && guard.closest(".square-inner") && guard.closest(".square-inner").contains(e.target)){
-    e.preventDefault();
-    toggleWindyInteraction();
-  }
-});
-// When mouse leaves the windy square, disable interaction again so page scroll is restored
-document.addEventListener("mouseleave", (e)=>{
-  const windyInner = $("windyFrame")?.closest(".square-inner");
-  if(windyInner && !windyInner.contains(e.relatedTarget)){
-    const guard = windyGuard();
-    if(guard && !guard.isConnected) return;
-    guard.classList.remove("active");
-    $("windyFrame").style.pointerEvents = "none";
-    $("windyBadge").textContent = "Interakce: vypnuta";
-  }
-}, true);
 
 /* Moon phase (API, cz) */
 function getMoonEmojiFromName(n){n=String(n||"").toLowerCase().replace(/_/g," ").trim();if(n.includes("new moon"))return"🌑 Nov";if(n.includes("waxing crescent"))return"🌒 Dorůstající srpek";if(n.includes("first quarter"))return"🌓 První čtvrť";if(n.includes("waxing gibbous"))return"🌔 Dorůstající měsíc";if(n.includes("full moon"))return"🌕 Úplněk";if(n.includes("waning gibbous"))return"🌖 Couvající měsíc";if(n.includes("last quarter"))return"🌗 Poslední čtvrť";if(n.includes("waning crescent"))return"🌘 Couvající srpek";return"🌙 Neznámá fáze"}
 async function fetchMoonPhase(lat,lon){const url=`https://api.ipgeolocation.io/astronomy?apiKey=${IPGEO_API_KEY}&lat=${lat}&long=${lon}`;try{const r=await fetch(url);const d=await r.json();const p=d.moon_phase||"Neznámá fáze";$("moon-phase-label").textContent=getMoonEmojiFromName(p);if(DEBUG){$("phase-raw").style.display="block";$("phase-raw").textContent=`API: ${p}`}}catch(e){console.error("Chyba při načítání fáze:",e);$("moon-phase-label").textContent="Chyba načítání";$("phase-raw").textContent=""}}
 
-/* Forecast + moon emoji in headers */
-let moonPhasesByDate={};
-function getMoonEmojiFromFraction(x){if(x===0||x===1)return"🌑";if(x>0&&x<0.25)return"🌒";if(x===0.25)return"🌓";if(x>0.25&&x<0.5)return"🌔";if(x===0.5)return"🌕";if(x>0.5&&x<0.75)return"🌖";if(x===0.75)return"🌗";return"🌘"}
-async function fetchMoonPhasesForecast(lat,lon){try{const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=moon_phase&timezone=Europe%2FPrague`);const d=await res.json();}catch(e){}}
-
+/* Forecast */
 async function fetchForecast(lat,lon){
   showSpinner(true);
   const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,cloudcover,precipitation,windspeed_10m&timezone=Europe/Prague`);
@@ -296,62 +261,62 @@ async function fetchForecast(lat,lon){
   });
 }
 
-/* Toggle */
+/* Toggle helpers */
 function toggleForecast(id){const c=document.getElementById(id);const i=document.getElementById(id+'-icon');if(c.style.display==='none'){c.style.display='block';i.textContent='⬆️'}else{c.style.display='none';i.textContent='⬇️'}}
 function centerTime(contentId,target){const sc=document.querySelector(`#${contentId} .forecast-scroll`);if(!sc)return;const cards=sc.querySelectorAll('.forecast-card');for(let i=0;i<cards.length;i++){const strong=cards[i].querySelector('strong');if(strong&&strong.textContent.trim()===target){const w=sc.clientWidth;const off=cards[i].offsetLeft;const cw=cards[i].offsetWidth;sc.scrollTo({left:off-(w/2)+(cw/2),behavior:'smooth'});break}}}
 
-/* Planets: Astronomy Engine at 22:00 local (fallback API) */
+/* Planety @22:00 – Astronomy Engine (fallback API) */
 async function fetchPlanets(lat,lon){
   const box=$("planets-list"); const log=(m)=>$("planet-log").textContent=m;
-  try{
-    log("počítám…"); box.innerHTML="";
-    // 22:00 local today
-    const now=new Date();
-    const date=new Date(now.getFullYear(), now.getMonth(), now.getDate(), 22, 0, 0);
-    const obs=new Astronomy.Observer(lat, lon, 0);
-    const bodies=[["Mercury","Merkur"],["Venus","Venuše"],["Mars","Mars"],["Jupiter","Jupiter"],["Saturn","Saturn"]];
+  box.innerHTML=""; log("počítám…");
+  const render = (list) => {
+    box.innerHTML="";
     let any=false;
-    for(const [body, label] of bodies){
-      const hor = Astronomy.Horizontal(date, obs, Astronomy.Body[body], 'normal');
-      if (isFinite(hor.altitude) && hor.altitude > 5) {
-        const el=document.createElement("span");
-        el.className="pill";
-        el.title=`Azimut ${hor.azimuth.toFixed(0)}° v 22:00`;
-        el.textContent=`${label}: ${hor.altitude.toFixed(0)}°`;
-        box.appendChild(el);
-        any=true;
+    for(const p of list){
+      if(Number.isFinite(p.alt)&&p.alt>5){
+        const el=document.createElement("span"); el.className="pill"; el.title=`Azimut ${p.az.toFixed(0)}° v 22:00`; el.textContent=`${p.label}: ${p.alt.toFixed(0)}°`; box.appendChild(el); any=true;
       }
     }
-    if(!any){
-      box.innerHTML = `<span class="small">Žádné planety nejsou dobře viditelné v 22:00.</span>`;
-    }
+    if(!any) box.innerHTML = `<span class="small">Žádné planety nejsou dobře viditelné v 22:00.</span>`;
     log("");
-  } catch (e) {
-    console.warn("AE selhalo, padám na API:", e);
-    // Fallback to API "now"
+    syncMapHeight();
+  };
+  try{
+    if(!window.Astronomy) throw new Error("Astronomy Engine nenačten");
+    const Body=window.Astronomy.Body;
+    const mapEnum = {Mercury:Body.Mercury, Venus:Body.Venus, Mars:Body.Mars, Jupiter:Body.Jupiter, Saturn:Body.Saturn, Uranus:Body.Uranus, Neptune:Body.Neptune};
+    const now=new Date(); const t=new Date(now.getFullYear(), now.getMonth(), now.getDate(), 22, 0, 0);
+    const obs=new window.Astronomy.Observer(lat, lon, 0);
+    const names=[["Mercury","Merkur"],["Venus","Venuše"],["Mars","Mars"],["Jupiter","Jupiter"],["Saturn","Saturn"],["Uranus","Uran"],["Neptune","Neptun"]];
+    const out=[];
+    for(const [eng, label] of names){
+      const hor=window.Astronomy.Horizontal(t, obs, mapEnum[eng], 'normal');
+      out.push({label, alt: hor.altitude, az: hor.azimuth});
+    }
+    render(out);
+  }catch(e){
+    console.warn("AE selhalo -> fallback API", e);
     try{
       const url=`https://api.ipgeolocation.io/astronomy?apiKey=${IPGEO_API_KEY}&lat=${lat}&long=${lon}`;
-      const r=await fetch(url); const d=await r.json(); box.innerHTML="";
-      const arr=[
-        {name:"Merkur", alt:+d.mercury_altitude, az:+d.mercury_azimuth},
-        {name:"Venuše", alt:+d.venus_altitude,   az:+d.venus_azimuth},
-        {name:"Mars",   alt:+d.mars_altitude,    az:+d.mars_azimuth},
-        {name:"Jupiter",alt:+d.jupiter_altitude, az:+d.jupiter_azimuth},
-        {name:"Saturn", alt:+d.saturn_altitude,  az:+d.saturn_azimuth}
+      const r=await fetch(url); const d=await r.json();
+      const out=[
+        {label:"Merkur", alt:+d.mercury_altitude, az:+d.mercury_azimuth},
+        {label:"Venuše", alt:+d.venus_altitude,   az:+d.venus_azimuth},
+        {label:"Mars",   alt:+d.mars_altitude,    az:+d.mars_azimuth},
+        {label:"Jupiter",alt:+d.jupiter_altitude, az:+d.jupiter_azimuth},
+        {label:"Saturn", alt:+d.saturn_altitude,  az:+d.saturn_azimuth},
+        {label:"Uran",   alt:+d.uranus_altitude,  az:+d.uranus_azimuth},
+        {label:"Neptun", alt:+d.neptune_altitude, az:+d.neptune_azimuth}
       ];
-      let any=false;
-      for(const p of arr){
-        if(Number.isFinite(p.alt) && p.alt > 5){
-          const el=document.createElement("span"); el.className="pill"; el.title=`Azimut ${p.az.toFixed(0)}°`; el.textContent=`${p.name}: ${p.alt.toFixed(0)}°`; box.appendChild(el); any=true;
-        }
-      }
-      if(!any) box.innerHTML=`<span class="small">Žádné planety nejsou dobře viditelné (nyní).</span>`;
-      log("");
+      render(out);
     }catch(err){
       box.innerHTML=`<span class="small">Chyba načítání planet.</span>`; log("");
     }
   }
 }
+
+/* Kick initial layout */
+window.addEventListener('load', syncMapHeight);
 </script>
 </body>
 </html>
