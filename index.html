@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Astronomická předpověď – v0.2.2‑p5</title>
+<title>Astronomická předpověď – v0.2.2‑p6</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -11,7 +11,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
-  :root { --bg:#0b0c10; --panel:#1f2833; --accent:#00ffc3; --border:#3e5363; --text:#dcdcdc; --shadow:0 0 12px rgba(0,255,195,0.5); --green:#00ff88; --greenDim:#00c46a; }
+  :root { --bg:#0b0c10; --panel:#1f2833; --accent:#00ffc3; --border:#3e5363; --text:#dcdcdc; --shadow:0 0 12px rgba(0,255,195,0.5); --green:#00ff88; --greenFill:rgba(0,255,136,0.22); --red:#ff4d4d; --redFill:rgba(255,77,77,0.22); }
   *{box-sizing:border-box}
   body{margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:radial-gradient(ellipse at top,#0b0c1a 0%,#1b2c3a 100%);color:var(--text);padding:16px}
   h1{margin:8px 0 16px 0;text-align:center;color:#fff;font-size:2.2rem;text-shadow:0 0 18px var(--accent)}
@@ -27,7 +27,7 @@
   .has-submenu{position:relative}
   .has-submenu:hover>.submenu{display:block}
   .version-tag{position:relative;background:var(--accent);color:#000;font-weight:bold;padding:6px 12px;border-radius:12px;box-shadow:var(--shadow)}
-  .version-tag:hover::after{content:"v0.2.2‑p5\\A • Mapa vpravo, stejná výška jako info\\A • Zoom jen po PKM\\A • Planety (AE @22:00)\\A • ⭐ Graf viditelnosti v pozadí";white-space:pre;position:absolute;top:115%;right:0;background:var(--panel);color:var(--accent);font-size:.9em;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 0 16px rgba(0,255,195,.4);min-width:320px}
+  .version-tag:hover::after{content:"v0.2.2‑p6\\A • Dvoubarevný graf viditelnosti\\A • Zelená nahoře, červená dole\\A • Ostatní funkce beze změn";white-space:pre;position:absolute;top:115%;right:0;background:var(--panel);color:var(--accent);font-size:.9em;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 0 16px rgba(0,255,195,.4);min-width:320px}
   .controls{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
   .input-wrapper{position:relative}
   #cityInput{width:360px;max-width:100%;padding:10px 36px 10px 12px;border-radius:10px;border:2px solid var(--accent);background:#111;color:#00ffc3;font-weight:700;box-shadow:var(--shadow)}
@@ -81,7 +81,7 @@
       </div>
     </div>
   </div>
-  <div class="version-tag">v0.2.2‑p5</div>
+  <div class="version-tag">v0.2.2‑p6</div>
 </div>
 
 <h1>🪐 Astronomická předpověď</h1>
@@ -210,9 +210,7 @@ async function fetchMoonPhase(lat,lon){const url=`https://api.ipgeolocation.io/a
 
 /* === Star visibility graph support === */
 let moonPhaseFracByDate = {};
-function illuminationFromPhase(frac){ // 0..1 -> 0 at new, 1 at full
-  return 0.5 - 0.5*Math.cos(2*Math.PI*frac);
-}
+function illuminationFromPhase(frac){ return 0.5 - 0.5*Math.cos(2*Math.PI*frac); } // 0..1
 async function fetchMoonPhasesForecast(lat,lon){
   try{
     const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=moon_phase&timezone=Europe%2FPrague`;
@@ -221,31 +219,28 @@ async function fetchMoonPhasesForecast(lat,lon){
     moonPhaseFracByDate = {};
     if(data?.daily?.time){
       for(let i=0;i<data.daily.time.length;i++){
-        moonPhaseFracByDate[data.daily.time[i]] = data.daily.moon_phase[i]; // assume 0..1
+        moonPhaseFracByDate[data.daily.time[i]] = data.daily.moon_phase[i];
       }
     }
   }catch(e){ console.warn("Moon phases forecast failed",e); moonPhaseFracByDate={}; }
 }
 function visibilityScore(cloud, precip, dateStr){
-  // Heuristika 0..100: čistá obloha + bez deště + tmavý měsíc => vyšší
-  const cloudScore = 100 - Math.min(Math.max(cloud,0),100); // 0 best
-  const rainPenalty = Math.min(precip*50, 50);              // 1 mm/h => -50
+  const cloudScore = 100 - Math.min(Math.max(cloud,0),100);
+  const rainPenalty = Math.min(precip*50, 50);
   const phase = moonPhaseFracByDate[dateStr] ?? 0;
-  const illum = illuminationFromPhase(phase);                // 0..1
-  const moonPenalty = illum * 40;                            // max -40 při úplňku
+  const illum = illuminationFromPhase(phase);
+  const moonPenalty = illum * 40;
   const raw = cloudScore - rainPenalty - moonPenalty;
   return Math.max(0, Math.min(100, Math.round(raw)));
 }
 function drawBackgroundGraph(scrollEl, entries, dateStr){
-  // Remove old
   const old = scrollEl.parentElement.querySelector('.bg-graph');
   if(old) old.remove();
 
   const totalW = scrollEl.scrollWidth;
-  const totalH = 140; // px background height
+  const totalH = 140;
   const midY = totalH/2;
   const amp = (totalH/2) * 0.9;
-
   const svgNS="http://www.w3.org/2000/svg";
   const wrap = document.createElement('div');
   wrap.className = "bg-graph";
@@ -254,6 +249,7 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
   svg.setAttribute('height', totalH);
   svg.style.display='block';
 
+  // Baseline
   const baseline = document.createElementNS(svgNS, 'line');
   baseline.setAttribute('x1', 0); baseline.setAttribute('y1', midY);
   baseline.setAttribute('x2', totalW); baseline.setAttribute('y2', midY);
@@ -264,7 +260,6 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
   const n = entries.length;
   if(n<2){ wrap.appendChild(svg); scrollEl.parentElement.insertBefore(wrap, scrollEl); return; }
 
-  // Build polyline and area path
   const points = [];
   for(let i=0;i<n;i++){
     const x = (totalW-1) * (i/(n-1));
@@ -273,15 +268,35 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
     const y = midY - (norm/50)*amp;
     points.push([x,y]);
   }
-  // Create path string
-  const path = document.createElementNS(svgNS, 'path');
-  const dTop = points.map((p,i)=> (i===0?`M ${p[0]} ${p[1]}`:`L ${p[0]} ${p[1]}`)).join(' ');
-  const d = `${dTop} L ${points[n-1][0]} ${midY} L ${points[0][0]} ${midY} Z`;
-  path.setAttribute('d', d);
-  path.setAttribute('fill', 'rgba(0,255,136,0.22)');
-  path.setAttribute('stroke', 'var(--green)');
-  path.setAttribute('stroke-width', '2');
-  svg.appendChild(path);
+
+  // Helper: path from points with clamped y
+  const makeAreaPath = (clampFn, fill, stroke) => {
+    const dTop = points.map(([x,y],i)=> (i===0 ? `M ${x} ${clampFn(y)}` : `L ${x} ${clampFn(y)}`)).join(' ');
+    const d = `${dTop} L ${points[n-1][0]} ${midY} L ${points[0][0]} ${midY} Z`;
+    const p = document.createElementNS(svgNS, 'path');
+    p.setAttribute('d', d);
+    p.setAttribute('fill', fill);
+    p.setAttribute('stroke', stroke);
+    p.setAttribute('stroke-width', '0');
+    return p;
+  };
+
+  // Green area (above baseline): clamp to not go below baseline
+  const greenArea = makeAreaPath(y => Math.min(y, midY), 'var(--greenFill)', 'transparent');
+  svg.appendChild(greenArea);
+
+  // Red area (below baseline): clamp to not go above baseline
+  const redArea = makeAreaPath(y => Math.max(y, midY), 'var(--redFill)', 'transparent');
+  svg.appendChild(redArea);
+
+  // Optional: overlay the line for clarity
+  const linePath = document.createElementNS(svgNS, 'path');
+  const dLine = points.map(([x,y],i)=> (i===0 ? `M ${x} ${y}` : `L ${x} ${y}`)).join(' ');
+  linePath.setAttribute('d', dLine);
+  linePath.setAttribute('fill', 'none');
+  linePath.setAttribute('stroke', 'rgba(255,255,255,0.6)');
+  linePath.setAttribute('stroke-width', '1.5');
+  svg.appendChild(linePath);
 
   wrap.appendChild(svg);
   scrollEl.parentElement.insertBefore(wrap, scrollEl);
@@ -303,7 +318,7 @@ async function fetchForecast(lat,lon){
     if(!days[date]) days[date]=[];
     const entry={time:hour,temp:temperature_2m[i],cloud:cloudcover[i],rain:precipitation[i],wind:windspeed_10m[i],date};
     days[date].push(entry);
-    if(h<12){ // přidej ranní hodiny do předchozího dne (pro noc)
+    if(h<12){
       const prev=new Date(date); prev.setDate(prev.getDate()-1); const prevStr=prev.toISOString().split('T')[0];
       if(!days[prevStr]) days[prevStr]=[];
       days[prevStr].push(entry);
@@ -350,7 +365,6 @@ async function fetchForecast(lat,lon){
     section.appendChild(content);
     div.appendChild(section);
 
-    // Draw background graph after DOM paints so widths are correct
     requestAnimationFrame(()=> drawBackgroundGraph(scroll, entries, date));
   });
 }
