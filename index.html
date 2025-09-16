@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Astronomická předpověď – v0.2.2‑p6</title>
+<title>Astronomická předpověď – v0.2.2‑p7</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -27,7 +27,7 @@
   .has-submenu{position:relative}
   .has-submenu:hover>.submenu{display:block}
   .version-tag{position:relative;background:var(--accent);color:#000;font-weight:bold;padding:6px 12px;border-radius:12px;box-shadow:var(--shadow)}
-  .version-tag:hover::after{content:"v0.2.2‑p6\\A • Dvoubarevný graf viditelnosti\\A • Zelená nahoře, červená dole\\A • Ostatní funkce beze změn";white-space:pre;position:absolute;top:115%;right:0;background:var(--panel);color:var(--accent);font-size:.9em;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 0 16px rgba(0,255,195,.4);min-width:320px}
+  .version-tag:hover::after{content:"v0.2.2‑p7\\A • Graf se hýbe se sliderem\\A • Dvoubarevný (zelená/červená)\\A • Ostatní beze změn";white-space:pre;position:absolute;top:115%;right:0;background:var(--panel);color:var(--accent);font-size:.9em;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 0 16px rgba(0,255,195,.4);min-width:320px}
   .controls{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
   .input-wrapper{position:relative}
   #cityInput{width:360px;max-width:100%;padding:10px 36px 10px 12px;border-radius:10px;border:2px solid var(--accent);background:#111;color:#00ffc3;font-weight:700;box-shadow:var(--shadow)}
@@ -55,8 +55,9 @@
   .forecast-content{display:none;padding:10px;position:relative}
   .forecast-scroll-wrapper{position:relative}
   .forecast-scroll{position:relative;display:flex;gap:8px;overflow-x:auto;padding:6px 0;z-index:2}
-  .bg-graph{position:absolute;left:0;right:0;top:0;bottom:0;z-index:1;pointer-events:none;}
-  .forecast-card{min-width:80px;font-size:.9em;background:rgba(44,47,51,0.72);border:1px solid var(--border);border-radius:8px;padding:6px;text-align:center}
+  /* IMPORTANT CHANGE: bg-graph sits INSIDE .forecast-scroll so it scrolls with hours */
+  .bg-graph{position:absolute;top:0;left:0;z-index:1;pointer-events:none;}
+  .forecast-card{min-width:80px;font-size:.9em;background:rgba(44,47,51,0.72);border:1px solid var(--border);border-radius:8px;padding:6px;text-align:center;position:relative;z-index:2}
   .scroll-left,.scroll-right{background:none;border:none;color:#fff;font-size:1.5em;padding:6px 10px;cursor:pointer;position:absolute;top:50%;transform:translateY(-50%);opacity:.6;text-shadow:0 0 6px rgba(255,255,255,.3);z-index:3}
   .scroll-left{left:6px}.scroll-right{right:6px}
   .spinner{display:none;width:44px;height:44px;margin:8px auto;border:6px solid #333;border-top:6px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite}
@@ -81,7 +82,7 @@
       </div>
     </div>
   </div>
-  <div class="version-tag">v0.2.2‑p6</div>
+  <div class="version-tag">v0.2.2‑p7</div>
 </div>
 
 <h1>🪐 Astronomická předpověď</h1>
@@ -234,16 +235,22 @@ function visibilityScore(cloud, precip, dateStr){
   return Math.max(0, Math.min(100, Math.round(raw)));
 }
 function drawBackgroundGraph(scrollEl, entries, dateStr){
-  const old = scrollEl.parentElement.querySelector('.bg-graph');
+  // Remove old background *inside* the scroll element
+  const old = scrollEl.querySelector('.bg-graph');
   if(old) old.remove();
 
+  // Use the scroll content size so it scrolls together
   const totalW = scrollEl.scrollWidth;
-  const totalH = 140;
+  const totalH = scrollEl.clientHeight || 140;
   const midY = totalH/2;
   const amp = (totalH/2) * 0.9;
   const svgNS="http://www.w3.org/2000/svg";
+
   const wrap = document.createElement('div');
   wrap.className = "bg-graph";
+  wrap.style.width = totalW + "px";
+  wrap.style.height = totalH + "px";
+
   const svg = document.createElementNS(svgNS, 'svg');
   svg.setAttribute('width', totalW);
   svg.setAttribute('height', totalH);
@@ -258,7 +265,7 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
   svg.appendChild(baseline);
 
   const n = entries.length;
-  if(n<2){ wrap.appendChild(svg); scrollEl.parentElement.insertBefore(wrap, scrollEl); return; }
+  if(n<2){ wrap.appendChild(svg); scrollEl.insertBefore(wrap, scrollEl.firstChild); return; }
 
   const points = [];
   for(let i=0;i<n;i++){
@@ -269,27 +276,22 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
     points.push([x,y]);
   }
 
-  // Helper: path from points with clamped y
-  const makeAreaPath = (clampFn, fill, stroke) => {
+  // Two-tone areas
+  const makeAreaPath = (clampFn, fill) => {
     const dTop = points.map(([x,y],i)=> (i===0 ? `M ${x} ${clampFn(y)}` : `L ${x} ${clampFn(y)}`)).join(' ');
     const d = `${dTop} L ${points[n-1][0]} ${midY} L ${points[0][0]} ${midY} Z`;
     const p = document.createElementNS(svgNS, 'path');
     p.setAttribute('d', d);
     p.setAttribute('fill', fill);
-    p.setAttribute('stroke', stroke);
-    p.setAttribute('stroke-width', '0');
+    p.setAttribute('stroke', 'transparent');
     return p;
   };
-
-  // Green area (above baseline): clamp to not go below baseline
-  const greenArea = makeAreaPath(y => Math.min(y, midY), 'var(--greenFill)', 'transparent');
+  const greenArea = makeAreaPath(y => Math.min(y, midY), 'var(--greenFill)');
+  const redArea   = makeAreaPath(y => Math.max(y, midY), 'var(--redFill)');
   svg.appendChild(greenArea);
-
-  // Red area (below baseline): clamp to not go above baseline
-  const redArea = makeAreaPath(y => Math.max(y, midY), 'var(--redFill)', 'transparent');
   svg.appendChild(redArea);
 
-  // Optional: overlay the line for clarity
+  // Outline
   const linePath = document.createElementNS(svgNS, 'path');
   const dLine = points.map(([x,y],i)=> (i===0 ? `M ${x} ${y}` : `L ${x} ${y}`)).join(' ');
   linePath.setAttribute('d', dLine);
@@ -299,7 +301,8 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
   svg.appendChild(linePath);
 
   wrap.appendChild(svg);
-  scrollEl.parentElement.insertBefore(wrap, scrollEl);
+  // Insert as the first child so it sits behind cards and scrolls with them
+  scrollEl.insertBefore(wrap, scrollEl.firstChild);
 }
 
 /* Forecast */
@@ -365,6 +368,7 @@ async function fetchForecast(lat,lon){
     section.appendChild(content);
     div.appendChild(section);
 
+    // Draw *inside* the scroll element so it scrolls with cards
     requestAnimationFrame(()=> drawBackgroundGraph(scroll, entries, date));
   });
 }
