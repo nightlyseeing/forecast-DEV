@@ -3,16 +3,11 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Astronomická předpověď – komplet</title>
+<title>Astronomická předpověď – v0.2.1</title>
 
 <!-- Leaflet -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-<!-- Astronomy Engine (optional, kept for future use) -->
-<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.0/astronomy.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
@@ -22,106 +17,140 @@
     --accent: #00ffc3;
     --border: #3e5363;
     --text: #dcdcdc;
+    --shadow: 0 0 12px rgba(0,255,195,0.5);
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(to bottom, #0b0c1a, #1b2c3a);
-    background-size: 400% 400%;
-    animation: gradientShift 60s ease infinite;
+    background: radial-gradient(ellipse at top, #0b0c1a 0%, #1b2c3a 100%);
     color: var(--text);
     padding: 16px;
-  }
-  @keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
   }
   h1 {
     margin: 8px 0 16px 0;
     text-align: center;
     color: #fff;
-    font-size: 2.1rem;
-    text-shadow: 0 0 14px var(--accent);
+    font-size: 2.2rem;
+    text-shadow: 0 0 18px var(--accent);
   }
+
+  /* ===== Top bar with left menu + right version tag ===== */
   .topbar {
+    position: sticky;
+    top: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    z-index: 50;
   }
-  .version-tag {
-    background: var(--accent);
-    color: #000;
-    font-weight: bold;
-    padding: 4px 10px;
-    border-radius: 8px;
-    box-shadow: 0 0 8px rgba(0,255,195,0.6);
+  .menu-container {
+    position: relative;
+    align-self: flex-start;
   }
-  .menu-container { position: relative; }
   .menu-toggle {
     background: var(--accent);
     color: #000;
     font-weight: bold;
-    padding: 6px 12px;
-    border-radius: 8px;
+    padding: 8px 14px;
+    border-radius: 10px;
     cursor: pointer;
     border: none;
-    box-shadow: 0 0 8px rgba(0,255,195,0.6);
+    box-shadow: var(--shadow);
   }
   .menu-dropdown {
     display: none;
     position: absolute;
     top: 110%;
-    right: 0;
+    left: 0; /* LEFT side */
     background-color: var(--panel);
     border: 1px solid var(--border);
     border-radius: 10px;
     min-width: 220px;
     box-shadow: 0px 8px 16px rgba(0,0,0,0.6);
     overflow: hidden;
-    z-index: 20;
   }
-  .menu-item, .menu-dropdown a {
-    display: block;
+  .menu-section { padding: 6px 0; }
+  .menu-item, .menu-link {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
     padding: 10px 16px;
     color: var(--accent);
     text-decoration: none;
     cursor: pointer;
+    white-space: nowrap;
   }
-  .menu-item:hover, .menu-dropdown a:hover {
-    background: #2e8b57;
-    color: #fff;
+  .menu-item:hover, .menu-link:hover {
+    background: #2e8b57; color: #fff;
+  }
+  /* Submenu */
+  .submenu {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 100%;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    min-width: 230px;
+    box-shadow: 0px 8px 16px rgba(0,0,0,0.6);
+  }
+  .has-submenu { position: relative; }
+  .has-submenu:hover > .submenu { display: block; }
+
+  /* Version tag + tooltip */
+  .version-tag {
+    position: relative;
+    background: var(--accent);
+    color: #000;
+    font-weight: bold;
+    padding: 6px 12px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+  .version-tag:hover::after {
+    content: "V.0.2.1\A • Vyhledání místa\A • Předpověď 36h/den\A • Fáze Měsíce (API, česky)\A • Emoji do záhlaví dne\A • Mapa + Windy sync";
+    white-space: pre;
+    position: absolute;
+    top: 115%;
+    right: 0;
+    background: var(--panel);
+    color: var(--accent);
+    font-size: 0.9em;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    box-shadow: 0 0 16px rgba(0,255,195,0.4);
+    min-width: 260px;
   }
 
+  /* ===== Controls ===== */
   .controls {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
+    display: flex; justify-content: center; align-items: center;
+    gap: 8px; flex-wrap: wrap; margin: 12px 0;
   }
   .input-wrapper { position: relative; }
   #cityInput {
-    width: 320px; max-width: 100%;
+    width: 360px; max-width: 100%;
     padding: 10px 36px 10px 12px;
     border-radius: 10px;
     border: 2px solid var(--accent);
     background: #111;
     color: var(--accent);
-    font-weight: 600;
+    font-weight: 700;
+    box-shadow: var(--shadow);
   }
   .btn {
-    background: var(--accent);
-    color: #000;
-    font-weight: bold;
-    padding: 10px 12px;
-    border-radius: 8px;
+    background: #7a6cb6;
+    color: #fff;
     border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 700;
     cursor: pointer;
-    box-shadow: 0 0 8px rgba(0,255,195,0.6);
+    box-shadow: 0 0 10px rgba(122,108,182,.5);
   }
   #suggestions {
     position: absolute; top: 100%; left: 0; right: 0;
@@ -131,9 +160,10 @@
     list-style: none; padding: 0; margin: 6px 0 0 0;
     display: none; overflow: hidden; z-index: 30;
   }
-  #suggestions li { padding: 10px 12px; cursor: pointer; }
+  #suggestions li { padding: 10px 12px; cursor: pointer; color: var(--text); }
   #suggestions li:hover { background: #243442; }
 
+  /* ===== Layout ===== */
   .layout { display: flex; gap: 16px; align-items: stretch; flex-wrap: wrap; }
   .info-container { flex: 1 1 60%; display: flex; flex-direction: column; gap: 16px; min-width: 300px; }
   .map-container { flex: 1 1 40%; display: flex; flex-direction: column; gap: 16px; min-width: 260px; }
@@ -152,7 +182,8 @@
 
   .forecast-day { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
   .forecast-day h3 {
-    margin: 0; padding: 10px; background: #4b3f72; color: #fff; display: flex; align-items: center; gap: 8px; cursor: pointer;
+    margin: 0; padding: 10px;
+    background: #4b3f72; color: #fff; display: flex; align-items: center; gap: 8px; cursor: pointer;
   }
   .forecast-content { display: none; padding: 10px; }
   .forecast-scroll-wrapper { position: relative; }
@@ -179,14 +210,23 @@
 <body>
 
 <div class="topbar">
-  <div class="version-tag">Verze 0.2</div>
   <div class="menu-container">
     <button class="menu-toggle" onclick="toggleMenu()">📋 Menu</button>
     <div class="menu-dropdown" id="mainMenu">
-      <a href="https://www.lightpollutionmap.info" target="_blank">💡 Light Pollution Map</a>
-      <a href="https://www.windy.com" target="_blank">🌬️ Windy</a>
+      <div class="menu-section">
+        <div class="menu-item has-submenu">🗺️ Mapy ▸
+          <div class="submenu">
+            <a class="menu-link" href="https://www.lightpollutionmap.info" target="_blank">💡 Light Pollution Map</a>
+            <a class="menu-link" href="https://www.windy.com" target="_blank">🌬️ Windy</a>
+            <a class="menu-link" href="https://zoom.earth" target="_blank">🛰️ Zoom.Earth (satelit)</a>
+            <a class="menu-link" href="https://www.meteoblue.com" target="_blank">☁️ Meteoblue</a>
+          </div>
+        </div>
+        <a class="menu-link" href="https://www.timeanddate.com/moon/" target="_blank">🌙 Moon (timeanddate)</a>
+      </div>
     </div>
   </div>
+  <div class="version-tag" title="Verze">Verze 0.2.1</div>
 </div>
 
 <h1>🪐 Astronomická předpověď</h1>
@@ -216,7 +256,7 @@
       <div id="moon-phase-display" style="margin-top: 8px;">
         <strong>🌙 Fáze Měsíce:</strong> <span id="moon-phase-label">—</span>
       </div>
-      <div class="small" id="phase-raw" style="opacity:.8;margin-top:6px;"></div>
+      <div class="small" id="phase-raw" style="display:none; opacity:.8; margin-top:6px;"></div>
     </div>
 
     <div class="spinner" id="spinner"></div>
@@ -246,12 +286,13 @@
 </div>
 
 <div class="footer">
-  Zdroj fází a planet: ipgeolocation.io • Počasí a geokódování: Open‑Meteo • Mapa: Leaflet & OSM
+  Zdroj fází a planet: ipgeolocation.io • Počasí a geokódování: Open-Meteo • Mapa: Leaflet & OSM
 </div>
 
 <script>
-/* ===== Konfigurace ===== */
+/* ===== Config ===== */
 const IPGEO_API_KEY = "781aa2d69af74745906e01cc68c84207";
+const DEBUG = new URLSearchParams(location.search).has("debug");
 
 /* ===== Menu ===== */
 function toggleMenu() {
@@ -266,7 +307,7 @@ document.addEventListener("click", (e) => {
   }
 });
 
-/* ===== Pomocné ===== */
+/* ===== Helpers ===== */
 const $ = (id) => document.getElementById(id);
 function showSpinner(b) { $("spinner").style.display = b ? "block" : "none"; }
 function getDayName(dateStr) {
@@ -400,7 +441,10 @@ async function fetchMoonPhase(lat, lon) {
     const data = await res.json();
     const phase = data.moon_phase || "Neznámá fáze";
     $("moon-phase-label").textContent = getMoonEmojiFromName(phase);
-    $("phase-raw").textContent = phase ? `API: ${phase}` : "";
+    if (DEBUG) {
+      $("phase-raw").style.display = "block";
+      $("phase-raw").textContent = `API: ${phase}`;
+    }
   } catch (err) {
     console.error("Chyba při načítání fáze měsíce:", err);
     $("moon-phase-label").textContent = "Chyba načítání";
@@ -408,7 +452,7 @@ async function fetchMoonPhase(lat, lon) {
   }
 }
 
-/* ===== Předpověď počasí + měsíční emoji v hlavičkách ===== */
+/* ===== Předpověď + měsíční emoji v hlavičkách ===== */
 let moonPhasesByDate = {};
 function getMoonEmojiFromFraction(phase) {
   if (phase === 0 || phase === 1) return "🌑";
@@ -420,29 +464,25 @@ function getMoonEmojiFromFraction(phase) {
   if (phase === 0.75) return "🌗";
   return "🌘";
 }
-
 async function fetchMoonPhasesForecast(lat, lon) {
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=moon_phase&timezone=Europe%2FPrague`;
     const res = await fetch(url);
     const data = await res.json();
-    const dates = data.daily.time;
-    const phases = data.daily.moon_phase;
     moonPhasesByDate = {};
-    for (let i = 0; i < dates.length; i++) {
-      moonPhasesByDate[dates[i]] = getMoonEmojiFromFraction(phases[i]);
+    for (let i = 0; i < data.daily.time.length; i++) {
+      moonPhasesByDate[data.daily.time[i]] = getMoonEmojiFromFraction(data.daily.moon_phase[i]);
     }
   } catch (err) {
     console.error("Chyba při načítání měsíčních fází:", err);
   }
 }
-
 function addMoonPhasesToHeaders() {
   const headers = document.querySelectorAll(".forecast-day h3");
   headers.forEach(h => {
-    const m = h.dataset.date;
-    if (m && moonPhasesByDate[m] && !h.textContent.includes(moonPhasesByDate[m])) {
-      h.innerHTML = h.innerHTML + " " + moonPhasesByDate[m];
+    const d = h.dataset.date;
+    if (d && moonPhasesByDate[d] && !h.textContent.includes(moonPhasesByDate[d])) {
+      h.innerHTML += " " + moonPhasesByDate[d];
     }
   });
 }
@@ -464,7 +504,6 @@ async function fetchForecast(lat, lon) {
     if (!days[date]) days[date] = [];
     const entry = { time: hour, temp: temperature_2m[i], cloud: cloudcover[i], rain: precipitation[i], wind: windspeed_10m[i] };
     days[date].push(entry);
-    // extend previous day with morning hours to make 36h
     if (hourNum < 12) {
       const prevDate = new Date(date);
       prevDate.setDate(prevDate.getDate() - 1);
@@ -540,7 +579,6 @@ async function fetchForecast(lat, lon) {
     forecastDiv.appendChild(section);
   });
 
-  // add moon emoji to headers
   addMoonPhasesToHeaders();
 }
 
@@ -609,11 +647,6 @@ async function fetchPlanets(lat, lon) {
     log("❌ Chyba: " + e.message);
   }
 }
-
-/* ===== Start: volitelné – načtení polohy hned po otevření ===== */
-// Pokud chceš při načtení hned požádat o polohu, odkomentuj:
-// getLocation();
-
 </script>
 </body>
 </html>
