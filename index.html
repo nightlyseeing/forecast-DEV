@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Astronomická předpověď – v0.2.2-patch-planets</title>
+<title>Astronomická předpověď – v0.2.2-p2</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -25,7 +25,7 @@
   .has-submenu{position:relative}
   .has-submenu:hover>.submenu{display:block}
   .version-tag{position:relative;background:var(--accent);color:#000;font-weight:bold;padding:6px 12px;border-radius:12px;box-shadow:var(--shadow)}
-  .version-tag:hover::after{content:"V.0.2.2-p\A • Vyhledání místa\A • Předpověď 36h/den\A • Fáze Měsíce (API, česky)\A • Emoji v záhlaví dne\A • Mapa + Windy sync\A • Planety v panelu info";white-space:pre;position:absolute;top:115%;right:0;background:var(--panel);color:var(--accent);font-size:.9em;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 0 16px rgba(0,255,195,.4);min-width:260px}
+  .version-tag:hover::after{content:"V.0.2.2-p2\A • Mapy dole 2×50%\A • Zoom pouze po PKM\A • Zbytek beze změny";white-space:pre;position:absolute;top:115%;right:0;background:var(--panel);color:var(--accent);font-size:.9em;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 0 16px rgba(0,255,195,.4);min-width:260px}
   .controls{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
   .input-wrapper{position:relative}
   #cityInput{width:360px;max-width:100%;padding:10px 36px 10px 12px;border-radius:10px;border:2px solid var(--accent);background:#111;color:#00ffc3;font-weight:700;box-shadow:var(--shadow)}
@@ -33,13 +33,10 @@
   #suggestions{position:absolute;top:100%;left:0;right:0;background:#121212;border:1px solid var(--border);border-radius:10px;list-style:none;padding:0;margin:6px 0 0 0;display:none;overflow:hidden;z-index:30}
   #suggestions li{padding:10px 12px;cursor:pointer;color:var(--text)} #suggestions li:hover{background:#243442}
   .layout{display:flex;gap:16px;align-items:stretch;flex-wrap:wrap}
-  .info-container{flex:1 1 60%;display:flex;flex-direction:column;gap:16px;min-width:300px}
-  .map-container{flex:1 1 40%;display:flex;flex-direction:column;gap:16px;min-width:260px}
+  .info-container{flex:1 1 100%;display:flex;flex-direction:column;gap:16px;min-width:300px}
   .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;box-shadow:0 2px 12px rgba(0,0,0,.5)}
   .panel strong{color:var(--accent)}
   .kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 10px}
-  #map{width:100%;aspect-ratio:1/1;border-radius:10px}
-  #windyFrame{width:100%;border:none;border-radius:10px;height:400px}
   .forecast-day{border:1px solid var(--border);border-radius:10px;overflow:hidden}
   .forecast-day h3{margin:0;padding:10px;background:#4b3f72;color:#fff;display:flex;align-items:center;gap:8px;cursor:pointer}
   .forecast-content{display:none;padding:10px}
@@ -53,7 +50,17 @@
   .footer{text-align:center;opacity:.8;margin-top:10px;font-size:.95em}
   .small{font-size:.92em;opacity:.9}
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#243442;border:1px solid var(--border);margin-left:6px}
-  .planet-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+
+  /* bottom maps row */
+  .maps-row{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px}
+  .map-cell{flex:1 1 calc(50% - 8px);min-width:260px}
+  .square{position:relative;width:100%;}
+  .square::before{content:"";display:block;padding-top:100%;} /* 1:1 */
+  .square-inner{position:absolute;inset:0;border-radius:12px;overflow:hidden}
+  #map{width:100%;height:100%}
+  #windyFrame{width:100%;height:100%;border:none}
+  .map-overlay{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:6px 8px;border-radius:8px;font-size:.9em;border:1px solid rgba(255,255,255,.2)}
+  .zoom-badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:4px 8px;border-radius:999px;font-size:.85em;border:1px solid rgba(255,255,255,.2)}
 </style>
 </head>
 <body>
@@ -71,7 +78,7 @@
       </div>
     </div>
   </div>
-  <div class="version-tag">Verze 0.2.2-p</div>
+  <div class="version-tag">Verze 0.2.2-p2</div>
 </div>
 
 <h1>🪐 Astronomická předpověď</h1>
@@ -106,17 +113,32 @@
           <strong>🪐 Viditelné planety</strong>
           <span id="planet-log" class="small" style="opacity:.85;"></span>
         </div>
-        <div id="planets-list" class="planet-list"></div>
+        <div id="planets-list"></div>
       </div>
     </div>
 
     <div class="spinner" id="spinner"></div>
     <div id="forecast"></div>
   </div>
+</div>
 
-  <div class="map-container">
-    <div id="map" class="panel"></div>
-    <iframe id="windyFrame" class="panel" src=""></iframe>
+<!-- Bottom: two square maps at 50% width -->
+<div class="maps-row">
+  <div class="map-cell">
+    <div class="panel square">
+      <div class="square-inner">
+        <div id="map"></div>
+        <div id="mapZoomBadge" class="zoom-badge">Zoom: vypnuto</div>
+        <div class="map-overlay">Klikni <b>pravým</b> pro zapnutí/ vypnutí zoomu</div>
+      </div>
+    </div>
+  </div>
+  <div class="map-cell">
+    <div class="panel square">
+      <div class="square-inner">
+        <iframe id="windyFrame" src=""></iframe>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -144,15 +166,50 @@ async function autocompleteCities(){const v=$("cityInput").value.trim();const s=
 
 async function getLocation(){if(!navigator.geolocation)return alert("Váš prohlížeč nepodporuje geolokaci.");navigator.geolocation.getCurrentPosition(async p=>{const lat=p.coords.latitude,lon=p.coords.longitude;const name=await reverseGeocode(lat,lon);const c={name,country:"",latitude:lat,longitude:lon};selectedCity=c;updateLocationInfo(c);initMap(lat,lon);fetchForecast(lat,lon);fetchMoonPhase(lat,lon);fetchPlanets(lat,lon);updateWindyWidget(lat,lon)},e=>alert("Nepodařilo se zjistit polohu."))}
 
-async function reverseGeocode(lat,lon){try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`);const d=await r.json();return d.address?.city||d.address?.town||d.address?.village||d.address?.municipality||d.display_name||`${lat.toFixed(4)}, ${lon.toFixed(4)}`}catch{return `${lat.toFixed(4)}, ${lon.toFixed(4)}`}} 
+async function reverseGeocode(lat,lon){try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`);const d=await r.json();return d.address?.city||d.address?.town||d.address?.village||d.address?.municipality||d.display_name||`${lat.toFixed(4)}, ${lon.toFixed(4)}` }catch{return `${lat.toFixed(4)}, ${lon.toFixed(4)}`} } 
 
 function updateLocationInfo(c){const name=c.name||"-";const country=c.country||"";const lat=typeof c.latitude==="number"?c.latitude:null;const lon=typeof c.longitude==="number"?c.longitude:null;$("info-name").innerHTML=country?`<span style="color:#00ffc3;font-weight:bold;">${name}</span>, ${country}`:`<span style="color:#00ffc3;font-weight:bold;">${name}</span>`;$("info-gps").textContent=(lat!=null&&lon!=null)?`${lat.toFixed(4)}, ${lon.toFixed(4)}`:"—";const link=$("bortle-link");if(lat!=null&&lon!=null){link.href=`https://www.lightpollutionmap.info/#zoom=9&lat=${lat}&lon=${lon}`;link.style.display="inline"}else{link.style.display="none"}}
 
-/* Map + Windy */
-let map=null,marker=null;
-function initMap(lat,lon){if(!map){map=L.map('map',{scrollWheelZoom:false}).setView([lat,lon],10);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);marker=L.marker([lat,lon]).addTo(map)}else{map.setView([lat,lon],10);marker.setLatLng([lat,lon])}const mapDiv=$("map"),windy=$("windyFrame");if(mapDiv&&windy){const h=mapDiv.offsetWidth;mapDiv.style.height=h+"px";windy.style.height=h+"px";setTimeout(()=>map.invalidateSize(),200)}}
-function updateWindyWidget(lat,lon){$("windyFrame").src=`https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&zoom=11&level=surface&overlay=satellite&menu=&message=&marker=&calendar=now&type=satellite&location=coordinates&detail=&metricWind=default&metricTemp=default`}
-window.addEventListener('resize',()=>{const mapDiv=$("map"),windy=$("windyFrame");if(mapDiv&&windy){const h=mapDiv.offsetWidth;mapDiv.style.height=h+"px";windy.style.height=h+"px";if(map)setTimeout(()=>map.invalidateSize(),150)}});
+/* Map + Windy (bottom, 2x50%) */
+let map=null,marker=null,zoomEnabled=false,zoomControl=null;
+function applySquareSizes(){ const squares=document.querySelectorAll('.square'); squares.forEach(sq=>{ const inner=sq.querySelector('.square-inner'); if(inner){ /* already absolute, fills container */ } }); }
+function initMap(lat,lon){
+  if(!map){
+    map=L.map('map', { zoomControl:false, scrollWheelZoom:false, touchZoom:false, doubleClickZoom:false, boxZoom:false, keyboard:false, dragging:true })
+          .setView([lat,lon], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+    marker=L.marker([lat,lon]).addTo(map);
+
+    // Right-click toggles zoom interactions
+    map.on('contextmenu', function(e){
+      zoomEnabled = !zoomEnabled;
+      const badge = document.getElementById('mapZoomBadge');
+      if(zoomEnabled){
+        map.scrollWheelZoom.enable();
+        map.touchZoom.enable();
+        map.doubleClickZoom.enable();
+        map.boxZoom.enable();
+        map.keyboard.enable();
+        if(!zoomControl){ zoomControl = L.control.zoom({position:'topleft'}).addTo(map); }
+        if(badge) badge.textContent = "Zoom: zapnuto";
+      } else {
+        map.scrollWheelZoom.disable();
+        map.touchZoom.disable();
+        map.doubleClickZoom.disable();
+        map.boxZoom.disable();
+        map.keyboard.disable();
+        if(zoomControl){ map.removeControl(zoomControl); zoomControl=null; }
+        if(badge) badge.textContent = "Zoom: vypnuto";
+      }
+    });
+  } else {
+    map.setView([lat,lon], 10);
+    marker.setLatLng([lat,lon]);
+  }
+  setTimeout(()=> map.invalidateSize(), 200);
+}
+function updateWindyWidget(lat,lon){ $("windyFrame").src=`https://embed.windy.com/embed2.html?lat=${lat}&lon=${lon}&zoom=11&level=surface&overlay=satellite&menu=&message=&marker=&calendar=now&type=satellite&location=coordinates&detail=&metricWind=default&metricTemp=default` }
+window.addEventListener('resize', ()=>{ setTimeout(()=>{ if(map) map.invalidateSize(); }, 150); });
 
 /* Moon phase (API, cz) */
 function getMoonEmojiFromName(n){n=String(n||"").toLowerCase().replace(/_/g," ").trim();if(n.includes("new moon"))return"🌑 Nov";if(n.includes("waxing crescent"))return"🌒 Dorůstající srpek";if(n.includes("first quarter"))return"🌓 První čtvrť";if(n.includes("waxing gibbous"))return"🌔 Dorůstající měsíc";if(n.includes("full moon"))return"🌕 Úplněk";if(n.includes("waning gibbous"))return"🌖 Couvající měsíc";if(n.includes("last quarter"))return"🌗 Poslední čtvrť";if(n.includes("waning crescent"))return"🌘 Couvající srpek";return"🌙 Neznámá fáze"}
@@ -171,7 +228,7 @@ async function fetchForecast(lat,lon){showSpinner(true);await fetchMoonPhasesFor
 function toggleForecast(id){const c=document.getElementById(id);const i=document.getElementById(id+'-icon');if(c.style.display==='none'){c.style.display='block';i.textContent='⬆️'}else{c.style.display='none';i.textContent='⬇️'}}
 function centerTime(contentId,target){const sc=document.querySelector(`#${contentId} .forecast-scroll`);if(!sc)return;const cards=sc.querySelectorAll('.forecast-card');for(let i=0;i<cards.length;i++){const strong=cards[i].querySelector('strong');if(strong&&strong.textContent.trim()===target){const w=sc.clientWidth;const off=cards[i].offsetLeft;const cw=cards[i].offsetWidth;sc.scrollTo({left:off-(w/2)+(cw/2),behavior:'smooth'});break}}}
 
-/* Planets via API into Astronomické informace */
+/* Planets into info panel */
 async function fetchPlanets(lat,lon){
   const url=`https://api.ipgeolocation.io/astronomy?apiKey=${IPGEO_API_KEY}&lat=${lat}&long=${lon}`;
   const log=(m)=>$("planet-log").textContent=m;
@@ -200,9 +257,7 @@ async function fetchPlanets(lat,lon){
         any=true;
       }
     }
-    if(!any){
-      box.innerHTML = `<span class="small">Žádné planety nejsou dobře viditelné.</span>`;
-    }
+    if(!any) box.innerHTML = `<span class="small">Žádné planety nejsou dobře viditelné.</span>`;
     log(" ");
   }catch(e){
     console.error("Chyba planet:", e);
