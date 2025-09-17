@@ -54,6 +54,8 @@
   .forecast-day h3{margin:0;padding:10px;background:#4b3f72;color:#fff;display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;z-index:2}
   .forecast-content{display:none;padding:10px;position:relative}
   .forecast-scroll-wrapper{position:relative}
+  .graph-controls{position:absolute;top:6px;right:10px;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);padding:4px 8px;border-radius:8px;display:flex;gap:10px;z-index:3;font-size:.9em;border:1px solid rgba(255,255,255,.2)}
+  .graph-controls label{display:flex;align-items:center;gap:6px;cursor:pointer;}
   .forecast-scroll{position:relative;display:flex;gap:8px;overflow-x:auto;padding:6px 0;z-index:2}
   /* IMPORTANT CHANGE: bg-graph sits INSIDE .forecast-scroll so it scrolls with hours */
   .bg-graph{position:absolute;top:0;left:0;z-index:1;pointer-events:none;}
@@ -234,17 +236,15 @@ function visibilityScore(cloud, precip, dateStr){
   const raw = cloudScore - rainPenalty - moonPenalty;
   return Math.max(0, Math.min(100, Math.round(raw)));
 }
+
 function drawBackgroundGraph(scrollEl, entries, dateStr){
   // Remove old background *inside* the scroll element
   const old = scrollEl.querySelector('.bg-graph');
-  if(old) old.remove();
+  if (old) old.remove();
 
-  // Use the scroll content size so it scrolls together
   const totalW = scrollEl.scrollWidth;
   const totalH = scrollEl.clientHeight || 140;
-  const midY = totalH/2;
-  const amp = (totalH/2) * 0.9;
-  const svgNS="http://www.w3.org/2000/svg";
+  const svgNS = "http://www.w3.org/2000/svg";
 
   const wrap = document.createElement('div');
   wrap.className = "bg-graph";
@@ -254,55 +254,92 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
   const svg = document.createElementNS(svgNS, 'svg');
   svg.setAttribute('width', totalW);
   svg.setAttribute('height', totalH);
-  svg.style.display='block';
+  svg.style.position = 'absolute';
+  svg.style.left = '0';
+  svg.style.top = '0';
 
-  // Baseline
-  const baseline = document.createElementNS(svgNS, 'line');
-  baseline.setAttribute('x1', 0); baseline.setAttribute('y1', midY);
-  baseline.setAttribute('x2', totalW); baseline.setAttribute('y2', midY);
-  baseline.setAttribute('stroke', 'rgba(255,255,255,0.2)');
-  baseline.setAttribute('stroke-width', '1');
-  svg.appendChild(baseline);
+  // Horizontal midline for clouds
+  const midY = totalH/2;
 
+  // Compute geometry
+  const card = scrollEl.querySelector('.forecast-card');
+  const gap = 8; // matches CSS gap
+  const cardW = card ? card.getBoundingClientRect().width : 120;
   const n = entries.length;
-  if(n<2){ wrap.appendChild(svg); scrollEl.insertBefore(wrap, scrollEl.firstChild); return; }
+  const xAt = (i) => i * (cardW + gap) + (cardW/2);
 
-  const points = [];
-  for(let i=0;i<n;i++){
-    const x = (totalW-1) * (i/(n-1));
-    const score = visibilityScore(entries[i].cloud, entries[i].rain, dateStr); // 0..100
-    const norm = score - 50; // -50..+50
-    const y = midY - (norm/50)*amp;
-    points.push([x,y]);
+  // ----- Layers containers -----
+  const cloudsLayer = document.createElementNS(svgNS, 'g');
+  cloudsLayer.setAttribute('class', 'layer-clouds');
+  const rainLayer = document.createElementNS(svgNS, 'g');
+  rainLayer.setAttribute('class', 'layer-rain');
+  const marksLayer = document.createElementNS(svgNS, 'g');
+  marksLayer.setAttribute('class', 'layer-marks');
+
+  // ----- Clouds line (0-100%) mapped around midline -----
+  const cloudsY = (pct) => {
+    // Map 0% at bottom margin, 100% at top margin, with midline at 50%
+    return totalH - (pct/100)*(totalH-12) - 6; // 6px padding
+  };
+  const cPts = entries.map((e,i)=>[ xAt(i), cloudsY(+e.cloud || 0) ]);
+  if (cPts.length){
+    const cPath = document.createElementNS(svgNS, 'path');
+    const dC = cPts.map(([x,y],i)=> (i===0?`M ${x} ${y}`:`L ${x} ${y}`)).join(' ');
+    cPath.setAttribute('d', dC);
+    cPath.setAttribute('fill','none');
+    cPath.setAttribute('stroke','rgba(0,255,195,0.9)');
+    cPath.setAttribute('stroke-width','2');
+    cloudsLayer.appendChild(cPath);
   }
 
-  // Two-tone areas
-  const makeAreaPath = (clampFn, fill) => {
-    const dTop = points.map(([x,y],i)=> (i===0 ? `M ${x} ${clampFn(y)}` : `L ${x} ${clampFn(y)}`)).join(' ');
-    const d = `${dTop} L ${points[n-1][0]} ${midY} L ${points[0][0]} ${midY} Z`;
-    const p = document.createElementNS(svgNS, 'path');
-    p.setAttribute('d', d);
-    p.setAttribute('fill', fill);
-    p.setAttribute('stroke', 'transparent');
-    return p;
-  };
-  const greenArea = makeAreaPath(y => Math.min(y, midY), 'var(--greenFill)');
-  const redArea   = makeAreaPath(y => Math.max(y, midY), 'var(--redFill)');
-  svg.appendChild(greenArea);
-  svg.appendChild(redArea);
+  // ----- Rain area (mm) scaled to its own max -----
+  const maxRain = Math.max(0.01, ...entries.map(e=>+e.rain||0));
+  const rainY = (mm) => totalH - (mm/maxRain)*(totalH-12) - 6;
+  const rPts = entries.map((e,i)=>[ xAt(i), rainY(+e.rain || 0) ]);
+  if (rPts.length){
+    // area under the curve
+    const dTop = rPts.map(([x,y],i)=> (i===0?`M ${x} ${y}`:`L ${x} ${y}`)).join(' ');
+    const dArea = `${dTop} L ${rPts[rPts.length-1][0]} ${totalH-6} L ${rPts[0][0]} ${totalH-6} Z`;
+    const area = document.createElementNS(svgNS, 'path');
+    area.setAttribute('d', dArea);
+    area.setAttribute('fill','rgba(0,160,255,0.25)');
+    area.setAttribute('stroke','rgba(0,160,255,0.8)');
+    area.setAttribute('stroke-width','1.5');
+    rainLayer.appendChild(area);
+  }
 
-  // Outline
-  const linePath = document.createElementNS(svgNS, 'path');
-  const dLine = points.map(([x,y],i)=> (i===0 ? `M ${x} ${y}` : `L ${x} ${y}`)).join(' ');
-  linePath.setAttribute('d', dLine);
-  linePath.setAttribute('fill', 'none');
-  linePath.setAttribute('stroke', 'rgba(255,255,255,0.6)');
-  linePath.setAttribute('stroke-width', '1.5');
-  svg.appendChild(linePath);
+  // ----- Mark noon / midnight if present -----
+  entries.forEach((e,i)=>{
+    const h = parseInt((e.time||'0:0').split(':')[0]);
+    if (h===0 || h===12){
+      const x = xAt(i);
+      const line = document.createElementNS(svgNS,'line');
+      line.setAttribute('x1', x);
+      line.setAttribute('x2', x);
+      line.setAttribute('y1', 0);
+      line.setAttribute('y2', totalH);
+      line.setAttribute('stroke', 'rgba(255,255,255,0.25)');
+      line.setAttribute('stroke-dasharray','4 4');
+      marksLayer.appendChild(line);
 
+      const label = document.createElementNS(svgNS,'text');
+      label.setAttribute('x', x+4);
+      label.setAttribute('y', 12);
+      label.setAttribute('fill', 'rgba(255,255,255,0.8)');
+      label.setAttribute('font-size','11');
+      label.textContent = (h===0 ? 'Půlnoc' : 'Poledne');
+      marksLayer.appendChild(label);
+    }
+  });
+
+  svg.appendChild(marksLayer);
+  svg.appendChild(rainLayer);
+  svg.appendChild(cloudsLayer);
   wrap.appendChild(svg);
-  // Insert as the first child so it sits behind cards and scrolls with them
+
   scrollEl.insertBefore(wrap, scrollEl.firstChild);
+}
+
 }
 
 /* Forecast */
@@ -346,11 +383,31 @@ async function fetchForecast(lat,lon){
     leftBtn.onclick=()=>scroll.scrollBy({left:-250,behavior:'smooth'});
     rightBtn.onclick=()=>scroll.scrollBy({left:250,behavior:'smooth'});
     wrapper.appendChild(leftBtn); wrapper.appendChild(scroll); wrapper.appendChild(rightBtn);
+    // Controls for graph layers
+    const controls = document.createElement('div');
+    controls.className = 'graph-controls';
+    controls.innerHTML = `
+      <label><input type="checkbox" data-layer="clouds" checked> Oblačnost</label>
+      <label><input type="checkbox" data-layer="rain" checked> Srážky</label>
+    `;
+    wrapper.appendChild(controls);
+    controls.addEventListener('change', (e) => {
+      const t = e.target;
+      if (t.matches('input[type=checkbox][data-layer]')) {
+        const layer = t.getAttribute('data-layer');
+        const g = scroll.querySelector('.bg-graph svg g.layer-'+layer);
+        if (g) g.style.display = t.checked ? '' : 'none';
+      }
+    });
+
 
     const nowIso=new Date().toISOString().split('T')[0];
-    entries
-      .filter(e => (date !== nowIso) || (parseInt(e.time.split(':')[0]) >= new Date().getHours()))
-      .forEach(e => {
+    const nowHour = new Date().getHours();
+    const visibleEntries = entries.filter(e => {
+      if (date !== nowIso) return true;
+      return parseInt(e.time.split(':')[0]) >= nowHour;
+    });
+    visibleEntries.forEach(e => {
         const card=document.createElement('div'); card.className='forecast-card';
         const icon=getWeatherIcon(e.cloud, e.rain);
         let color=e.cloud<=25?'green':(e.cloud<=75?'orange':'red');
@@ -369,7 +426,7 @@ async function fetchForecast(lat,lon){
     div.appendChild(section);
 
     // Draw *inside* the scroll element so it scrolls with cards
-    requestAnimationFrame(()=> drawBackgroundGraph(scroll, entries, date));
+    requestAnimationFrame(()=> drawBackgroundGraph(scroll, visibleEntries, date));
   });
 }
 
