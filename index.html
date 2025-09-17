@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Astronomická předpověď – v0.2.3-graphs</title>
+<title>Astronomická předpověď – grafy déšť/vítr (světlé ↓ / tmavé ↑) + diagnostika</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -11,12 +11,24 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
-  :root { --bg:#0b0c10; --panel:#1f2833; --accent:#00ffc3; --border:#3e5363; --text:#dcdcdc; --shadow:0 0 12px rgba(0,255,195,0.5); --green:#00ff88; --greenFill:rgba(0,255,136,0.22); --red:#ff4d4d; --redFill:rgba(255,77,77,0.22); }
-  *{box-sizing:border-box}
-  body{margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:radial-gradient(ellipse at top,#0b0c1a 0%,#1b2c3a 100%);color:var(--text);padding:16px}
-  h1{margin:8px 0 16px 0;text-align:center;color:#fff;font-size:2.2rem;text-shadow:0 0 18px var(--accent)}
+  :root{
+    --bg:#0b0c10; --panel:#1f2833; --accent:#00ffc3; --border:#3e5363; --text:#dcdcdc; --shadow:0 0 12px rgba(0,255,195,0.5);
+    --green:#00ff88; --greenFill:rgba(0,255,136,0.22);
+    --red:#ff4d4d;   --redFill:rgba(255,77,77,0.22);
 
-  /* ===== Top bar ===== */
+    /* Déšť: světle → tmavě modrá (dole → nahoře) */
+    --rainLow:#a5d8ff;   /* světle modrá */
+    --rainHigh:#1e3a8a;  /* tmavě modrá */
+
+    /* Vítr: světle → tmavě zelená (dole → nahoře) */
+    --windLow:#c7f9cc;   /* světle mint */
+    --windHigh:#03543f;  /* tmavě smaragdová */
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(ellipse at top,#0b0c1a 0%,#1b2c3a 100%);color:var(--text);padding:16px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+  h1{margin:8px 0 16px;text-align:center;color:#fff;font-size:2.1rem;text-shadow:0 0 16px var(--accent)}
+
+  /* ===== Top bar with menu + diag + version ===== */
   .topbar{
     position:sticky; top:0; z-index:2000;
     display:flex; justify-content:space-between; align-items:center; gap:8px;
@@ -36,9 +48,11 @@
   .submenu{display:none;position:absolute;top:0;left:100%;background:var(--panel);border:1px solid var(--border);border-radius:10px;min-width:230px;box-shadow:0 8px 16px rgba(0,0,0,.6);}
   .has-submenu{position:relative}
   .has-submenu:hover>.submenu{display:block}
-  .badges{display:flex;align-items:center;gap:8px}
-  .version-tag, .diag-tag{position:relative;background:var(--accent);color:#000;font-weight:bold;padding:6px 12px;border-radius:12px;box-shadow:var(--shadow);cursor:default; white-space:nowrap}
-  .version-tag:hover::after{content:"v0.2.3\\A • Přepínatelné grafy (☁️/💨/🌧️)\\A • Výchozí: oblačnost";white-space:pre;position:absolute;top:115%;right:0;background:var(--panel);color:var(--accent);font-size:.9em;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 0 16px rgba(0,255,195,.4);min-width:320px}
+
+  .badges{display:flex;align-items:center;gap:8px;margin-left:auto}
+  .version-tag{background:var(--accent);color:#000;font-weight:700;padding:6px 12px;border-radius:12px;box-shadow:var(--shadow)}
+  .diag-tag{position:relative;background:#243442;border:1px solid var(--border);padding:6px 12px;border-radius:12px;cursor:default}
+  .diag-tag:hover{filter:brightness(1.05)}
   .diag-pop{display:none;position:absolute;top:115%;right:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;min-width:320px;max-width:400px;padding:10px 12px;box-shadow:0 0 16px rgba(0,255,195,.25); color:var(--text); z-index:2100}
   .diag-tag:hover .diag-pop{display:block}
   .diag-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06)}
@@ -48,6 +62,7 @@
   .ok{color:#00ff88} .fail{color:#ff6b6b} .pending{color:#ffd166}
   .tiny{font-size:.85em;opacity:.8}
 
+  /* ===== Controls + layout ===== */
   .controls{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
   .input-wrapper{position:relative}
   #cityInput{width:360px;max-width:100%;padding:10px 36px 10px 12px;border-radius:10px;border:2px solid var(--accent);background:#111;color:#00ffc3;font-weight:700;box-shadow:var(--shadow)}
@@ -58,17 +73,27 @@
   .top-row{display:grid;grid-template-columns: minmax(300px, 1fr) minmax(280px, 1fr);gap:16px;align-items:start}
   .left-col{display:flex;flex-direction:column;gap:16px}
   .right-col{position:relative}
+
   .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;box-shadow:0 2px 12px rgba(0,0,0,.5)}
   .panel strong{color:var(--accent)}
   .kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 10px}
 
-  #mapPanel{padding:0;overflow:hidden}
+  #mapPanel{padding:0;overflow:hidden;position:relative}
   #map{width:100%;height:100%}
   .zoom-badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:4px 8px;border-radius:999px;font-size:.85em;border:1px solid rgba(255,255,255,.2);z-index:2}
   .map-tip{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:6px 8px;border-radius:8px;font-size:.9em;border:1px solid rgba(255,255,255,.2);z-index:2}
 
   .forecast-day{border:1px solid var(--border);border-radius:10px;overflow:hidden;position:relative}
   .forecast-day h3{margin:0;padding:10px;background:#4b3f72;color:#fff;display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;z-index:2;flex-wrap:wrap}
+  .mode-tabs{display:flex; gap:6px; margin-left:auto}
+  .mode-btn{
+    background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2);
+    border-radius:999px; padding:4px 10px; cursor:pointer; font-weight:700; font-size:.9em
+  }
+  .mode-btn.active{background:var(--accent); color:#000; box-shadow:0 0 10px rgba(0,255,195,.5)}
+  .mode-btn:hover{filter:brightness(1.1)}
+  .tiny-help{font-size:.85em;opacity:.85;margin-left:6px}
+
   .forecast-content{display:none;padding:10px;position:relative}
   .forecast-scroll-wrapper{position:relative}
   .forecast-scroll{position:relative;display:flex;gap:8px;overflow-x:auto;padding:6px 0;z-index:2}
@@ -81,16 +106,6 @@
   .footer{text-align:center;opacity:.8;margin-top:10px;font-size:.95em}
   .small{font-size:.92em;opacity:.9}
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#243442;border:1px solid var(--border);margin:4px 6px 0 0}
-
-  /* Mode tabs inside day header */
-  .mode-tabs{display:flex; gap:6px; margin-left:auto}
-  .mode-btn{
-    background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2);
-    border-radius:999px; padding:4px 10px; cursor:pointer; font-weight:700; font-size:.9em
-  }
-  .mode-btn.active{background:var(--accent); color:#000; box-shadow:0 0 10px rgba(0,255,195,.5)}
-  .mode-btn:hover{filter:brightness(1.1)}
-  .tiny-help{font-size:.85em;opacity:.85;margin-left:6px}
 </style>
 </head>
 <body>
@@ -105,12 +120,13 @@
             <a class="menu-link" href="https://www.windy.com" target="_blank">🌬️ Windy</a>
           </div>
         </div>
+        <a class="menu-link" href="https://open-meteo.com/" target="_blank">📡 Open-Meteo API</a>
+        <a class="menu-link" href="https://ipgeolocation.io/documentation/astronomy-api.html" target="_blank">🌙 ipgeolocation Astronomy</a>
       </div>
     </div>
   </div>
 
   <div class="badges">
-    <div class="version-tag">v0.2.3</div>
     <div class="diag-tag">🧪 API
       <div class="diag-pop" id="diagPop">
         <div class="tiny" style="margin-bottom:6px;">Živá diagnostika API (najetím myši se provede test, klikem se test zopakuje).</div>
@@ -118,6 +134,7 @@
         <div class="tiny" style="margin-top:8px;">Vlastní seznam můžeš dodat přes <code>window.DIAG_CUSTOM_ENDPOINTS</code> (viz JS).</div>
       </div>
     </div>
+    <div class="version-tag">v0.3.1</div>
   </div>
 </div>
 
@@ -259,7 +276,7 @@ window.addEventListener("resize", syncMapHeight);
 let selectedCity=null;
 async function autocompleteCities(){const v=$("cityInput").value.trim();const s=$("suggestions");if(v.length<2){s.style.display="none";return}const res=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(v)}&count=6&language=cs&format=json`);const data=await res.json();s.innerHTML="";(data.results||[]).forEach(c=>{const li=document.createElement("li");li.textContent=`${c.name}, ${c.country}`;li.onclick=()=>{selectedCity=c;$("cityInput").value=`${c.name}, ${c.country}`;updateLocationInfo(c);initMap(c.latitude,c.longitude);fetchForecast(c.latitude,c.longitude);fetchMoonPhase(c.latitude,c.longitude);fetchPlanets(c.latitude,c.longitude);s.style.display="none"};s.appendChild(li)});s.style.display=s.children.length?"block":"none"}
 
-async function getLocation(){if(!navigator.geolocation)return alert("Váš prohlížeč nepodporuje geolokaci.");navigator.geolocation.getCurrentPosition(async p=>{const lat=p.coords.latitude,lon=p.coords.longitude;const name=await reverseGeocode(lat,lon);const c={name,country:"",latitude:lat,longitude:lon};selectedCity=c;updateLocationInfo(c);initMap(lat,lon);fetchForecast(lat,lon);fetchMoonPhase(lat,lon);fetchPlanets(lat,lon)},e=>alert("Nepodařelo se zjistit polohu."))}
+async function getLocation(){if(!navigator.geolocation)return alert("Váš prohlížeč nepodporuje geolokaci.");navigator.geolocation.getCurrentPosition(async p=>{const lat=p.coords.latitude,lon=p.coords.longitude;const name=await reverseGeocode(lat,lon);const c={name,country:"",latitude:lat,longitude:lon};selectedCity=c;updateLocationInfo(c);initMap(lat,lon);fetchForecast(lat,lon);fetchMoonPhase(lat,lon);fetchPlanets(lat,lon)},e=>alert("Nepodařilo se zjistit polohu."))}
 
 async function reverseGeocode(lat,lon){try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`);const d=await r.json();return d.address?.city||d.address?.town||d.address?.village||d.address?.municipality||d.display_name||`${lat.toFixed(4)}, ${lon.toFixed(4)}`}catch{return `${lat.toFixed(4)}, ${lon.toFixed(4)}`}} 
 
@@ -316,7 +333,7 @@ async function fetchMoonPhase(lat,lon){
   }
 }
 
-/* ===== Star visibility score (kept for possible future use) ===== */
+/* ===== Star visibility score (pro cloud režim) ===== */
 function visibilityScore(cloud, precip, dateStr){
   const cloudScore = 100 - Math.min(Math.max(cloud,0),100);
   const rainPenalty = Math.min(precip*50, 50);
@@ -338,23 +355,30 @@ function measureCardsWidth(scrollEl){
   return Math.ceil(sum);
 }
 
-/* ===== Graph drawing with mode (cloud | wind | rain) ===== */
+/* ===== Scaling ===== */
+const RAIN_MAX_MM = 5;     // 0..5 mm/h => 100 %
+const WIND_MAX_KMH = 50;   // 0..50 km/h => 100 %
+
+/* ===== Mode score (0..100) ===== */
 function scoreForMode(entry, mode, dateStr){
   if(mode === 'cloud'){
     return Math.max(0, Math.min(100, 100 - (entry.cloud ?? 0)));
   }
   if(mode === 'wind'){
-    const w = Math.max(0, Math.min(50, entry.wind ?? 0)); // cap 0..50 km/h
-    return Math.round(100 * (1 - w/50));
+    const w = Math.max(0, Math.min(WIND_MAX_KMH, entry.wind ?? 0));
+    return Math.round(100 * (w / WIND_MAX_KMH)); // 0..100 (víc větru = výš)
   }
   if(mode === 'rain'){
-    const r = Math.max(0, Math.min(2, entry.rain ?? 0)); // cap 0..2 mm
-    return Math.round(100 * (1 - r/2));
+    const r = Math.max(0, Math.min(RAIN_MAX_MM, entry.rain ?? 0));
+    return Math.round(100 * (r / RAIN_MAX_MM)); // 0..100 (víc srážek = výš)
   }
-  // fallback: visibility
   return visibilityScore(entry.cloud ?? 0, entry.rain ?? 0, dateStr);
 }
 
+/* ===== Graph drawing =====
+   - cloud: baseline uprostřed (zelená ↑ / červená ↓)
+   - rain & wind: baseline dole, plocha roste nahoru; výplň = vertikální přechod (světlá dole → tmavá nahoře)
+*/
 function drawBackgroundGraph(scrollEl, entries, dateStr, mode='cloud'){
   const old = scrollEl.querySelector('.bg-graph');
   if(old) old.remove();
@@ -363,8 +387,6 @@ function drawBackgroundGraph(scrollEl, entries, dateStr, mode='cloud'){
   if(!Number.isFinite(totalW) || totalW <= 0) totalW = Math.max(1, scrollEl.scrollWidth);
 
   const totalH = scrollEl.getBoundingClientRect().height || 140;
-  const midY = totalH/2;
-  const amp = (totalH/2) * 0.9;
   const svgNS="http://www.w3.org/2000/svg";
 
   const wrap = document.createElement('div');
@@ -377,44 +399,110 @@ function drawBackgroundGraph(scrollEl, entries, dateStr, mode='cloud'){
   svg.setAttribute('height', totalH);
   svg.style.display='block';
 
-  const baseline = document.createElementNS(svgNS, 'line');
-  baseline.setAttribute('x1', 0); baseline.setAttribute('y1', midY);
-  baseline.setAttribute('x2', totalW); baseline.setAttribute('y2', midY);
-  baseline.setAttribute('stroke', 'rgba(255,255,255,0.2)');
-  baseline.setAttribute('stroke-width', '1');
-  svg.appendChild(baseline);
-
-  const n = entries.length;
-  if(n<2){ wrap.appendChild(svg); scrollEl.insertBefore(wrap, scrollEl.firstChild); return; }
-
-  const points = [];
-  for(let i=0;i<n;i++){
-    const x = (totalW-1) * (i/(n-1));
-    const score = scoreForMode(entries[i], mode, dateStr); // 0..100 (100 = lepší)
-    const norm = score - 50;
-    const y = midY - (norm/50)*amp;
-    points.push([x,y]);
-  }
-
-  const makeAreaPath = (clampFn, fill) => {
-    const dTop = points.map(([x,y],i)=> (i===0 ? `M ${x} ${clampFn(y)}` : `L ${x} ${clampFn(y)}`)).join(' ');
-    const d = `${dTop} L ${points[n-1][0]} ${midY} L ${points[0][0]} ${midY} Z`;
-    const p = document.createElementNS(svgNS, 'path');
-    p.setAttribute('d', d);
-    p.setAttribute('fill', fill);
-    p.setAttribute('stroke', 'transparent');
-    return p;
+  /* defs: gradienty pro rain & wind */
+  const defs = document.createElementNS(svgNS,'defs');
+  const mkGrad = (id, lowVar, highVar) => {
+    const lg = document.createElementNS(svgNS,'linearGradient');
+    lg.setAttribute('id', id);
+    lg.setAttribute('x1','0'); lg.setAttribute('y1','1');
+    lg.setAttribute('x2','0'); lg.setAttribute('y2','0'); // vertikálně dole→nahoře
+    const stop1 = document.createElementNS(svgNS,'stop');
+    stop1.setAttribute('offset','0%');  stop1.setAttribute('stop-color', getComputedStyle(document.documentElement).getPropertyValue(lowVar).trim() || 'white');
+    const stop2 = document.createElementNS(svgNS,'stop');
+    stop2.setAttribute('offset','100%');stop2.setAttribute('stop-color', getComputedStyle(document.documentElement).getPropertyValue(highVar).trim() || 'black');
+    lg.appendChild(stop1); lg.appendChild(stop2);
+    return lg;
   };
-  svg.appendChild(makeAreaPath(y => Math.min(y, midY), 'var(--greenFill)'));
-  svg.appendChild(makeAreaPath(y => Math.max(y, midY), 'var(--redFill)'));
+  defs.appendChild(mkGrad('rainGrad','--rainLow','--rainHigh'));
+  defs.appendChild(mkGrad('windGrad','--windLow','--windHigh'));
+  svg.appendChild(defs);
 
-  const linePath = document.createElementNS(svgNS, 'path');
-  const dLine = points.map(([x,y],i)=> (i===0 ? `M ${x} ${y}` : `L ${x} ${y}`)).join(' ');
-  linePath.setAttribute('d', dLine);
-  linePath.setAttribute('fill', 'none');
-  linePath.setAttribute('stroke', 'rgba(255,255,255,0.6)');
-  linePath.setAttribute('stroke-width', '1.5');
-  svg.appendChild(linePath);
+  if(mode === 'cloud'){
+    const midY = totalH/2;
+    const amp = (totalH/2) * 0.9;
+
+    const baseline = document.createElementNS(svgNS, 'line');
+    baseline.setAttribute('x1', 0); baseline.setAttribute('y1', midY);
+    baseline.setAttribute('x2', totalW); baseline.setAttribute('y2', midY);
+    baseline.setAttribute('stroke', 'rgba(255,255,255,0.2)');
+    baseline.setAttribute('stroke-width', '1');
+    svg.appendChild(baseline);
+
+    const n = entries.length;
+    if(n<2){ wrap.appendChild(svg); scrollEl.insertBefore(wrap, scrollEl.firstChild); return; }
+
+    const points = [];
+    for(let i=0;i<n;i++){
+      const x = (totalW-1) * (i/(n-1));
+      const score = scoreForMode(entries[i], 'cloud', dateStr); // 0..100 (víc nahoru = lepší)
+      const norm = score - 50; // -50..+50
+      const y = midY - (norm/50)*amp;
+      points.push([x,y]);
+    }
+
+    const makeAreaPath = (clampFn, fill) => {
+      const dTop = points.map(([x,y],i)=> (i===0 ? `M ${x} ${clampFn(y)}` : `L ${x} ${clampFn(y)}`)).join(' ');
+      const d = `${dTop} L ${points[n-1][0]} ${midY} L ${points[0][0]} ${midY} Z`;
+      const p = document.createElementNS(svgNS, 'path');
+      p.setAttribute('d', d);
+      p.setAttribute('fill', fill);
+      p.setAttribute('stroke', 'transparent');
+      return p;
+    };
+    svg.appendChild(makeAreaPath(y => Math.min(y, midY), 'var(--greenFill)'));
+    svg.appendChild(makeAreaPath(y => Math.max(y, midY), 'var(--redFill)'));
+
+    const linePath = document.createElementNS(svgNS, 'path');
+    const dLine = points.map(([x,y],i)=> (i===0 ? `M ${x} ${y}` : `L ${x} ${y}`)).join(' ');
+    linePath.setAttribute('d', dLine);
+    linePath.setAttribute('fill', 'none');
+    linePath.setAttribute('stroke', 'rgba(255,255,255,0.6)');
+    linePath.setAttribute('stroke-width', '1.6');
+    svg.appendChild(linePath);
+  } else {
+    // rain / wind: baseline dole, plocha nahoru s gradientem
+    const baseY = totalH - 2;    // jemná rezerva
+    const topPad = 6;            // rezerva od horní hrany
+    const usableH = Math.max(20, baseY - topPad);
+
+    const baseLine = document.createElementNS(svgNS,'line');
+    baseLine.setAttribute('x1',0); baseLine.setAttribute('y1',baseY);
+    baseLine.setAttribute('x2',totalW); baseLine.setAttribute('y2',baseY);
+    baseLine.setAttribute('stroke','rgba(255,255,255,.18)');
+    svg.appendChild(baseLine);
+
+    const n = entries.length;
+    if(n<2){ wrap.appendChild(svg); scrollEl.insertBefore(wrap, scrollEl.firstChild); return; }
+
+    const points=[];
+    for(let i=0;i<n;i++){
+      const x=(totalW-1)*(i/(n-1));
+      const score=scoreForMode(entries[i], mode, dateStr); // 0..100
+      const y= baseY - (score/100)*usableH;
+      points.push([x,y]);
+    }
+
+    // Plocha
+    const dTop = points.map(([x,y],i)=> (i?`L ${x} ${y}`:`M ${x} ${y}`)).join(' ');
+    const dArea = `${dTop} L ${points[n-1][0]} ${baseY} L ${points[0][0]} ${baseY} Z`;
+    const area = document.createElementNS(svgNS,'path');
+    area.setAttribute('d', dArea);
+    area.setAttribute('fill', mode==='rain' ? 'url(#rainGrad)' : 'url(#windGrad)');
+    area.setAttribute('stroke','none');
+    svg.appendChild(area);
+
+    // Linka nahoře – tmavý odstín
+    const line=document.createElementNS(svgNS,'path');
+    const dLine = points.map(([x,y],i)=> (i?`L ${x} ${y}`:`M ${x} ${y}`)).join(' ');
+    line.setAttribute('d', dLine);
+    line.setAttribute('fill','none');
+    line.setAttribute('stroke', mode==='rain'
+      ? getComputedStyle(document.documentElement).getPropertyValue('--rainHigh').trim() || '#1e3a8a'
+      : getComputedStyle(document.documentElement).getPropertyValue('--windHigh').trim() || '#03543f'
+    );
+    line.setAttribute('stroke-width','1.8');
+    svg.appendChild(line);
+  }
 
   wrap.appendChild(svg);
   scrollEl.insertBefore(wrap, scrollEl.firstChild);
@@ -444,23 +532,17 @@ async function fetchForecast(lat,lon){
   const days={};
   for(let i=0;i<time.length;i++){
     const [date,hour]=time[i].split('T');
-    const h=parseInt(hour.split(':')[0]);
-    if(!days[date]) days[date]=[];
     const entry={time:hour,temp:temperature_2m[i],cloud:cloudcover[i],rain:precipitation[i],wind:windspeed_10m[i],date};
+    if(!days[date]) days[date]=[];
     days[date].push(entry);
-    if(h<12){
-      const prev=new Date(date); prev.setDate(prev.getDate()-1); const prevStr=prev.toISOString().split('T')[0];
-      if(!days[prevStr]) days[prevStr]=[];
-      days[prevStr].push(entry);
-    }
   }
-  Object.entries(days).forEach(([date,entries],idx)=>{
-    if(!entries.some(e=>parseInt(e.time.split(':')[0])>=12)) return;
+  let idx=0;
+  Object.entries(days).forEach(([date,entries])=>{
+    if(!entries.length) return;
     const section=document.createElement('div'); section.className='forecast-day';
-    const header=document.createElement('h3'); const contentId=`day-${idx}`;
+    const header=document.createElement('h3'); const contentId=`day-${idx++}`;
     header.dataset.date=date;
 
-    // Header content + mode tabs
     const leftPart = document.createElement('div');
     leftPart.style.display='flex'; leftPart.style.alignItems='center'; leftPart.style.gap='8px';
     leftPart.innerHTML = `<span id="${contentId}-icon">⬆️</span> ${getDayName(date)}, ${date}
@@ -472,8 +554,8 @@ async function fetchForecast(lat,lon){
     tabs.className='mode-tabs';
     tabs.innerHTML = `
       <button class="mode-btn active" data-mode="cloud" title="Graf podle oblačnosti (výchozí)">☁️</button>
-      <button class="mode-btn" data-mode="wind" title="Graf podle rychlosti větru">💨</button>
-      <button class="mode-btn" data-mode="rain" title="Graf podle srážek">🌧️</button>`;
+      <button class="mode-btn" data-mode="wind" title="Graf podle rychlosti větru (světlá ↓ → tmavá ↑)">💨</button>
+      <button class="mode-btn" data-mode="rain" title="Graf podle srážek (světlá ↓ → tmavá ↑)">🌧️</button>`;
     tabs.addEventListener('click', (e)=>{
       if(!(e.target instanceof HTMLElement)) return;
       const btn = e.target.closest('.mode-btn'); if(!btn) return;
@@ -498,21 +580,15 @@ async function fetchForecast(lat,lon){
     rightBtn.onclick=()=>scroll.scrollBy({left:250,behavior:'smooth'});
     wrapper.appendChild(leftBtn); wrapper.appendChild(scroll); wrapper.appendChild(rightBtn);
 
-    const nowIso=new Date().toISOString().split('T')[0];
-    const currentHour=new Date().getHours();
-    const displayedEntries = entries.filter(e => (date !== nowIso) || (parseInt(e.time.split(':')[0]) >= currentHour));
-
-    displayedEntries.forEach(e => {
+    entries.forEach(e => {
       const card=document.createElement('div'); card.className='forecast-card';
       const icon=getWeatherIcon(e.cloud, e.rain);
-      let color=e.cloud<=25?'green':(e.cloud<=75?'orange':'red');
       card.innerHTML=`<div><strong>${e.time}</strong></div>
                       <div style="font-size:1.4em">${icon}</div>
-                      <div>${e.temp}°C</div>
-                      <div>☁️ ${e.cloud}%</div>
+                      <div>${Math.round(e.temp)}°C</div>
+                      <div>☁️ ${Math.round(e.cloud)}%</div>
                       <div>🌧️ ${e.rain} mm</div>
-                      <div>💨 ${e.wind} km/h</div>
-                      <div style="width: 100%; height: 8px; background-color: ${color}; border-radius: 4px; margin-top: 4px;"></div>`;
+                      <div>💨 ${Math.round(e.wind)} km/h</div>`;
       scroll.appendChild(card);
     });
 
@@ -521,10 +597,13 @@ async function fetchForecast(lat,lon){
     div.appendChild(section);
 
     // Save data & draw default (cloud) graph
-    window._graphData[contentId] = { entries: displayedEntries, date };
+    window._graphData[contentId] = { entries, date };
     window._graphMode[contentId] = 'cloud';
-    requestAnimationFrame(()=> drawBackgroundGraph(scroll, displayedEntries, date, 'cloud'));
+    requestAnimationFrame(()=> drawBackgroundGraph(scroll, entries, date, 'cloud'));
   });
+
+  // po vykreslení uprav výšku mapy
+  syncMapHeight();
 }
 
 /* ===== Toggle & focus helpers ===== */
@@ -571,7 +650,6 @@ async function fetchPlanets(lat,lon){
     }
     render(out);
   }catch(e){
-    console.warn("AE selhalo -> fallback API", e);
     try{
       const url=`https://api.ipgeolocation.io/astronomy?apiKey=${IPGEO_API_KEY}&lat=${lat}&long=${lon}`;
       const r=await fetch(url); const d=await r.json();
