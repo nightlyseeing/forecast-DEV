@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Astronomická předpověď – v0.2.2-p7</title>
+<title>Astronomická předpověď – v0.2.2-p7 (fix width)</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -15,7 +15,6 @@
   *{box-sizing:border-box}
   body{margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:radial-gradient(ellipse at top,#0b0c1a 0%,#1b2c3a 100%);color:var(--text);padding:16px}
   h1{margin:8px 0 16px 0;text-align:center;color:#fff;font-size:2.2rem;text-shadow:0 0 18px var(--accent)}
-  /* top bar */
   .topbar{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;z-index:50}
   .menu-container{position:relative;align-self:flex-start}
   .menu-toggle{background:var(--accent);color:#000;font-weight:bold;padding:8px 14px;border-radius:10px;cursor:pointer;border:none;box-shadow:var(--shadow)}
@@ -27,7 +26,7 @@
   .has-submenu{position:relative}
   .has-submenu:hover>.submenu{display:block}
   .version-tag{position:relative;background:var(--accent);color:#000;font-weight:bold;padding:6px 12px;border-radius:12px;box-shadow:var(--shadow)}
-  .version-tag:hover::after{content:"v0.2.2-p7\\A • Graf se hýbe se sliderem\\A • Dvoubarevný (zelená/červená)\\A • Ostatní beze změn";white-space:pre;position:absolute;top:115%;right:0;background:var(--panel);color:var(--accent);font-size:.9em;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 0 16px rgba(0,255,195,.4);min-width:320px}
+  .version-tag:hover::after{content:"v0.2.2-p7\\A • Graf jen nad zobrazenými kartami";white-space:pre;position:absolute;top:115%;right:0;background:var(--panel);color:var(--accent);font-size:.9em;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 0 16px rgba(0,255,195,.4);min-width:320px}
   .controls{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
   .input-wrapper{position:relative}
   #cityInput{width:360px;max-width:100%;padding:10px 36px 10px 12px;border-radius:10px;border:2px solid var(--accent);background:#111;color:#00ffc3;font-weight:700;box-shadow:var(--shadow)}
@@ -35,7 +34,6 @@
   #suggestions{position:absolute;top:100%;left:0;right:0;background:#121212;border:1px solid var(--border);border-radius:10px;list-style:none;padding:0;margin:6px 0 0 0;display:none;overflow:hidden;z-index:30}
   #suggestions li{padding:10px 12px;cursor:pointer;color:var(--text)} #suggestions li:hover{background:#243442}
 
-  /* TOP ROW */
   .top-row{display:grid;grid-template-columns: minmax(300px, 1fr) minmax(280px, 1fr);gap:16px;align-items:start}
   .left-col{display:flex;flex-direction:column;gap:16px}
   .right-col{position:relative}
@@ -43,19 +41,16 @@
   .panel strong{color:var(--accent)}
   .kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 10px}
 
-  /* Map panel */
   #mapPanel{padding:0;overflow:hidden}
   #map{width:100%;height:100%}
   .zoom-badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:4px 8px;border-radius:999px;font-size:.85em;border:1px solid rgba(255,255,255,.2);z-index:2}
   .map-tip{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:6px 8px;border-radius:8px;font-size:.9em;border:1px solid rgba(255,255,255,.2);z-index:2}
 
-  /* Forecast */
   .forecast-day{border:1px solid var(--border);border-radius:10px;overflow:hidden;position:relative}
   .forecast-day h3{margin:0;padding:10px;background:#4b3f72;color:#fff;display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;z-index:2}
   .forecast-content{display:none;padding:10px;position:relative}
   .forecast-scroll-wrapper{position:relative}
   .forecast-scroll{position:relative;display:flex;gap:8px;overflow-x:auto;padding:6px 0;z-index:2}
-  /* bg-graph je uvnitř .forecast-scroll -> scrolluje se s hodinami a nepřesahuje */
   .bg-graph{position:absolute;top:0;left:0;z-index:1;pointer-events:none;}
   .forecast-card{min-width:80px;font-size:.9em;background:rgba(44,47,51,0.72);border:1px solid var(--border);border-radius:8px;padding:6px;text-align:center;position:relative;z-index:2}
   .scroll-left,.scroll-right{background:none;border:none;color:#fff;font-size:1.5em;padding:6px 10px;cursor:pointer;position:absolute;top:50%;transform:translateY(-50%);opacity:.6;text-shadow:0 0 6px rgba(255,255,255,.3);z-index:3}
@@ -142,17 +137,14 @@
 const IPGEO_API_KEY="781aa2d69af74745906e01cc68c84207";
 const DEBUG=new URLSearchParams(location.search).has("debug");
 
-/* Menu */
 function toggleMenu(){const m=document.getElementById("mainMenu");m.style.display=m.style.display==="block"?"none":"block"}
 document.addEventListener("click",(e)=>{const m=document.getElementById("mainMenu");const t=document.querySelector(".menu-toggle");if(m&&t&&!m.contains(e.target)&&!t.contains(e.target))m.style.display="none"});
 
-/* Helpers */
 const $=(id)=>document.getElementById(id);
 function showSpinner(b){$("spinner").style.display=b?"block":"none"}
 function getDayName(d){const today=new Date().toISOString().split('T')[0];if(d===today)return"Dnes";const arr=['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'];return arr[new Date(d).getDay()]}
 function getWeatherIcon(c,r){if(r>2)return'🌧️';if(r>0)return'🌦️';if(c>75)return'☁️';if(c>25)return'🌤️';return'☀️'}
 
-/* Layout sync */
 function syncMapHeight(){
   const left=document.getElementById("leftTop");
   const mapPanel=document.getElementById("mapPanel");
@@ -167,7 +159,6 @@ const leftObserver = new MutationObserver(()=> syncMapHeight());
 leftObserver.observe(document.getElementById("leftTop"), {subtree:true, childList:true, characterData:true});
 window.addEventListener("resize", syncMapHeight);
 
-/* Geocoding & selection */
 let selectedCity=null;
 async function autocompleteCities(){const v=$("cityInput").value.trim();const s=$("suggestions");if(v.length<2){s.style.display="none";return}const res=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(v)}&count=6&language=cs&format=json`);const data=await res.json();s.innerHTML="";(data.results||[]).forEach(c=>{const li=document.createElement("li");li.textContent=`${c.name}, ${c.country}`;li.onclick=()=>{selectedCity=c;$("cityInput").value=`${c.name}, ${c.country}`;updateLocationInfo(c);initMap(c.latitude,c.longitude);fetchForecast(c.latitude,c.longitude);fetchMoonPhase(c.latitude,c.longitude);fetchPlanets(c.latitude,c.longitude);s.style.display="none"};s.appendChild(li)});s.style.display=s.children.length?"block":"none"}
 
@@ -177,7 +168,6 @@ async function reverseGeocode(lat,lon){try{const r=await fetch(`https://nominati
 
 function updateLocationInfo(c){const name=c.name||"-";const country=c.country||"";const lat=typeof c.latitude==="number"?c.latitude:null;const lon=typeof c.longitude==="number"?c.longitude:null;$("info-name").innerHTML=country?`<span style="color:#00ffc3;font-weight:bold;">${name}</span>, ${country}`:`<span style="color:#00ffc3;font-weight:bold;">${name}</span>`;$("info-gps").textContent=(lat!=null&&lon!=null)?`${lat.toFixed(4)}, ${lon.toFixed(4)}`:"—";const link=$("bortle-link");if(lat!=null&&lon!=null){link.href=`https://www.lightpollutionmap.info/#zoom=9&lat=${lat}&lon=${lon}`;link.style.display="inline"}else{link.style.display="none"}}
 
-/* Map on the right */
 let map=null,marker=null,zoomEnabled=false,zoomControl=null;
 function initMap(lat,lon){
   syncMapHeight();
@@ -205,7 +195,6 @@ function initMap(lat,lon){
   setTimeout(()=> { map.invalidateSize(); syncMapHeight(); }, 150);
 }
 
-/* Moon phase (API, cz) */
 function getMoonEmojiFromName(n){n=String(n||"").toLowerCase().replace(/_/g," ").trim();if(n.includes("new moon"))return"🌑 Nov";if(n.includes("waxing crescent"))return"🌒 Dorůstající srpek";if(n.includes("first quarter"))return"🌓 První čtvrť";if(n.includes("waxing gibbous"))return"🌔 Dorůstající měsíc";if(n.includes("full moon"))return"🌕 Úplněk";if(n.includes("waning gibbous"))return"🌖 Couvající měsíc";if(n.includes("last quarter"))return"🌗 Poslední čtvrť";if(n.includes("waning crescent"))return"🌘 Couvající srpek";return"🌙 Neznámá fáze"}
 async function fetchMoonPhase(lat,lon){const url=`https://api.ipgeolocation.io/astronomy?apiKey=${IPGEO_API_KEY}&lat=${lat}&long=${lon}`;try{const r=await fetch(url);const d=await r.json();const p=d.moon_phase||"Neznámá fáze";$("moon-phase-label").textContent=getMoonEmojiFromName(p);if(DEBUG){$("phase-raw").style.display="block";$("phase-raw").textContent=`API: ${p}`}}catch(e){console.error("Chyba při načítání fáze:",e);$("moon-phase-label").textContent="Chyba načítání";$("phase-raw").textContent=""}}
 
@@ -234,14 +223,31 @@ function visibilityScore(cloud, precip, dateStr){
   const raw = cloudScore - rainPenalty - moonPenalty;
   return Math.max(0, Math.min(100, Math.round(raw)));
 }
+
+/* Compute the exact pixel width of cards, not the container/client width */
+function measureCardsWidth(scrollEl){
+  const cards = scrollEl.querySelectorAll('.forecast-card');
+  if(cards.length === 0) return 0;
+  const style = getComputedStyle(scrollEl);
+  // flex row gap is the column-gap property
+  const gap = parseFloat(style.columnGap || style.gap || 0) || 0;
+  let sum = 0;
+  cards.forEach((c)=>{ sum += c.getBoundingClientRect().width; });
+  sum += gap * (cards.length - 1);
+  return Math.ceil(sum);
+}
+
 function drawBackgroundGraph(scrollEl, entries, dateStr){
-  // Smazat starý graf uvnitř scrollu
   const old = scrollEl.querySelector('.bg-graph');
   if(old) old.remove();
 
-  // Rozměry podle skutečně ZOBRAZENÝCH karet
-  const totalW = scrollEl.scrollWidth;
-  const totalH = scrollEl.clientHeight || 140;
+  // Use exact width of the cards; avoid stretching to clientWidth when there are few cards.
+  let totalW = measureCardsWidth(scrollEl);
+  // Fallback to scrollWidth if something goes wrong
+  if(!Number.isFinite(totalW) || totalW <= 0) totalW = Math.max(1, scrollEl.scrollWidth);
+
+  // Height matches the scroll track
+  const totalH = scrollEl.getBoundingClientRect().height || 140;
   const midY = totalH/2;
   const amp = (totalH/2) * 0.9;
   const svgNS="http://www.w3.org/2000/svg";
@@ -256,7 +262,6 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
   svg.setAttribute('height', totalH);
   svg.style.display='block';
 
-  // Baseline
   const baseline = document.createElementNS(svgNS, 'line');
   baseline.setAttribute('x1', 0); baseline.setAttribute('y1', midY);
   baseline.setAttribute('x2', totalW); baseline.setAttribute('y2', midY);
@@ -276,7 +281,6 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
     points.push([x,y]);
   }
 
-  // Dvoubarevná výplň
   const makeAreaPath = (clampFn, fill) => {
     const dTop = points.map(([x,y],i)=> (i===0 ? `M ${x} ${clampFn(y)}` : `L ${x} ${clampFn(y)}`)).join(' ');
     const d = `${dTop} L ${points[n-1][0]} ${midY} L ${points[0][0]} ${midY} Z`;
@@ -291,7 +295,6 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
   svg.appendChild(greenArea);
   svg.appendChild(redArea);
 
-  // Obrys
   const linePath = document.createElementNS(svgNS, 'path');
   const dLine = points.map(([x,y],i)=> (i===0 ? `M ${x} ${y}` : `L ${x} ${y}`)).join(' ');
   linePath.setAttribute('d', dLine);
@@ -301,11 +304,19 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
   svg.appendChild(linePath);
 
   wrap.appendChild(svg);
-  // Vložit jako první – pod kartami a scrolluje se s nimi
   scrollEl.insertBefore(wrap, scrollEl.firstChild);
+
+  // Keep graph width in sync on resize/when fonts load etc.
+  if(!scrollEl._graphResizeObs){
+    const ro = new ResizeObserver(()=>{
+      // Re-measure and redraw quickly
+      drawBackgroundGraph(scrollEl, entries, dateStr);
+    });
+    ro.observe(scrollEl);
+    scrollEl._graphResizeObs = ro;
+  }
 }
 
-/* Forecast */
 async function fetchForecast(lat,lon){
   showSpinner(true);
   await fetchMoonPhasesForecast(lat,lon);
@@ -348,9 +359,9 @@ async function fetchForecast(lat,lon){
     wrapper.appendChild(leftBtn); wrapper.appendChild(scroll); wrapper.appendChild(rightBtn);
 
     const nowIso=new Date().toISOString().split('T')[0];
+    const currentHour=new Date().getHours();
 
-    /* === FIX: používat stejné zobrazené hodiny i pro graf === */
-    const displayedEntries = entries.filter(e => (date !== nowIso) || (parseInt(e.time.split(':')[0]) >= new Date().getHours()));
+    const displayedEntries = entries.filter(e => (date !== nowIso) || (parseInt(e.time.split(':')[0]) >= currentHour));
 
     displayedEntries.forEach(e => {
       const card=document.createElement('div'); card.className='forecast-card';
@@ -370,16 +381,13 @@ async function fetchForecast(lat,lon){
     section.appendChild(content);
     div.appendChild(section);
 
-    // Kreslit graf jen pro ZOBRAZENÉ hodiny (řeší natahování u Dnes)
     requestAnimationFrame(()=> drawBackgroundGraph(scroll, displayedEntries, date));
   });
 }
 
-/* Toggle helpers */
 function toggleForecast(id){const c=document.getElementById(id);const i=document.getElementById(id+'-icon');if(c.style.display==='none'){c.style.display='block';i.textContent='⬆️'}else{c.style.display='none';i.textContent='⬇️'}}
 function centerTime(contentId,target){const sc=document.querySelector(`#${contentId} .forecast-scroll`);if(!sc)return;const cards=sc.querySelectorAll('.forecast-card');for(let i=0;i<cards.length;i++){const strong=cards[i].querySelector('strong');if(strong&&strong.textContent.trim()===target){const w=sc.clientWidth;const off=cards[i].offsetLeft;const cw=cards[i].offsetWidth;sc.scrollTo({left:off-(w/2)+(cw/2),behavior:'smooth'});break}}}
 
-/* Planety @22:00 – AE (fallback API) */
 async function fetchPlanets(lat,lon){
   const box=$("planets-list"); const log=(m)=>$("planet-log").textContent=m;
   box.innerHTML=""; log("počítám…");
@@ -429,7 +437,6 @@ async function fetchPlanets(lat,lon){
   }
 }
 
-/* Kick initial layout */
 window.addEventListener('load', syncMapHeight);
 </script>
 </body>
