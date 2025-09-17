@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Astronomická předpověď – v0.2.2-p7 (fix width)</title>
+<title>Astronomická předpověď – v0.2.2-p8</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -15,7 +15,18 @@
   *{box-sizing:border-box}
   body{margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:radial-gradient(ellipse at top,#0b0c1a 0%,#1b2c3a 100%);color:var(--text);padding:16px}
   h1{margin:8px 0 16px 0;text-align:center;color:#fff;font-size:2.2rem;text-shadow:0 0 18px var(--accent)}
-  .topbar{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;z-index:50}
+
+  /* ===== Top bar - keep above map while scrolling ===== */
+  .topbar{
+    position:sticky; top:0; z-index:2000;
+    display:flex; justify-content:space-between; align-items:center; gap:8px;
+    padding:8px 10px;
+    background:linear-gradient(180deg, rgba(11,12,16,0.92) 0%, rgba(11,12,16,0.70) 100%);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px;
+    backdrop-filter:saturate(140%) blur(6px);
+    box-shadow:0 6px 18px rgba(0,0,0,.35);
+  }
   .menu-container{position:relative;align-self:flex-start}
   .menu-toggle{background:var(--accent);color:#000;font-weight:bold;padding:8px 14px;border-radius:10px;cursor:pointer;border:none;box-shadow:var(--shadow)}
   .menu-dropdown{display:none;position:absolute;top:110%;left:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;min-width:220px;box-shadow:0 8px 16px rgba(0,0,0,.6);overflow:visible}
@@ -25,8 +36,19 @@
   .submenu{display:none;position:absolute;top:0;left:100%;background:var(--panel);border:1px solid var(--border);border-radius:10px;min-width:230px;box-shadow:0 8px 16px rgba(0,0,0,.6);}
   .has-submenu{position:relative}
   .has-submenu:hover>.submenu{display:block}
-  .version-tag{position:relative;background:var(--accent);color:#000;font-weight:bold;padding:6px 12px;border-radius:12px;box-shadow:var(--shadow)}
-  .version-tag:hover::after{content:"v0.2.2-p7\\A • Graf jen nad zobrazenými kartami";white-space:pre;position:absolute;top:115%;right:0;background:var(--panel);color:var(--accent);font-size:.9em;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 0 16px rgba(0,255,195,.4);min-width:320px}
+  .badges{display:flex;align-items:center;gap:8px}
+  .version-tag, .diag-tag{position:relative;background:var(--accent);color:#000;font-weight:bold;padding:6px 12px;border-radius:12px;box-shadow:var(--shadow);cursor:default; white-space:nowrap}
+  .version-tag:hover::after{content:"v0.2.2-p8\\A • Graf jen nad zobrazenými kartami\\A • Open‑Meteo Moon odstraněno\\A • Lepší sticky horní lišta";white-space:pre;position:absolute;top:115%;right:0;background:var(--panel);color:var(--accent);font-size:.9em;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 0 16px rgba(0,255,195,.4);min-width:320px}
+  /* Diagnostics popover */
+  .diag-pop{display:none;position:absolute;top:115%;right:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;min-width:320px;max-width:400px;padding:10px 12px;box-shadow:0 0 16px rgba(0,255,195,.25); color:var(--text); z-index:2100}
+  .diag-tag:hover .diag-pop{display:block}
+  .diag-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+  .diag-item:last-child{border-bottom:none}
+  .diag-name{opacity:.9}
+  .diag-status{font-weight:700}
+  .ok{color:#00ff88} .fail{color:#ff6b6b} .pending{color:#ffd166}
+  .tiny{font-size:.85em;opacity:.8}
+
   .controls{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
   .input-wrapper{position:relative}
   #cityInput{width:360px;max-width:100%;padding:10px 36px 10px 12px;border-radius:10px;border:2px solid var(--accent);background:#111;color:#00ffc3;font-weight:700;box-shadow:var(--shadow)}
@@ -77,7 +99,17 @@
       </div>
     </div>
   </div>
-  <div class="version-tag">v0.2.2-p7</div>
+
+  <div class="badges">
+    <div class="version-tag">v0.2.2-p8</div>
+    <div class="diag-tag">🧪 API
+      <div class="diag-pop" id="diagPop">
+        <div class="tiny" style="margin-bottom:6px;">Živá diagnostika API (najetím myši se provede test, klikem se test zopakuje).</div>
+        <div id="diagList"></div>
+        <div class="tiny" style="margin-top:8px;">Vlastní seznam můžeš dodat přes <code>window.DIAG_CUSTOM_ENDPOINTS</code> (viz JS).</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <h1>🪐 Astronomická předpověď</h1>
@@ -137,14 +169,79 @@
 const IPGEO_API_KEY="781aa2d69af74745906e01cc68c84207";
 const DEBUG=new URLSearchParams(location.search).has("debug");
 
+/* ===== Diagnostics badge ===== */
+// Provide your own endpoints as: window.DIAG_CUSTOM_ENDPOINTS = [{name:'Moje API', url:'https://.../health'}]
+const DEFAULT_ENDPOINTS = [
+  { name: "Open-Meteo Forecast", url: "https://api.open-meteo.com/v1/forecast?latitude=50.08&longitude=14.44&hourly=temperature_2m&timezone=Europe%2FPrague" },
+  { name: "ipgeolocation Astronomy", url: `https://api.ipgeolocation.io/astronomy?apiKey=${IPGEO_API_KEY}&lat=50.08&long=14.44` },
+  { name: "Nominatim Reverse", url: "https://nominatim.openstreetmap.org/reverse?format=json&lat=50.08&lon=14.44&zoom=10&addressdetails=1" }
+];
+const ENDPOINTS = (window.DIAG_CUSTOM_ENDPOINTS && Array.isArray(window.DIAG_CUSTOM_ENDPOINTS) && window.DIAG_CUSTOM_ENDPOINTS.length)
+  ? window.DIAG_CUSTOM_ENDPOINTS
+  : DEFAULT_ENDPOINTS;
+
+const diagTag = document.querySelector('.diag-tag');
+const diagList = document.getElementById('diagList');
+
+function el(tag, attrs={}, html=""){
+  const e=document.createElement(tag);
+  for(const [k,v] of Object.entries(attrs)) e.setAttribute(k,v);
+  if(html) e.innerHTML=html;
+  return e;
+}
+
+function statusRow(name, statusClass, text){
+  const row = el('div', {class:'diag-item'});
+  row.appendChild(el('div',{class:'diag-name'}, name));
+  row.appendChild(el('div',{class:'diag-status '+statusClass}, text));
+  return row;
+}
+
+async function ping(url, timeout=4500){
+  const controller = new AbortController();
+  const id = setTimeout(()=>controller.abort(), timeout);
+  try{
+    const r = await fetch(url, {signal: controller.signal, method:'GET'});
+    clearTimeout(id);
+    return {ok:r.ok, status:r.status};
+  }catch(e){
+    clearTimeout(id);
+    return {ok:false, status:'—'};
+  }
+}
+
+async function runDiagnostics(){
+  diagList.innerHTML = "";
+  for(const ep of ENDPOINTS){
+    const row = statusRow(ep.name, 'pending', 'čekám…');
+    diagList.appendChild(row);
+    ping(ep.url).then(res=>{
+      if(res.ok){
+        row.querySelector('.diag-status').className='diag-status ok';
+        row.querySelector('.diag-status').textContent='OK '+res.status;
+      }else{
+        row.querySelector('.diag-status').className='diag-status fail';
+        row.querySelector('.diag-status').textContent='Chyba '+res.status;
+      }
+    });
+  }
+}
+if(diagTag){
+  diagTag.addEventListener('mouseenter', ()=>{ runDiagnostics(); });
+  diagTag.addEventListener('click', (e)=>{ e.stopPropagation(); runDiagnostics(); });
+}
+
+/* ===== Menu ===== */
 function toggleMenu(){const m=document.getElementById("mainMenu");m.style.display=m.style.display==="block"?"none":"block"}
 document.addEventListener("click",(e)=>{const m=document.getElementById("mainMenu");const t=document.querySelector(".menu-toggle");if(m&&t&&!m.contains(e.target)&&!t.contains(e.target))m.style.display="none"});
 
+/* ===== Helpers ===== */
 const $=(id)=>document.getElementById(id);
 function showSpinner(b){$("spinner").style.display=b?"block":"none"}
 function getDayName(d){const today=new Date().toISOString().split('T')[0];if(d===today)return"Dnes";const arr=['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'];return arr[new Date(d).getDay()]}
 function getWeatherIcon(c,r){if(r>2)return'🌧️';if(r>0)return'🌦️';if(c>75)return'☁️';if(c>25)return'🌤️';return'☀️'}
 
+/* ===== Layout sync ===== */
 function syncMapHeight(){
   const left=document.getElementById("leftTop");
   const mapPanel=document.getElementById("mapPanel");
@@ -159,15 +256,17 @@ const leftObserver = new MutationObserver(()=> syncMapHeight());
 leftObserver.observe(document.getElementById("leftTop"), {subtree:true, childList:true, characterData:true});
 window.addEventListener("resize", syncMapHeight);
 
+/* ===== Geocoding & selection ===== */
 let selectedCity=null;
 async function autocompleteCities(){const v=$("cityInput").value.trim();const s=$("suggestions");if(v.length<2){s.style.display="none";return}const res=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(v)}&count=6&language=cs&format=json`);const data=await res.json();s.innerHTML="";(data.results||[]).forEach(c=>{const li=document.createElement("li");li.textContent=`${c.name}, ${c.country}`;li.onclick=()=>{selectedCity=c;$("cityInput").value=`${c.name}, ${c.country}`;updateLocationInfo(c);initMap(c.latitude,c.longitude);fetchForecast(c.latitude,c.longitude);fetchMoonPhase(c.latitude,c.longitude);fetchPlanets(c.latitude,c.longitude);s.style.display="none"};s.appendChild(li)});s.style.display=s.children.length?"block":"none"}
 
-async function getLocation(){if(!navigator.geolocation)return alert("Váš prohlížeč nepodporuje geolokaci.");navigator.geolocation.getCurrentPosition(async p=>{const lat=p.coords.latitude,lon=p.coords.longitude;const name=await reverseGeocode(lat,lon);const c={name,country:"",latitude:lat,longitude:lon};selectedCity=c;updateLocationInfo(c);initMap(lat,lon);fetchForecast(lat,lon);fetchMoonPhase(lat,lon);fetchPlanets(lat,lon)},e=>alert("Nepodařilo se zjistit polohu."))}
+async function getLocation(){if(!navigator.geolocation)return alert("Váš prohlížeč nepodporuje geolokaci.");navigator.geolocation.getCurrentPosition(async p=>{const lat=p.coords.latitude,lon=p.coords.longitude;const name=await reverseGeocode(lat,lon);const c={name,country:"",latitude:lat,longitude:lon};selectedCity=c;updateLocationInfo(c);initMap(lat,lon);fetchForecast(lat,lon);fetchMoonPhase(lat,lon);fetchPlanets(lat,lon)},e=>alert("Nepodařelo se zjistit polohu."))}
 
 async function reverseGeocode(lat,lon){try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`);const d=await r.json();return d.address?.city||d.address?.town||d.address?.village||d.address?.municipality||d.display_name||`${lat.toFixed(4)}, ${lon.toFixed(4)}`}catch{return `${lat.toFixed(4)}, ${lon.toFixed(4)}`}} 
 
 function updateLocationInfo(c){const name=c.name||"-";const country=c.country||"";const lat=typeof c.latitude==="number"?c.latitude:null;const lon=typeof c.longitude==="number"?c.longitude:null;$("info-name").innerHTML=country?`<span style="color:#00ffc3;font-weight:bold;">${name}</span>, ${country}`:`<span style="color:#00ffc3;font-weight:bold;">${name}</span>`;$("info-gps").textContent=(lat!=null&&lon!=null)?`${lat.toFixed(4)}, ${lon.toFixed(4)}`:"—";const link=$("bortle-link");if(lat!=null&&lon!=null){link.href=`https://www.lightpollutionmap.info/#zoom=9&lat=${lat}&lon=${lon}`;link.style.display="inline"}else{link.style.display="none"}}
 
+/* ===== Map on the right ===== */
 let map=null,marker=null,zoomEnabled=false,zoomControl=null;
 function initMap(lat,lon){
   syncMapHeight();
@@ -195,41 +294,46 @@ function initMap(lat,lon){
   setTimeout(()=> { map.invalidateSize(); syncMapHeight(); }, 150);
 }
 
+/* ===== Moon phase (ipgeolocation only) ===== */
+// Store illumination (0..1) by ISO date for visibility graph.
+let moonIllumByDate = {};
 function getMoonEmojiFromName(n){n=String(n||"").toLowerCase().replace(/_/g," ").trim();if(n.includes("new moon"))return"🌑 Nov";if(n.includes("waxing crescent"))return"🌒 Dorůstající srpek";if(n.includes("first quarter"))return"🌓 První čtvrť";if(n.includes("waxing gibbous"))return"🌔 Dorůstající měsíc";if(n.includes("full moon"))return"🌕 Úplněk";if(n.includes("waning gibbous"))return"🌖 Couvající měsíc";if(n.includes("last quarter"))return"🌗 Poslední čtvrť";if(n.includes("waning crescent"))return"🌘 Couvající srpek";return"🌙 Neznámá fáze"}
-async function fetchMoonPhase(lat,lon){const url=`https://api.ipgeolocation.io/astronomy?apiKey=${IPGEO_API_KEY}&lat=${lat}&long=${lon}`;try{const r=await fetch(url);const d=await r.json();const p=d.moon_phase||"Neznámá fáze";$("moon-phase-label").textContent=getMoonEmojiFromName(p);if(DEBUG){$("phase-raw").style.display="block";$("phase-raw").textContent=`API: ${p}`}}catch(e){console.error("Chyba při načítání fáze:",e);$("moon-phase-label").textContent="Chyba načítání";$("phase-raw").textContent=""}}
-
-/* === Star visibility graph support === */
-let moonPhaseFracByDate = {};
-function illuminationFromPhase(frac){ return 0.5 - 0.5*Math.cos(2*Math.PI*frac); } // 0..1
-async function fetchMoonPhasesForecast(lat,lon){
+async function fetchMoonPhase(lat,lon){
+  const url=`https://api.ipgeolocation.io/astronomy?apiKey=${IPGEO_API_KEY}&lat=${lat}&long=${lon}`;
   try{
-    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=moon_phase&timezone=Europe%2FPrague`;
-    const res=await fetch(url);
-    const data=await res.json();
-    moonPhaseFracByDate = {};
-    if(data?.daily?.time){
-      for(let i=0;i<data.daily.time.length;i++){
-        moonPhaseFracByDate[data.daily.time[i]] = data.daily.moon_phase[i];
-      }
+    const r=await fetch(url);
+    const d=await r.json();
+    const p=d.moon_phase||"Neznámá fáze";
+    $("moon-phase-label").textContent=getMoonEmojiFromName(p);
+    if(DEBUG){$("phase-raw").style.display="block";$("phase-raw").textContent=`API: ${p} (${d.moon_illumination||'?' }%)`}
+    // Save illumination for today's date (0..1) for the visibility graph
+    const today = new Date().toISOString().split('T')[0];
+    const illumPct = Number(d.moon_illumination);
+    if(Number.isFinite(illumPct)){
+      moonIllumByDate[today] = Math.max(0, Math.min(1, illumPct/100));
     }
-  }catch(e){ console.warn("Moon phases forecast failed",e); moonPhaseFracByDate={}; }
+  }catch(e){
+    console.error("Chyba při načítání fáze:",e);
+    $("moon-phase-label").textContent="Chyba načítání";
+    $("phase-raw").textContent="";
+  }
 }
+
+/* ===== Star visibility graph support (uses moonIllumByDate only) ===== */
 function visibilityScore(cloud, precip, dateStr){
   const cloudScore = 100 - Math.min(Math.max(cloud,0),100);
   const rainPenalty = Math.min(precip*50, 50);
-  const phase = moonPhaseFracByDate[dateStr] ?? 0;
-  const illum = illuminationFromPhase(phase);
+  const illum = moonIllumByDate[dateStr] ?? 0;  // 0..1 (no Open-Meteo fallback)
   const moonPenalty = illum * 40;
   const raw = cloudScore - rainPenalty - moonPenalty;
   return Math.max(0, Math.min(100, Math.round(raw)));
 }
 
-/* Compute the exact pixel width of cards, not the container/client width */
+/* Compute exact width of cards */
 function measureCardsWidth(scrollEl){
   const cards = scrollEl.querySelectorAll('.forecast-card');
   if(cards.length === 0) return 0;
   const style = getComputedStyle(scrollEl);
-  // flex row gap is the column-gap property
   const gap = parseFloat(style.columnGap || style.gap || 0) || 0;
   let sum = 0;
   cards.forEach((c)=>{ sum += c.getBoundingClientRect().width; });
@@ -241,12 +345,9 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
   const old = scrollEl.querySelector('.bg-graph');
   if(old) old.remove();
 
-  // Use exact width of the cards; avoid stretching to clientWidth when there are few cards.
   let totalW = measureCardsWidth(scrollEl);
-  // Fallback to scrollWidth if something goes wrong
   if(!Number.isFinite(totalW) || totalW <= 0) totalW = Math.max(1, scrollEl.scrollWidth);
 
-  // Height matches the scroll track
   const totalH = scrollEl.getBoundingClientRect().height || 140;
   const midY = totalH/2;
   const amp = (totalH/2) * 0.9;
@@ -275,8 +376,8 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
   const points = [];
   for(let i=0;i<n;i++){
     const x = (totalW-1) * (i/(n-1));
-    const score = visibilityScore(entries[i].cloud, entries[i].rain, dateStr); // 0..100
-    const norm = score - 50; // -50..+50
+    const score = visibilityScore(entries[i].cloud, entries[i].rain, dateStr);
+    const norm = score - 50;
     const y = midY - (norm/50)*amp;
     points.push([x,y]);
   }
@@ -290,10 +391,8 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
     p.setAttribute('stroke', 'transparent');
     return p;
   };
-  const greenArea = makeAreaPath(y => Math.min(y, midY), 'var(--greenFill)');
-  const redArea   = makeAreaPath(y => Math.max(y, midY), 'var(--redFill)');
-  svg.appendChild(greenArea);
-  svg.appendChild(redArea);
+  svg.appendChild(makeAreaPath(y => Math.min(y, midY), 'var(--greenFill)'));
+  svg.appendChild(makeAreaPath(y => Math.max(y, midY), 'var(--redFill)'));
 
   const linePath = document.createElementNS(svgNS, 'path');
   const dLine = points.map(([x,y],i)=> (i===0 ? `M ${x} ${y}` : `L ${x} ${y}`)).join(' ');
@@ -306,20 +405,16 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
   wrap.appendChild(svg);
   scrollEl.insertBefore(wrap, scrollEl.firstChild);
 
-  // Keep graph width in sync on resize/when fonts load etc.
   if(!scrollEl._graphResizeObs){
-    const ro = new ResizeObserver(()=>{
-      // Re-measure and redraw quickly
-      drawBackgroundGraph(scrollEl, entries, dateStr);
-    });
+    const ro = new ResizeObserver(()=> drawBackgroundGraph(scrollEl, entries, dateStr));
     ro.observe(scrollEl);
     scrollEl._graphResizeObs = ro;
   }
 }
 
+/* ===== Forecast ===== */
 async function fetchForecast(lat,lon){
   showSpinner(true);
-  await fetchMoonPhasesForecast(lat,lon);
   const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,cloudcover,precipitation,windspeed_10m&timezone=Europe/Prague`);
   const d=await r.json();
   showSpinner(false);
@@ -360,7 +455,6 @@ async function fetchForecast(lat,lon){
 
     const nowIso=new Date().toISOString().split('T')[0];
     const currentHour=new Date().getHours();
-
     const displayedEntries = entries.filter(e => (date !== nowIso) || (parseInt(e.time.split(':')[0]) >= currentHour));
 
     displayedEntries.forEach(e => {
@@ -380,14 +474,15 @@ async function fetchForecast(lat,lon){
     content.appendChild(wrapper);
     section.appendChild(content);
     div.appendChild(section);
-
     requestAnimationFrame(()=> drawBackgroundGraph(scroll, displayedEntries, date));
   });
 }
 
+/* ===== Toggle helpers ===== */
 function toggleForecast(id){const c=document.getElementById(id);const i=document.getElementById(id+'-icon');if(c.style.display==='none'){c.style.display='block';i.textContent='⬆️'}else{c.style.display='none';i.textContent='⬇️'}}
 function centerTime(contentId,target){const sc=document.querySelector(`#${contentId} .forecast-scroll`);if(!sc)return;const cards=sc.querySelectorAll('.forecast-card');for(let i=0;i<cards.length;i++){const strong=cards[i].querySelector('strong');if(strong&&strong.textContent.trim()===target){const w=sc.clientWidth;const off=cards[i].offsetLeft;const cw=cards[i].offsetWidth;sc.scrollTo({left:off-(w/2)+(cw/2),behavior:'smooth'});break}}}
 
+/* ===== Planets @22:00 ===== */
 async function fetchPlanets(lat,lon){
   const box=$("planets-list"); const log=(m)=>$("planet-log").textContent=m;
   box.innerHTML=""; log("počítám…");
