@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Astronomická předpověď – v0.2.2‑p7</title>
+<title>Astronomická předpověď – v0.2.2-p7</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -27,7 +27,7 @@
   .has-submenu{position:relative}
   .has-submenu:hover>.submenu{display:block}
   .version-tag{position:relative;background:var(--accent);color:#000;font-weight:bold;padding:6px 12px;border-radius:12px;box-shadow:var(--shadow)}
-  .version-tag:hover::after{content:"v0.2.2‑p7\\A • Graf se hýbe se sliderem\\A • Dvoubarevný (zelená/červená)\\A • Ostatní beze změn";white-space:pre;position:absolute;top:115%;right:0;background:var(--panel);color:var(--accent);font-size:.9em;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 0 16px rgba(0,255,195,.4);min-width:320px}
+  .version-tag:hover::after{content:"v0.2.2-p7\\A • Graf se hýbe se sliderem\\A • Dvoubarevný (zelená/červená)\\A • Ostatní beze změn";white-space:pre;position:absolute;top:115%;right:0;background:var(--panel);color:var(--accent);font-size:.9em;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 0 16px rgba(0,255,195,.4);min-width:320px}
   .controls{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
   .input-wrapper{position:relative}
   #cityInput{width:360px;max-width:100%;padding:10px 36px 10px 12px;border-radius:10px;border:2px solid var(--accent);background:#111;color:#00ffc3;font-weight:700;box-shadow:var(--shadow)}
@@ -54,10 +54,8 @@
   .forecast-day h3{margin:0;padding:10px;background:#4b3f72;color:#fff;display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;z-index:2}
   .forecast-content{display:none;padding:10px;position:relative}
   .forecast-scroll-wrapper{position:relative}
-  .graph-controls{position:absolute;top:6px;right:10px;background:rgba(0,0,0,0.4);backdrop-filter:blur(4px);padding:4px 8px;border-radius:8px;display:flex;gap:10px;z-index:3;font-size:.9em;border:1px solid rgba(255,255,255,.2)}
-  .graph-controls label{display:flex;align-items:center;gap:6px;cursor:pointer;}
   .forecast-scroll{position:relative;display:flex;gap:8px;overflow-x:auto;padding:6px 0;z-index:2}
-  /* IMPORTANT CHANGE: bg-graph sits INSIDE .forecast-scroll so it scrolls with hours */
+  /* bg-graph je uvnitř .forecast-scroll -> scrolluje se s hodinami a nepřesahuje */
   .bg-graph{position:absolute;top:0;left:0;z-index:1;pointer-events:none;}
   .forecast-card{min-width:80px;font-size:.9em;background:rgba(44,47,51,0.72);border:1px solid var(--border);border-radius:8px;padding:6px;text-align:center;position:relative;z-index:2}
   .scroll-left,.scroll-right{background:none;border:none;color:#fff;font-size:1.5em;padding:6px 10px;cursor:pointer;position:absolute;top:50%;transform:translateY(-50%);opacity:.6;text-shadow:0 0 6px rgba(255,255,255,.3);z-index:3}
@@ -84,7 +82,7 @@
       </div>
     </div>
   </div>
-  <div class="version-tag">v0.2.2‑p7</div>
+  <div class="version-tag">v0.2.2-p7</div>
 </div>
 
 <h1>🪐 Astronomická předpověď</h1>
@@ -236,15 +234,17 @@ function visibilityScore(cloud, precip, dateStr){
   const raw = cloudScore - rainPenalty - moonPenalty;
   return Math.max(0, Math.min(100, Math.round(raw)));
 }
-
 function drawBackgroundGraph(scrollEl, entries, dateStr){
-  // Remove old background *inside* the scroll element
+  // Smazat starý graf uvnitř scrollu
   const old = scrollEl.querySelector('.bg-graph');
-  if (old) old.remove();
+  if(old) old.remove();
 
+  // Rozměry podle skutečně ZOBRAZENÝCH karet
   const totalW = scrollEl.scrollWidth;
   const totalH = scrollEl.clientHeight || 140;
-  const svgNS = "http://www.w3.org/2000/svg";
+  const midY = totalH/2;
+  const amp = (totalH/2) * 0.9;
+  const svgNS="http://www.w3.org/2000/svg";
 
   const wrap = document.createElement('div');
   wrap.className = "bg-graph";
@@ -254,92 +254,55 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
   const svg = document.createElementNS(svgNS, 'svg');
   svg.setAttribute('width', totalW);
   svg.setAttribute('height', totalH);
-  svg.style.position = 'absolute';
-  svg.style.left = '0';
-  svg.style.top = '0';
+  svg.style.display='block';
 
-  // Horizontal midline for clouds
-  const midY = totalH/2;
+  // Baseline
+  const baseline = document.createElementNS(svgNS, 'line');
+  baseline.setAttribute('x1', 0); baseline.setAttribute('y1', midY);
+  baseline.setAttribute('x2', totalW); baseline.setAttribute('y2', midY);
+  baseline.setAttribute('stroke', 'rgba(255,255,255,0.2)');
+  baseline.setAttribute('stroke-width', '1');
+  svg.appendChild(baseline);
 
-  // Compute geometry
-  const card = scrollEl.querySelector('.forecast-card');
-  const gap = 8; // matches CSS gap
-  const cardW = card ? card.getBoundingClientRect().width : 120;
   const n = entries.length;
-  const xAt = (i) => i * (cardW + gap) + (cardW/2);
+  if(n<2){ wrap.appendChild(svg); scrollEl.insertBefore(wrap, scrollEl.firstChild); return; }
 
-  // ----- Layers containers -----
-  const cloudsLayer = document.createElementNS(svgNS, 'g');
-  cloudsLayer.setAttribute('class', 'layer-clouds');
-  const rainLayer = document.createElementNS(svgNS, 'g');
-  rainLayer.setAttribute('class', 'layer-rain');
-  const marksLayer = document.createElementNS(svgNS, 'g');
-  marksLayer.setAttribute('class', 'layer-marks');
+  const points = [];
+  for(let i=0;i<n;i++){
+    const x = (totalW-1) * (i/(n-1));
+    const score = visibilityScore(entries[i].cloud, entries[i].rain, dateStr); // 0..100
+    const norm = score - 50; // -50..+50
+    const y = midY - (norm/50)*amp;
+    points.push([x,y]);
+  }
 
-  // ----- Clouds line (0-100%) mapped around midline -----
-  const cloudsY = (pct) => {
-    // Map 0% at bottom margin, 100% at top margin, with midline at 50%
-    return totalH - (pct/100)*(totalH-12) - 6; // 6px padding
+  // Dvoubarevná výplň
+  const makeAreaPath = (clampFn, fill) => {
+    const dTop = points.map(([x,y],i)=> (i===0 ? `M ${x} ${clampFn(y)}` : `L ${x} ${clampFn(y)}`)).join(' ');
+    const d = `${dTop} L ${points[n-1][0]} ${midY} L ${points[0][0]} ${midY} Z`;
+    const p = document.createElementNS(svgNS, 'path');
+    p.setAttribute('d', d);
+    p.setAttribute('fill', fill);
+    p.setAttribute('stroke', 'transparent');
+    return p;
   };
-  const cPts = entries.map((e,i)=>[ xAt(i), cloudsY(+e.cloud || 0) ]);
-  if (cPts.length){
-    const cPath = document.createElementNS(svgNS, 'path');
-    const dC = cPts.map(([x,y],i)=> (i===0?`M ${x} ${y}`:`L ${x} ${y}`)).join(' ');
-    cPath.setAttribute('d', dC);
-    cPath.setAttribute('fill','none');
-    cPath.setAttribute('stroke','rgba(0,255,195,0.9)');
-    cPath.setAttribute('stroke-width','2');
-    cloudsLayer.appendChild(cPath);
-  }
+  const greenArea = makeAreaPath(y => Math.min(y, midY), 'var(--greenFill)');
+  const redArea   = makeAreaPath(y => Math.max(y, midY), 'var(--redFill)');
+  svg.appendChild(greenArea);
+  svg.appendChild(redArea);
 
-  // ----- Rain area (mm) scaled to its own max -----
-  const maxRain = Math.max(0.01, ...entries.map(e=>+e.rain||0));
-  const rainY = (mm) => totalH - (mm/maxRain)*(totalH-12) - 6;
-  const rPts = entries.map((e,i)=>[ xAt(i), rainY(+e.rain || 0) ]);
-  if (rPts.length){
-    // area under the curve
-    const dTop = rPts.map(([x,y],i)=> (i===0?`M ${x} ${y}`:`L ${x} ${y}`)).join(' ');
-    const dArea = `${dTop} L ${rPts[rPts.length-1][0]} ${totalH-6} L ${rPts[0][0]} ${totalH-6} Z`;
-    const area = document.createElementNS(svgNS, 'path');
-    area.setAttribute('d', dArea);
-    area.setAttribute('fill','rgba(0,160,255,0.25)');
-    area.setAttribute('stroke','rgba(0,160,255,0.8)');
-    area.setAttribute('stroke-width','1.5');
-    rainLayer.appendChild(area);
-  }
+  // Obrys
+  const linePath = document.createElementNS(svgNS, 'path');
+  const dLine = points.map(([x,y],i)=> (i===0 ? `M ${x} ${y}` : `L ${x} ${y}`)).join(' ');
+  linePath.setAttribute('d', dLine);
+  linePath.setAttribute('fill', 'none');
+  linePath.setAttribute('stroke', 'rgba(255,255,255,0.6)');
+  linePath.setAttribute('stroke-width', '1.5');
+  svg.appendChild(linePath);
 
-  // ----- Mark noon / midnight if present -----
-  entries.forEach((e,i)=>{
-    const h = parseInt((e.time||'0:0').split(':')[0]);
-    if (h===0 || h===12){
-      const x = xAt(i);
-      const line = document.createElementNS(svgNS,'line');
-      line.setAttribute('x1', x);
-      line.setAttribute('x2', x);
-      line.setAttribute('y1', 0);
-      line.setAttribute('y2', totalH);
-      line.setAttribute('stroke', 'rgba(255,255,255,0.25)');
-      line.setAttribute('stroke-dasharray','4 4');
-      marksLayer.appendChild(line);
-
-      const label = document.createElementNS(svgNS,'text');
-      label.setAttribute('x', x+4);
-      label.setAttribute('y', 12);
-      label.setAttribute('fill', 'rgba(255,255,255,0.8)');
-      label.setAttribute('font-size','11');
-      label.textContent = (h===0 ? 'Půlnoc' : 'Poledne');
-      marksLayer.appendChild(label);
-    }
-  });
-
-  svg.appendChild(marksLayer);
-  svg.appendChild(rainLayer);
-  svg.appendChild(cloudsLayer);
   wrap.appendChild(svg);
-
+  // Vložit jako první – pod kartami a scrolluje se s nimi
   scrollEl.insertBefore(wrap, scrollEl.firstChild);
-}
-
 }
 
 /* Forecast */
@@ -383,50 +346,32 @@ async function fetchForecast(lat,lon){
     leftBtn.onclick=()=>scroll.scrollBy({left:-250,behavior:'smooth'});
     rightBtn.onclick=()=>scroll.scrollBy({left:250,behavior:'smooth'});
     wrapper.appendChild(leftBtn); wrapper.appendChild(scroll); wrapper.appendChild(rightBtn);
-    // Controls for graph layers
-    const controls = document.createElement('div');
-    controls.className = 'graph-controls';
-    controls.innerHTML = `
-      <label><input type="checkbox" data-layer="clouds" checked> Oblačnost</label>
-      <label><input type="checkbox" data-layer="rain" checked> Srážky</label>
-    `;
-    wrapper.appendChild(controls);
-    controls.addEventListener('change', (e) => {
-      const t = e.target;
-      if (t.matches('input[type=checkbox][data-layer]')) {
-        const layer = t.getAttribute('data-layer');
-        const g = scroll.querySelector('.bg-graph svg g.layer-'+layer);
-        if (g) g.style.display = t.checked ? '' : 'none';
-      }
-    });
-
 
     const nowIso=new Date().toISOString().split('T')[0];
-    const nowHour = new Date().getHours();
-    const visibleEntries = entries.filter(e => {
-      if (date !== nowIso) return true;
-      return parseInt(e.time.split(':')[0]) >= nowHour;
+
+    /* === FIX: používat stejné zobrazené hodiny i pro graf === */
+    const displayedEntries = entries.filter(e => (date !== nowIso) || (parseInt(e.time.split(':')[0]) >= new Date().getHours()));
+
+    displayedEntries.forEach(e => {
+      const card=document.createElement('div'); card.className='forecast-card';
+      const icon=getWeatherIcon(e.cloud, e.rain);
+      let color=e.cloud<=25?'green':(e.cloud<=75?'orange':'red');
+      card.innerHTML=`<div><strong>${e.time}</strong></div>
+                      <div style="font-size:1.4em">${icon}</div>
+                      <div>${e.temp}°C</div>
+                      <div>☁️ ${e.cloud}%</div>
+                      <div>🌧️ ${e.rain} mm</div>
+                      <div>💨 ${e.wind} km/h</div>
+                      <div style="width: 100%; height: 8px; background-color: ${color}; border-radius: 4px; margin-top: 4px;"></div>`;
+      scroll.appendChild(card);
     });
-    visibleEntries.forEach(e => {
-        const card=document.createElement('div'); card.className='forecast-card';
-        const icon=getWeatherIcon(e.cloud, e.rain);
-        let color=e.cloud<=25?'green':(e.cloud<=75?'orange':'red');
-        card.innerHTML=`<div><strong>${e.time}</strong></div>
-                        <div style="font-size:1.4em">${icon}</div>
-                        <div>${e.temp}°C</div>
-                        <div>☁️ ${e.cloud}%</div>
-                        <div>🌧️ ${e.rain} mm</div>
-                        <div>💨 ${e.wind} km/h</div>
-                        <div style="width: 100%; height: 8px; background-color: ${color}; border-radius: 4px; margin-top: 4px;"></div>`;
-        scroll.appendChild(card);
-      });
 
     content.appendChild(wrapper);
     section.appendChild(content);
     div.appendChild(section);
 
-    // Draw *inside* the scroll element so it scrolls with cards
-    requestAnimationFrame(()=> drawBackgroundGraph(scroll, visibleEntries, date));
+    // Kreslit graf jen pro ZOBRAZENÉ hodiny (řeší natahování u Dnes)
+    requestAnimationFrame(()=> drawBackgroundGraph(scroll, displayedEntries, date));
   });
 }
 
@@ -456,7 +401,7 @@ async function fetchPlanets(lat,lon){
     const mapEnum = {Mercury:Body.Mercury, Venus:Body.Venus, Mars:Body.Mars, Jupiter:Body.Jupiter, Saturn:Body.Saturn, Uranus:Body.Uranus, Neptune:Body.Neptune};
     const now=new Date(); const t=new Date(now.getFullYear(), now.getMonth(), now.getDate(), 22, 0, 0);
     const obs=new window.Astronomy.Observer(lat, lon, 0);
-    const names=[["Mercury","Merkur"],["Venus","Venuše"],["Mars","Mars"],["Jupiter","Jupiter"],["Saturn","Saturn"],["Uranus","Uran"],["Neptune","Neptun"]];
+    const names=[["Mercury","Merkur"],["Venus","Venuše"],["Mars","Mars"],["Jupiter","Jupiter"],["Saturn","Saturn"],["Uran","Uran"],["Neptune","Neptun"]];
     const out=[];
     for(const [eng, label] of names){
       const hor=window.Astronomy.Horizontal(t, obs, mapEnum[eng], 'normal');
