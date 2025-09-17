@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Astronomická předpověď – v0.2.2-p8</title>
+<title>Astronomická předpověď – v0.2.3-graphs</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -16,7 +16,7 @@
   body{margin:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:radial-gradient(ellipse at top,#0b0c1a 0%,#1b2c3a 100%);color:var(--text);padding:16px}
   h1{margin:8px 0 16px 0;text-align:center;color:#fff;font-size:2.2rem;text-shadow:0 0 18px var(--accent)}
 
-  /* ===== Top bar - keep above map while scrolling ===== */
+  /* ===== Top bar ===== */
   .topbar{
     position:sticky; top:0; z-index:2000;
     display:flex; justify-content:space-between; align-items:center; gap:8px;
@@ -38,8 +38,7 @@
   .has-submenu:hover>.submenu{display:block}
   .badges{display:flex;align-items:center;gap:8px}
   .version-tag, .diag-tag{position:relative;background:var(--accent);color:#000;font-weight:bold;padding:6px 12px;border-radius:12px;box-shadow:var(--shadow);cursor:default; white-space:nowrap}
-  .version-tag:hover::after{content:"v0.2.2-p8\\A • Graf jen nad zobrazenými kartami\\A • Open‑Meteo Moon odstraněno\\A • Lepší sticky horní lišta";white-space:pre;position:absolute;top:115%;right:0;background:var(--panel);color:var(--accent);font-size:.9em;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 0 16px rgba(0,255,195,.4);min-width:320px}
-  /* Diagnostics popover */
+  .version-tag:hover::after{content:"v0.2.3\\A • Přepínatelné grafy (☁️/💨/🌧️)\\A • Výchozí: oblačnost";white-space:pre;position:absolute;top:115%;right:0;background:var(--panel);color:var(--accent);font-size:.9em;padding:10px 12px;border-radius:10px;border:1px solid var(--border);box-shadow:0 0 16px rgba(0,255,195,.4);min-width:320px}
   .diag-pop{display:none;position:absolute;top:115%;right:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;min-width:320px;max-width:400px;padding:10px 12px;box-shadow:0 0 16px rgba(0,255,195,.25); color:var(--text); z-index:2100}
   .diag-tag:hover .diag-pop{display:block}
   .diag-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06)}
@@ -69,7 +68,7 @@
   .map-tip{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:6px 8px;border-radius:8px;font-size:.9em;border:1px solid rgba(255,255,255,.2);z-index:2}
 
   .forecast-day{border:1px solid var(--border);border-radius:10px;overflow:hidden;position:relative}
-  .forecast-day h3{margin:0;padding:10px;background:#4b3f72;color:#fff;display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;z-index:2}
+  .forecast-day h3{margin:0;padding:10px;background:#4b3f72;color:#fff;display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;z-index:2;flex-wrap:wrap}
   .forecast-content{display:none;padding:10px;position:relative}
   .forecast-scroll-wrapper{position:relative}
   .forecast-scroll{position:relative;display:flex;gap:8px;overflow-x:auto;padding:6px 0;z-index:2}
@@ -82,6 +81,16 @@
   .footer{text-align:center;opacity:.8;margin-top:10px;font-size:.95em}
   .small{font-size:.92em;opacity:.9}
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#243442;border:1px solid var(--border);margin:4px 6px 0 0}
+
+  /* Mode tabs inside day header */
+  .mode-tabs{display:flex; gap:6px; margin-left:auto}
+  .mode-btn{
+    background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2);
+    border-radius:999px; padding:4px 10px; cursor:pointer; font-weight:700; font-size:.9em
+  }
+  .mode-btn.active{background:var(--accent); color:#000; box-shadow:0 0 10px rgba(0,255,195,.5)}
+  .mode-btn:hover{filter:brightness(1.1)}
+  .tiny-help{font-size:.85em;opacity:.85;margin-left:6px}
 </style>
 </head>
 <body>
@@ -101,7 +110,7 @@
   </div>
 
   <div class="badges">
-    <div class="version-tag">v0.2.2-p8</div>
+    <div class="version-tag">v0.2.3</div>
     <div class="diag-tag">🧪 API
       <div class="diag-pop" id="diagPop">
         <div class="tiny" style="margin-bottom:6px;">Živá diagnostika API (najetím myši se provede test, klikem se test zopakuje).</div>
@@ -170,15 +179,13 @@ const IPGEO_API_KEY="781aa2d69af74745906e01cc68c84207";
 const DEBUG=new URLSearchParams(location.search).has("debug");
 
 /* ===== Diagnostics badge ===== */
-// Provide your own endpoints as: window.DIAG_CUSTOM_ENDPOINTS = [{name:'Moje API', url:'https://.../health'}]
 const DEFAULT_ENDPOINTS = [
   { name: "Open-Meteo Forecast", url: "https://api.open-meteo.com/v1/forecast?latitude=50.08&longitude=14.44&hourly=temperature_2m&timezone=Europe%2FPrague" },
   { name: "ipgeolocation Astronomy", url: `https://api.ipgeolocation.io/astronomy?apiKey=${IPGEO_API_KEY}&lat=50.08&long=14.44` },
   { name: "Nominatim Reverse", url: "https://nominatim.openstreetmap.org/reverse?format=json&lat=50.08&lon=14.44&zoom=10&addressdetails=1" }
 ];
 const ENDPOINTS = (window.DIAG_CUSTOM_ENDPOINTS && Array.isArray(window.DIAG_CUSTOM_ENDPOINTS) && window.DIAG_CUSTOM_ENDPOINTS.length)
-  ? window.DIAG_CUSTOM_ENDPOINTS
-  : DEFAULT_ENDPOINTS;
+  ? window.DIAG_CUSTOM_ENDPOINTS : DEFAULT_ENDPOINTS;
 
 const diagTag = document.querySelector('.diag-tag');
 const diagList = document.getElementById('diagList');
@@ -189,14 +196,12 @@ function el(tag, attrs={}, html=""){
   if(html) e.innerHTML=html;
   return e;
 }
-
 function statusRow(name, statusClass, text){
   const row = el('div', {class:'diag-item'});
   row.appendChild(el('div',{class:'diag-name'}, name));
   row.appendChild(el('div',{class:'diag-status '+statusClass}, text));
   return row;
 }
-
 async function ping(url, timeout=4500){
   const controller = new AbortController();
   const id = setTimeout(()=>controller.abort(), timeout);
@@ -209,20 +214,14 @@ async function ping(url, timeout=4500){
     return {ok:false, status:'—'};
   }
 }
-
 async function runDiagnostics(){
   diagList.innerHTML = "";
   for(const ep of ENDPOINTS){
     const row = statusRow(ep.name, 'pending', 'čekám…');
     diagList.appendChild(row);
     ping(ep.url).then(res=>{
-      if(res.ok){
-        row.querySelector('.diag-status').className='diag-status ok';
-        row.querySelector('.diag-status').textContent='OK '+res.status;
-      }else{
-        row.querySelector('.diag-status').className='diag-status fail';
-        row.querySelector('.diag-status').textContent='Chyba '+res.status;
-      }
+      if(res.ok){ row.querySelector('.diag-status').className='diag-status ok'; row.querySelector('.diag-status').textContent='OK '+res.status; }
+      else { row.querySelector('.diag-status').className='diag-status fail'; row.querySelector('.diag-status').textContent='Chyba '+res.status; }
     });
   }
 }
@@ -295,7 +294,6 @@ function initMap(lat,lon){
 }
 
 /* ===== Moon phase (ipgeolocation only) ===== */
-// Store illumination (0..1) by ISO date for visibility graph.
 let moonIllumByDate = {};
 function getMoonEmojiFromName(n){n=String(n||"").toLowerCase().replace(/_/g," ").trim();if(n.includes("new moon"))return"🌑 Nov";if(n.includes("waxing crescent"))return"🌒 Dorůstající srpek";if(n.includes("first quarter"))return"🌓 První čtvrť";if(n.includes("waxing gibbous"))return"🌔 Dorůstající měsíc";if(n.includes("full moon"))return"🌕 Úplněk";if(n.includes("waning gibbous"))return"🌖 Couvající měsíc";if(n.includes("last quarter"))return"🌗 Poslední čtvrť";if(n.includes("waning crescent"))return"🌘 Couvající srpek";return"🌙 Neznámá fáze"}
 async function fetchMoonPhase(lat,lon){
@@ -306,7 +304,6 @@ async function fetchMoonPhase(lat,lon){
     const p=d.moon_phase||"Neznámá fáze";
     $("moon-phase-label").textContent=getMoonEmojiFromName(p);
     if(DEBUG){$("phase-raw").style.display="block";$("phase-raw").textContent=`API: ${p} (${d.moon_illumination||'?' }%)`}
-    // Save illumination for today's date (0..1) for the visibility graph
     const today = new Date().toISOString().split('T')[0];
     const illumPct = Number(d.moon_illumination);
     if(Number.isFinite(illumPct)){
@@ -319,11 +316,11 @@ async function fetchMoonPhase(lat,lon){
   }
 }
 
-/* ===== Star visibility graph support (uses moonIllumByDate only) ===== */
+/* ===== Star visibility score (kept for possible future use) ===== */
 function visibilityScore(cloud, precip, dateStr){
   const cloudScore = 100 - Math.min(Math.max(cloud,0),100);
   const rainPenalty = Math.min(precip*50, 50);
-  const illum = moonIllumByDate[dateStr] ?? 0;  // 0..1 (no Open-Meteo fallback)
+  const illum = moonIllumByDate[dateStr] ?? 0;  // 0..1
   const moonPenalty = illum * 40;
   const raw = cloudScore - rainPenalty - moonPenalty;
   return Math.max(0, Math.min(100, Math.round(raw)));
@@ -341,7 +338,24 @@ function measureCardsWidth(scrollEl){
   return Math.ceil(sum);
 }
 
-function drawBackgroundGraph(scrollEl, entries, dateStr){
+/* ===== Graph drawing with mode (cloud | wind | rain) ===== */
+function scoreForMode(entry, mode, dateStr){
+  if(mode === 'cloud'){
+    return Math.max(0, Math.min(100, 100 - (entry.cloud ?? 0)));
+  }
+  if(mode === 'wind'){
+    const w = Math.max(0, Math.min(50, entry.wind ?? 0)); // cap 0..50 km/h
+    return Math.round(100 * (1 - w/50));
+  }
+  if(mode === 'rain'){
+    const r = Math.max(0, Math.min(2, entry.rain ?? 0)); // cap 0..2 mm
+    return Math.round(100 * (1 - r/2));
+  }
+  // fallback: visibility
+  return visibilityScore(entry.cloud ?? 0, entry.rain ?? 0, dateStr);
+}
+
+function drawBackgroundGraph(scrollEl, entries, dateStr, mode='cloud'){
   const old = scrollEl.querySelector('.bg-graph');
   if(old) old.remove();
 
@@ -376,7 +390,7 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
   const points = [];
   for(let i=0;i<n;i++){
     const x = (totalW-1) * (i/(n-1));
-    const score = visibilityScore(entries[i].cloud, entries[i].rain, dateStr);
+    const score = scoreForMode(entries[i], mode, dateStr); // 0..100 (100 = lepší)
     const norm = score - 50;
     const y = midY - (norm/50)*amp;
     points.push([x,y]);
@@ -406,13 +420,20 @@ function drawBackgroundGraph(scrollEl, entries, dateStr){
   scrollEl.insertBefore(wrap, scrollEl.firstChild);
 
   if(!scrollEl._graphResizeObs){
-    const ro = new ResizeObserver(()=> drawBackgroundGraph(scrollEl, entries, dateStr));
+    const ro = new ResizeObserver(()=> {
+      const id = scrollEl.closest('.forecast-content')?.id;
+      const modeNow = (window._graphMode && id) ? (window._graphMode[id] || 'cloud') : 'cloud';
+      drawBackgroundGraph(scrollEl, entries, dateStr, modeNow);
+    });
     ro.observe(scrollEl);
     scrollEl._graphResizeObs = ro;
   }
 }
 
 /* ===== Forecast ===== */
+window._graphData = {}; // {contentId: {entries, date}}
+window._graphMode = {}; // {contentId: 'cloud'|'wind'|'rain'}
+
 async function fetchForecast(lat,lon){
   showSpinner(true);
   const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,cloudcover,precipitation,windspeed_10m&timezone=Europe/Prague`);
@@ -438,9 +459,33 @@ async function fetchForecast(lat,lon){
     const section=document.createElement('div'); section.className='forecast-day';
     const header=document.createElement('h3'); const contentId=`day-${idx}`;
     header.dataset.date=date;
-    header.innerHTML=`<span id="${contentId}-icon">⬆️</span> ${getDayName(date)}, ${date}
+
+    // Header content + mode tabs
+    const leftPart = document.createElement('div');
+    leftPart.style.display='flex'; leftPart.style.alignItems='center'; leftPart.style.gap='8px';
+    leftPart.innerHTML = `<span id="${contentId}-icon">⬆️</span> ${getDayName(date)}, ${date}
       <button class="btn" style="padding:4px 8px;font-size:.85em" onclick="event.stopPropagation(); centerTime('${contentId}', '12:00')">Poledne</button>
-      <button class="btn" style="padding:4px 8px;font-size:.85em" onclick="event.stopPropagation(); centerTime('${contentId}', '23:00')">Půlnoc</button>`;
+      <button class="btn" style="padding:4px 8px;font-size:.85em" onclick="event.stopPropagation(); centerTime('${contentId}', '23:00')">Půlnoc</button>
+      <span class="tiny-help">(Kliknutím na den sbalíš/rozbalíš)</span>`;
+
+    const tabs = document.createElement('div');
+    tabs.className='mode-tabs';
+    tabs.innerHTML = `
+      <button class="mode-btn active" data-mode="cloud" title="Graf podle oblačnosti (výchozí)">☁️</button>
+      <button class="mode-btn" data-mode="wind" title="Graf podle rychlosti větru">💨</button>
+      <button class="mode-btn" data-mode="rain" title="Graf podle srážek">🌧️</button>`;
+    tabs.addEventListener('click', (e)=>{
+      if(!(e.target instanceof HTMLElement)) return;
+      const btn = e.target.closest('.mode-btn'); if(!btn) return;
+      e.stopPropagation();
+      const mode = btn.getAttribute('data-mode');
+      changeGraphMode(contentId, mode);
+      tabs.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+
+    header.appendChild(leftPart);
+    header.appendChild(tabs);
     header.onclick=()=>toggleForecast(contentId);
     section.appendChild(header);
 
@@ -474,13 +519,27 @@ async function fetchForecast(lat,lon){
     content.appendChild(wrapper);
     section.appendChild(content);
     div.appendChild(section);
-    requestAnimationFrame(()=> drawBackgroundGraph(scroll, displayedEntries, date));
+
+    // Save data & draw default (cloud) graph
+    window._graphData[contentId] = { entries: displayedEntries, date };
+    window._graphMode[contentId] = 'cloud';
+    requestAnimationFrame(()=> drawBackgroundGraph(scroll, displayedEntries, date, 'cloud'));
   });
 }
 
-/* ===== Toggle helpers ===== */
+/* ===== Toggle & focus helpers ===== */
 function toggleForecast(id){const c=document.getElementById(id);const i=document.getElementById(id+'-icon');if(c.style.display==='none'){c.style.display='block';i.textContent='⬆️'}else{c.style.display='none';i.textContent='⬇️'}}
 function centerTime(contentId,target){const sc=document.querySelector(`#${contentId} .forecast-scroll`);if(!sc)return;const cards=sc.querySelectorAll('.forecast-card');for(let i=0;i<cards.length;i++){const strong=cards[i].querySelector('strong');if(strong&&strong.textContent.trim()===target){const w=sc.clientWidth;const off=cards[i].offsetLeft;const cw=cards[i].offsetWidth;sc.scrollTo({left:off-(w/2)+(cw/2),behavior:'smooth'});break}}}
+
+/* Change graph mode for a given day */
+function changeGraphMode(contentId, mode){
+  window._graphMode[contentId] = mode;
+  const sc = document.querySelector(`#${contentId} .forecast-scroll`);
+  const data = window._graphData[contentId];
+  if(sc && data){
+    drawBackgroundGraph(sc, data.entries, data.date, mode);
+  }
+}
 
 /* ===== Planets @22:00 ===== */
 async function fetchPlanets(lat,lon){
