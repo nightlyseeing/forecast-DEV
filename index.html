@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Astronomická předpověď – grafy déšť/vítr (světlé ↓ / tmavé ↑) + diagnostika</title>
+<title>Astronomická předpověď – seeing (👁️), vítr, déšť</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -134,7 +134,7 @@
         <div class="tiny" style="margin-top:8px;">Vlastní seznam můžeš dodat přes <code>window.DIAG_CUSTOM_ENDPOINTS</code> (viz JS).</div>
       </div>
     </div>
-    <div class="version-tag">v0.3.1</div>
+    <div class="version-tag">v0.3.2</div>
   </div>
 </div>
 
@@ -255,7 +255,15 @@ document.addEventListener("click",(e)=>{const m=document.getElementById("mainMen
 const $=(id)=>document.getElementById(id);
 function showSpinner(b){$("spinner").style.display=b?"block":"none"}
 function getDayName(d){const today=new Date().toISOString().split('T')[0];if(d===today)return"Dnes";const arr=['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'];return arr[new Date(d).getDay()]}
-function getWeatherIcon(c,r){if(r>2)return'🌧️';if(r>0)return'🌦️';if(c>75)return'☁️';if(c>25)return'🌤️';return'☀️'}
+function getWeatherIcon(c,r){
+  // Pozn.: karta počasí dál ukazuje počasí (☁️/🌤️/☀️ …),
+  // ale ikona režimu seeing je 👁️ – viz tlačítko níže.
+  if(r>2)return'🌧️';
+  if(r>0)return'🌦️';
+  if(c>75)return'☁️';
+  if(c>25)return'🌤️';
+  return'☀️';
+}
 
 /* ===== Layout sync ===== */
 function syncMapHeight(){
@@ -333,7 +341,7 @@ async function fetchMoonPhase(lat,lon){
   }
 }
 
-/* ===== Star visibility score (pro cloud režim) ===== */
+/* ===== Star visibility score (pro seeing režim) ===== */
 function visibilityScore(cloud, precip, dateStr){
   const cloudScore = 100 - Math.min(Math.max(cloud,0),100);
   const rainPenalty = Math.min(precip*50, 50);
@@ -361,7 +369,7 @@ const WIND_MAX_KMH = 50;   // 0..50 km/h => 100 %
 
 /* ===== Mode score (0..100) ===== */
 function scoreForMode(entry, mode, dateStr){
-  if(mode === 'cloud'){
+  if(mode === 'seeing'){ // dříve 'cloud'
     return Math.max(0, Math.min(100, 100 - (entry.cloud ?? 0)));
   }
   if(mode === 'wind'){
@@ -372,14 +380,15 @@ function scoreForMode(entry, mode, dateStr){
     const r = Math.max(0, Math.min(RAIN_MAX_MM, entry.rain ?? 0));
     return Math.round(100 * (r / RAIN_MAX_MM)); // 0..100 (víc srážek = výš)
   }
+  // fallback: seeing
   return visibilityScore(entry.cloud ?? 0, entry.rain ?? 0, dateStr);
 }
 
 /* ===== Graph drawing =====
-   - cloud: baseline uprostřed (zelená ↑ / červená ↓)
-   - rain & wind: baseline dole, plocha roste nahoru; výplň = vertikální přechod (světlá dole → tmavá nahoře)
+   - seeing (👁️): baseline uprostřed (zelená ↑ / červená ↓)
+   - rain & wind: baseline dole, plocha nahoru; výplň = vertikální přechod (světlá ↓ → tmavá ↑)
 */
-function drawBackgroundGraph(scrollEl, entries, dateStr, mode='cloud'){
+function drawBackgroundGraph(scrollEl, entries, dateStr, mode='seeing'){
   const old = scrollEl.querySelector('.bg-graph');
   if(old) old.remove();
 
@@ -417,7 +426,7 @@ function drawBackgroundGraph(scrollEl, entries, dateStr, mode='cloud'){
   defs.appendChild(mkGrad('windGrad','--windLow','--windHigh'));
   svg.appendChild(defs);
 
-  if(mode === 'cloud'){
+  if(mode === 'seeing'){
     const midY = totalH/2;
     const amp = (totalH/2) * 0.9;
 
@@ -434,7 +443,7 @@ function drawBackgroundGraph(scrollEl, entries, dateStr, mode='cloud'){
     const points = [];
     for(let i=0;i<n;i++){
       const x = (totalW-1) * (i/(n-1));
-      const score = scoreForMode(entries[i], 'cloud', dateStr); // 0..100 (víc nahoru = lepší)
+      const score = scoreForMode(entries[i], 'seeing', dateStr); // 0..100 (víc nahoru = lepší)
       const norm = score - 50; // -50..+50
       const y = midY - (norm/50)*amp;
       points.push([x,y]);
@@ -510,7 +519,7 @@ function drawBackgroundGraph(scrollEl, entries, dateStr, mode='cloud'){
   if(!scrollEl._graphResizeObs){
     const ro = new ResizeObserver(()=> {
       const id = scrollEl.closest('.forecast-content')?.id;
-      const modeNow = (window._graphMode && id) ? (window._graphMode[id] || 'cloud') : 'cloud';
+      const modeNow = (window._graphMode && id) ? (window._graphMode[id] || 'seeing') : 'seeing';
       drawBackgroundGraph(scrollEl, entries, dateStr, modeNow);
     });
     ro.observe(scrollEl);
@@ -520,7 +529,7 @@ function drawBackgroundGraph(scrollEl, entries, dateStr, mode='cloud'){
 
 /* ===== Forecast ===== */
 window._graphData = {}; // {contentId: {entries, date}}
-window._graphMode = {}; // {contentId: 'cloud'|'wind'|'rain'}
+window._graphMode = {}; // {contentId: 'seeing'|'wind'|'rain'}
 
 async function fetchForecast(lat,lon){
   showSpinner(true);
@@ -553,9 +562,9 @@ async function fetchForecast(lat,lon){
     const tabs = document.createElement('div');
     tabs.className='mode-tabs';
     tabs.innerHTML = `
-      <button class="mode-btn active" data-mode="cloud" title="Graf podle oblačnosti (výchozí)">☁️</button>
-      <button class="mode-btn" data-mode="wind" title="Graf podle rychlosti větru (světlá ↓ → tmavá ↑)">💨</button>
-      <button class="mode-btn" data-mode="rain" title="Graf podle srážek (světlá ↓ → tmavá ↑)">🌧️</button>`;
+      <button class="mode-btn active" data-mode="seeing" title="Seeing (lepší ↑)">👁️</button>
+      <button class="mode-btn" data-mode="wind" title="Vítr (světlá ↓ → tmavá ↑)">💨</button>
+      <button class="mode-btn" data-mode="rain" title="Déšť (světlá ↓ → tmavá ↑)">🌧️</button>`;
     tabs.addEventListener('click', (e)=>{
       if(!(e.target instanceof HTMLElement)) return;
       const btn = e.target.closest('.mode-btn'); if(!btn) return;
@@ -596,10 +605,10 @@ async function fetchForecast(lat,lon){
     section.appendChild(content);
     div.appendChild(section);
 
-    // Save data & draw default (cloud) graph
+    // Save data & draw default (seeing) graph
     window._graphData[contentId] = { entries, date };
-    window._graphMode[contentId] = 'cloud';
-    requestAnimationFrame(()=> drawBackgroundGraph(scroll, entries, date, 'cloud'));
+    window._graphMode[contentId] = 'seeing';
+    requestAnimationFrame(()=> drawBackgroundGraph(scroll, entries, date, 'seeing'));
   });
 
   // po vykreslení uprav výšku mapy
