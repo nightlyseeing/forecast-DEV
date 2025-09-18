@@ -106,6 +106,14 @@
   .footer{text-align:center;opacity:.8;margin-top:10px;font-size:.95em}
   .small{font-size:.92em;opacity:.9}
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#243442;border:1px solid var(--border);margin:4px 6px 0 0}
+
+  .version-wrap{position:relative}
+  .version-tag{position:relative; cursor:default}
+  .version-pop{display:none;position:absolute;top:115%;right:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;min-width:260px;max-width:420px;padding:10px 12px;box-shadow:0 0 16px rgba(0,255,195,.25); color:var(--text); z-index:2100}
+  .version-wrap:hover .version-pop{display:block}
+  .version-pop .row{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+  .version-pop .row:last-child{border-bottom:none}
+
 </style>
 </head>
 <body>
@@ -115,14 +123,8 @@
     <div class="menu-dropdown" id="mainMenu">
       <div class="menu-section">
         <div class="menu-item has-submenu">🗺️ Mapy ▸
-          <div class="submenu">
-            <a class="menu-link" href="https://www.lightpollutionmap.info" target="_blank">💡 Light Pollution Map</a>
-            <a class="menu-link" href="https://www.windy.com" target="_blank">🌬️ Windy</a>
-          </div>
-        </div>
-        <a class="menu-link" href="https://open-meteo.com/" target="_blank">📡 Open-Meteo API</a>
-        <a class="menu-link" href="https://ipgeolocation.io/documentation/astronomy-api.html" target="_blank">🌙 ipgeolocation Astronomy</a>
-      </div>
+          <div class="submenu"><a class="menu-link" href="https://www.lightpollutionmap.info" target="_blank">💡 Light Pollution Map</a><a class="menu-link" href="https://www.windy.com" target="_blank">🌬️ Windy</a></div>
+        </div></div>
     </div>
   </div>
 
@@ -134,7 +136,7 @@
         <div class="tiny" style="margin-top:8px;">Vlastní seznam můžeš dodat přes <code>window.DIAG_CUSTOM_ENDPOINTS</code> (viz JS).</div>
       </div>
     </div>
-    <div class="version-tag">v0.3.2</div>
+    <div class="version-wrap"><div class="version-tag" id="versionTag">v0.3.3</div><div class="version-pop" id="versionPop"><div class="row"><div>Verze</div><div id="verVal">v0.3.3</div></div><div class="row"><div>Sestaveno</div><div id="buildVal">—</div></div><div class="row"><div>Prohlížeč</div><div id="uaVal">—</div></div></div></div>
   </div>
 </div>
 
@@ -195,6 +197,20 @@
 const IPGEO_API_KEY="781aa2d69af74745906e01cc68c84207";
 const DEBUG=new URLSearchParams(location.search).has("debug");
 
+const VERSION = "v0.3.3";
+const BUILD_DATE = "2025-09-18"; // Europe/Prague
+(function setupVersionHover(){
+  const tag = document.getElementById('versionTag');
+  const ver = document.getElementById('verVal');
+  const build = document.getElementById('buildVal');
+  const ua = document.getElementById('uaVal');
+  if(tag){ tag.textContent = VERSION; }
+  if(ver){ ver.textContent = VERSION; }
+  if(build){ build.textContent = BUILD_DATE; }
+  if(ua){ ua.textContent = (navigator.userAgent || "—"); }
+})();
+
+
 /* ===== Diagnostics badge ===== */
 const DEFAULT_ENDPOINTS = [
   { name: "Open-Meteo Forecast", url: "https://api.open-meteo.com/v1/forecast?latitude=50.08&longitude=14.44&hourly=temperature_2m&timezone=Europe%2FPrague" },
@@ -254,7 +270,7 @@ document.addEventListener("click",(e)=>{const m=document.getElementById("mainMen
 /* ===== Helpers ===== */
 const $=(id)=>document.getElementById(id);
 function showSpinner(b){$("spinner").style.display=b?"block":"none"}
-function getDayName(d){const today=new Date().toISOString().split('T')[0];if(d===today)return"Dnes";const arr=['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'];return arr[new Date(d).getDay()]}
+function getDayName(d){const today=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Prague'});if(d===today)return"Dnes";const arr=['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'];return arr[new Date(d+'T00:00:00').getDay()]}
 function getWeatherIcon(c,r){
   // Pozn.: karta počasí dál ukazuje počasí (☁️/🌤️/☀️ …),
   // ale ikona režimu seeing je 👁️ – viz tlačítko níže.
@@ -389,6 +405,9 @@ function scoreForMode(entry, mode, dateStr){
    - rain & wind: baseline dole, plocha nahoru; výplň = vertikální přechod (světlá ↓ → tmavá ↑)
 */
 function drawBackgroundGraph(scrollEl, entries, dateStr, mode='seeing'){
+  // Guard: use only the provided entries for a single date span of hours
+  if(Array.isArray(entries)){ const dates = new Set(entries.map(e=>e.date)); if(dates.size>1){ entries = entries.filter(e=> e.date===date); } }
+
   const old = scrollEl.querySelector('.bg-graph');
   if(old) old.remove();
 
@@ -539,15 +558,39 @@ async function fetchForecast(lat,lon){
   const {time,temperature_2m,cloudcover,precipitation,windspeed_10m}=d.hourly;
   const div=$("forecast");div.innerHTML="";
   const days={};
-  for(let i=0;i<time.length;i++){
-    const [date,hour]=time[i].split('T');
-    const entry={time:hour,temp:temperature_2m[i],cloud:cloudcover[i],rain:precipitation[i],wind:windspeed_10m[i],date};
-    if(!days[date]) days[date]=[];
+  
+for(let i=0;i<time.length;i++){
+  let [date,hour] = time[i].split('T');
+  if(hour === '24:00'){
+    // Normalize 24:00 to next day 00:00 so it doesn't appear under the same date
+    const dt = new Date(date + 'T00:00:00');
+    const next = new Date(dt.getTime() + 24*60*60*1000);
+    const y = next.getFullYear();
+    const m = String(next.getMonth()+1).padStart(2,'0');
+    const d2 = String(next.getDate()).padStart(2,'0');
+    date = `${y}-${m}-${d2}`;
+    hour = '00:00';
+  }
+  const entry={time:hour,temp:temperature_2m[i],cloud:cloudcover[i],rain:precipitation[i],wind:windspeed_10m[i],date};
+  if(!days[date]) days[date]=[];
+  // Guard: only push entries that exactly match the date key.
+  if(time[i].startsWith(date+'T')){
     days[date].push(entry);
   }
+}
+
   let idx=0;
-  Object.entries(days).forEach(([date,entries])=>{
+  Object.entries(days).sort((a,b)=> a[0]<b[0]? -1 : a[0]>b[0]? 1 : 0).forEach(([date,entries])=>{
     if(!entries.length) return;
+    // Start today's forecast from the current hour (Europe/Prague)
+    try{
+      const todayLocal = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Prague' });
+      if(date === todayLocal){
+        const nowHHmm = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Prague' });
+        entries = entries.filter(e => e.time >= nowHHmm);
+      }
+    }catch(e){/* noop */}
+
     const section=document.createElement('div'); section.className='forecast-day';
     const header=document.createElement('h3'); const contentId=`day-${idx++}`;
     header.dataset.date=date;
