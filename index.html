@@ -130,8 +130,8 @@
   .tiny-help{font-size:.85em;opacity:.85;margin-left:6px}
 
   .forecast-content{display:none;padding:10px;position:relative}
-  .forecast-scroll-wrapper{position:relative}
-  .forecast-scroll{position:relative;display:flex;gap:8px;overflow-x:auto;padding:6px 0;z-index:2}
+  .forecast-scroll-wrapper{position:relative; overflow:hidden;} /* prevent vertical scrollbars */
+  .forecast-scroll{position:relative;display:flex;gap:8px;overflow-x:auto; overflow-y:hidden; padding:6px 0;z-index:2} /* hide vertical scroll */
   .bg-graph{position:absolute;top:0;left:0;z-index:1;pointer-events:none;}
   .forecast-card{min-width:80px;font-size:.9em;background:rgba(44,47,51,0.72);border:1px solid var(--border);border-radius:8px;padding:6px;text-align:center;position:relative;z-index:2}
   .scroll-left,.scroll-right{background:none;border:none;color:#fff;font-size:1.5em;padding:6px 10px;cursor:pointer;position:absolute;top:50%;transform:translateY(-50%);opacity:.6;text-shadow:0 0 6px rgba(255,255,255,.3);z-index:3}
@@ -182,9 +182,9 @@
 
       <div class="badges">
         <div class="version-wrap">
-          <div class="version-tag" id="versionTag">v0.3.3</div>
+          <div class="version-tag" id="versionTag">v0.3.4</div>
           <div class="version-pop" id="versionPop">
-            <div class="row"><div>Verze</div><div id="verVal">v0.3.3</div></div>
+            <div class="row"><div>Verze</div><div id="verVal">v0.3.4</div></div>
             <div class="row"><div>Sestaveno</div><div id="buildVal">—</div></div>
             <div class="row"><div>Prohlížeč</div><div id="uaVal">—</div></div>
           </div>
@@ -269,7 +269,7 @@
 const IPGEO_API_KEY="781aa2d69af74745906e01cc68c84207";
 const DEBUG=new URLSearchParams(location.search).has("debug");
 
-const VERSION = "v0.3.3";
+const VERSION = "v0.3.4";
 const BUILD_DATE = "2025-09-18"; // Europe/Prague
 (function setupVersionHover(){
   const tag = document.getElementById('versionTag');
@@ -530,7 +530,7 @@ function drawBackgroundGraph(scrollEl, entries, dateStr, mode='seeing'){
     svg.appendChild(baseline);
 
     const n = entries.length;
-    if(n<2){ wrap.appendChild(svg); scrollEl.insertBefore(wrap, scrollEl.firstChild); return; }
+    if(n<2){ scrollEl.insertAdjacentElement('afterbegin', wrap); wrap.appendChild(svg); return; }
 
     const points = [];
     for(let i=0;i<n;i++){
@@ -572,7 +572,7 @@ function drawBackgroundGraph(scrollEl, entries, dateStr, mode='seeing'){
     svg.appendChild(baseLine);
 
     const n = entries.length;
-    if(n<2){ wrap.appendChild(svg); scrollEl.insertBefore(wrap, scrollEl.firstChild); return; }
+    if(n<2){ scrollEl.insertAdjacentElement('afterbegin', wrap); wrap.appendChild(svg); return; }
 
     const points=[];
     for(let i=0;i<n;i++){
