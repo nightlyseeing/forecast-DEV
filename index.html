@@ -52,10 +52,10 @@
 
   h1{margin:8px 0 16px;text-align:center;color:#fff;font-size:2.1rem;text-shadow:0 0 16px var(--accent)}
 
-  /* ===== Top bar with menu + version + NOW status ===== */
+  /* ===== Top bar with menu + centered NOW status ===== */
   .topbar{
     position:sticky; top:0; z-index:2000;
-    display:flex; align-items:center; gap:8px;
+    display:grid; grid-template-columns:auto 1fr auto; align-items:center;
     padding:8px 10px;
     background:linear-gradient(180deg, rgba(11,12,16,0.92) 0%, rgba(11,12,16,0.70) 100%);
     border:1px solid rgba(255,255,255,0.08);
@@ -74,12 +74,8 @@
   .has-submenu{position:relative}
   .has-submenu:hover>.submenu{display:block}
 
-  .topbar-spacer{flex:1}
-  .badges{display:flex;align-items:center;gap:8px;margin-left:auto}
-  .version-tag{background:var(--accent);color:#000;font-weight:700;padding:6px 12px;border-radius:12px;box-shadow:var(--shadow)}
-
   .now-status{
-    margin:0 auto;
+    justify-self:center; /* center in grid middle column */
     display:flex; align-items:center; gap:10px;
     padding:6px 12px; border-radius:999px;
     border:1px solid var(--border);
@@ -178,17 +174,24 @@
             </div>
           </div>
           <div class="menu-section">
-            <div class="menu-item has-submenu">🛠️ Tools ▸
+            <div class="menu-item has-submenu">🛠️ Nástroje ▸
               <div class="submenu">
                 <a class="menu-link" href="#" id="openDiag">🧪 API diagnostika</a>
+              </div>
+            </div>
+          </div>
+          <!-- NOVĚ: Verze v menu s hover zobrazením -->
+          <div class="menu-section">
+            <div class="menu-item has-submenu">ℹ️ Verze ▸
+              <div class="submenu">
+                <div class="menu-item" id="versionInMenuRow">Aktuální: <strong id="versionInMenu">—</strong></div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="topbar-spacer"></div>
-
+      <!-- Prostřední (center) buňka gridu: NOW status -->
       <div id="nowStatus" class="now-status" style="display:none">
         <span class="place" id="nowPlace">—</span><span class="sep">|</span>
         <span>👁️ <span class="val" id="nowSeeing">—</span></span>
@@ -200,11 +203,8 @@
         <span>🌡️ <span class="val" id="nowTemp">—</span></span>
       </div>
 
-      <div class="badges">
-        <div class="version-wrap">
-          <div class="version-tag" id="versionTag">v0.3.5</div>
-        </div>
-      </div>
+      <!-- Pravá (třetí) buňka gridu prázdná pro symetrii -->
+      <div></div>
     </div>
 
     <h1>🪐 Astronomická předpověď</h1>
@@ -287,6 +287,14 @@ const VERSION = "v0.3.5";
 function toggleMenu(){const m=document.getElementById("mainMenu");m.style.display=m.style.display==="block"?"none":"block"}
 document.addEventListener("click",(e)=>{const m=document.getElementById("mainMenu");const t=document.querySelector(".menu-toggle");if(m&&t&&!m.contains(e.target)&&!t.contains(e.target))m.style.display="none"});
 
+/* Po načtení: doplnit verzi do menu + tooltip na tlačítko */
+window.addEventListener('DOMContentLoaded', ()=>{
+  const vSpan = document.getElementById('versionInMenu');
+  if(vSpan) vSpan.textContent = VERSION;
+  const btn = document.querySelector('.menu-toggle');
+  if(btn) btn.title = `Verze ${VERSION}`;
+});
+
 /* ===== Helpers ===== */
 const $=(id)=>document.getElementById(id);
 function showSpinner(b){$("spinner").style.display=b?"block":"none"}
@@ -318,7 +326,23 @@ window.addEventListener("resize", syncMapHeight);
 let selectedCity=null;
 async function autocompleteCities(){const v=$("cityInput").value.trim();const s=$("suggestions");if(v.length<2){s.style.display="none";return}const res=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(v)}&count=6&language=cs&format=json`);const data=await res.json();s.innerHTML="";(data.results||[]).forEach(c=>{const li=document.createElement("li");li.textContent=`${c.name}, ${c.country}`;li.onclick=()=>{selectedCity=c;$("cityInput").value=`${c.name}, ${c.country}`;updateLocationInfo(c);initMap(c.latitude,c.longitude);fetchForecast(c.latitude,c.longitude);fetchMoonPhase(c.latitude,c.longitude);fetchPlanets(c.latitude,c.longitude);s.style.display="none"};s.appendChild(li)});s.style.display=s.children.length?"block":"none"}
 
-async function getLocation(){if(!navigator.geolocation)return alert("Váš prohlížeč nepodporuje geolokaci.");navigator.geolocation.getCurrentPosition(async p=>{const lat=p.coords.latitude,lon=p.coords.longitude;const name=await reverseGeocode(lat,lon);const c={name,country:"",latitude:lat,longitude:lon};selectedCity=c;updateLocationInfo(c);initMap(lat,lon);fetchForecast(lat,lon);fetchMoonPhase(lat,lon);fetchPlanets(lat,lon)},e=>alert("Nepodařilo se zjistit polohu."))}
+async function getLocation(){
+  if(!navigator.geolocation)return alert("Váš prohlížeč nepodporuje geolokaci.");
+  navigator.geolocation.getCurrentPosition(async p=>{
+    const lat=p.coords.latitude,lon=p.coords.longitude;
+    const name=await reverseGeocode(lat,lon);
+    const c={name,country:"",latitude:lat,longitude:lon};
+    selectedCity=c;
+    updateLocationInfo(c);
+    initMap(lat,lon);
+    fetchForecast(lat,lon);
+    fetchMoonPhase(lat,lon);
+    fetchPlanets(lat,lon);
+    /* NOVĚ: po kliknutí na Moje poloha vyčistit vstup i návrhy */
+    const input=$("cityInput"); if(input) input.value="";
+    const s=$("suggestions"); if(s) { s.innerHTML=""; s.style.display="none"; }
+  },e=>alert("Nepodařilo se zjistit polohu."));
+}
 
 async function reverseGeocode(lat,lon){try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`);const d=await r.json();return d.address?.city||d.address?.town||d.address?.village||d.address?.municipality||d.display_name||`${lat.toFixed(4)}, ${lon.toFixed(4)}`}catch{return `${lat.toFixed(4)}, ${lon.toFixed(4)}`}} 
 
