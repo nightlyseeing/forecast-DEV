@@ -53,8 +53,7 @@
   h1{margin:8px 0 16px;text-align:center;color:#fff;font-size:2.1rem;text-shadow:0 0 16px var(--accent)}
 
   /* ===== Top bar with menu + centered NOW status ===== */
-  .topbar{
-    position:sticky; top:0; z-index:2000;
+  .topbar{ position:sticky; top:0; z-index:15000; /* ↑ Fix: topbar nad vyhledávačem i jeho návrhy */
     display:grid; grid-template-columns:auto 1fr auto; align-items:center;
     padding:8px 10px;
     background:linear-gradient(180deg, rgba(11,12,16,0.92) 0%, rgba(11,12,16,0.70) 100%);
@@ -63,14 +62,14 @@
     backdrop-filter:saturate(140%) blur(6px);
     box-shadow:0 6px 18px rgba(0,0,0,.35);
   }
-  .menu-container{position:relative;align-self:flex-start}
+  .menu-container{position:relative;align-self:flex-start; z-index:9000}
   .menu-toggle{background:var(--accent);color:#000;font-weight:bold;padding:8px 14px;border-radius:10px;cursor:pointer;border:none;box-shadow:var(--shadow)}
-  .menu-dropdown{display:none;position:absolute;top:110%;left:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;min-width:240px;box-shadow:0 8px 16px rgba(0,0,0,.6);overflow:visible}
+  .menu-dropdown{display:none;position:absolute;top:110%;left:0;background:var(--panel);border:1px solid var(--border);border-radius:10px;min-width:240px;box-shadow:0 8px 16px rgba(0,0,0,.6);overflow:visible; z-index:9500}
   .menu-section{padding:6px 0;position:relative;border-bottom:1px solid rgba(255,255,255,.06)}
   .menu-section:last-child{border-bottom:none}
   .menu-item,.menu-link{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 16px;color:var(--accent);text-decoration:none;cursor:pointer;white-space:nowrap}
   .menu-item:hover,.menu-link:hover{background:#2e8b57;color:#fff}
-  .submenu{display:none;position:absolute;top:0;left:100%;background:var(--panel);border:1px solid var(--border);border-radius:10px;min-width:230px;box-shadow:0 8px 16px rgba(0,0,0,.6);}
+  .submenu{display:none;position:absolute;top:0;left:100%;background:var(--panel);border:1px solid var(--border);border-radius:10px;min-width:230px;box-shadow:0 8px 16px rgba(0,0,0,.6); z-index:9600;}
   .has-submenu{position:relative}
   .has-submenu:hover>.submenu{display:block}
 
@@ -109,10 +108,10 @@
 
   /* ===== Controls + layout ===== */
   .controls{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
-  .input-wrapper{position:relative}
+  .input-wrapper{position:relative; z-index:4000}
   #cityInput{width:360px;max-width:100%;padding:10px 36px 10px 12px;border-radius:10px;border:2px solid var(--accent);background:#111;color:#00ffc3;font-weight:700;box-shadow:var(--shadow)}
   .btn{background:#7a6cb6;color:#fff;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;box-shadow:0 0 10px rgba(122,108,182,.5)}
-  #suggestions{position:absolute;top:100%;left:0;right:0;background:#121212;border:1px solid var(--border);border-radius:10px;list-style:none;padding:0;margin:6px 0 0 0;display:none;overflow:hidden;z-index:30}
+  #suggestions{position:absolute;top:100%;left:0;right:0;background:#121212;border:1px solid var(--border);border-radius:10px;list-style:none;padding:0;margin:6px 0 0 0;display:none;overflow:hidden;z-index:5000}
   #suggestions li{padding:10px 12px;cursor:pointer;color:var(--text)} #suggestions li:hover{background:#243442}
 
   .top-row{display:grid;grid-template-columns: minmax(300px, 1fr) minmax(280px, 1fr);gap:16px;align-items:start}
@@ -123,7 +122,7 @@
   .panel strong{color:var(--accent)}
   .kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 10px}
 
-  #mapPanel{padding:0;overflow:hidden;position:relative}
+  #mapPanel{padding:0;overflow:hidden;position:relative; z-index:1}
   #map{width:100%;height:100%}
   .zoom-badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:4px 8px;border-radius:999px;font-size:.85em;border:1px solid rgba(255,255,255,.2);z-index:2}
   .map-tip{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:6px 8px;border-radius:8px;font-size:.9em;border:1px solid rgba(255,255,255,.2);z-index:2}
@@ -281,7 +280,7 @@
 
 <script>
 const IPGEO_API_KEY="781aa2d69af74745906e01cc68c84207";
-const VERSION = "v0.3.5";
+const VERSION = "v0.3.8";
 
 /* ===== Menu ===== */
 function toggleMenu(){const m=document.getElementById("mainMenu");m.style.display=m.style.display==="block"?"none":"block"}
@@ -373,6 +372,8 @@ function initMap(lat,lon){
     map.setView([lat,lon], 10);
     marker.setLatLng([lat,lon]);
   }
+  // initialize RainViewer overlays once when map is ready
+  enableWeatherLayers();
   setTimeout(()=> { map.invalidateSize(); syncMapHeight(); }, 150);
 }
 
@@ -787,6 +788,105 @@ async function fetchPlanets(lat,lon){
 }
 
 window.addEventListener('load', syncMapHeight);
+
+/* ===== RainViewer overlays: radar + IR clouds ===== */
+let rvState = {
+  host: 'https://tilecache.rainviewer.com',
+  radarPath: null,
+  satPath: null,
+  radarLayer: null,
+  satLayer: null,
+  control: null,
+  lastTsRadar: 0,
+  lastTsSat: 0
+};
+
+async function loadRainviewerMeta(){
+  try{
+    const res = await fetch('https://api.rainviewer.com/public/weather-maps.json', { cache: 'no-store' });
+    const data = await res.json();
+    rvState.host = data.host || rvState.host;
+
+    // latest radar: prefer nowcast if available, else last past
+    let radarFrames = (data.radar?.nowcast && data.radar.nowcast.length ? data.radar.nowcast : data.radar?.past) || [];
+    if(radarFrames.length){
+      const last = radarFrames[radarFrames.length - 1];
+      rvState.radarPath = last.path;
+      rvState.lastTsRadar = last.time;
+    }
+
+    // latest satellite IR (clouds)
+    const satFrames = (data.satellite?.infrared) || [];
+    if(satFrames.length){
+      const last = satFrames[satFrames.length - 1];
+      rvState.satPath = last.path;
+      rvState.lastTsSat = last.time;
+    }
+  }catch(e){
+    console.warn('RainViewer meta fetch failed', e);
+  }
+}
+
+function ensureRvLayers(){
+  if(!map) return;
+  // create/update radar layer
+  if(rvState.radarPath){
+    const url = `${rvState.host}${rvState.radarPath}/256/{z}/{x}/{y}/2/1_1.png`;
+    if(rvState.radarLayer){
+      rvState.radarLayer.setUrl(url);
+    } else {
+      rvState.radarLayer = L.tileLayer(url, { opacity: 0.65, zIndex: 450, attribution: 'Radar © RainViewer' });
+    }
+  }
+  // create/update satellite IR layer (clouds)
+  if(rvState.satPath){
+    const urlSat = `${rvState.host}${rvState.satPath}/256/{z}/{x}/{y}/0/0_0.png`; // satellite requires color=0 and options 0_0
+    if(rvState.satLayer){
+      rvState.satLayer.setUrl(urlSat);
+    } else {
+      rvState.satLayer = L.tileLayer(urlSat, { opacity: 0.5, zIndex: 440, attribution: 'Satellite © RainViewer' });
+    }
+  }
+
+  // add layer control once
+  if(!rvState.control){
+    const overlays = {};
+    if(rvState.satLayer) overlays['☁️ Oblačnost (IR)'] = rvState.satLayer;
+    if(rvState.radarLayer) overlays['🌧️ Srážkový radar'] = rvState.radarLayer;
+    rvState.control = L.control.layers({}, overlays, { collapsed: false, position: 'topleft' }).addTo(map);
+  } else {
+    // update existing control (Leaflet has no direct API to refresh; simple approach: remove/add control)
+    map.removeControl(rvState.control);
+    const overlays = {};
+    if(rvState.satLayer) overlays['☁️ Oblačnost (IR)'] = rvState.satLayer;
+    if(rvState.radarLayer) overlays['🌧️ Srážkový radar'] = rvState.radarLayer;
+    rvState.control = L.control.layers({}, overlays, { collapsed: false, position: 'topleft' }).addTo(map);
+  }
+}
+
+async function refreshWeatherLayers(){
+  const prevRadar = rvState.lastTsRadar;
+  const prevSat = rvState.lastTsSat;
+  await loadRainviewerMeta();
+  if(rvState.lastTsRadar && rvState.lastTsRadar !== prevRadar){
+    ensureRvLayers();
+  }
+  if(rvState.lastTsSat && rvState.lastTsSat !== prevSat){
+    ensureRvLayers();
+  }
+}
+
+async function enableWeatherLayers(){
+  await loadRainviewerMeta();
+  ensureRvLayers();
+}
+
+// refresh every 10 minutes
+setInterval(()=>{
+  refreshWeatherLayers();
+}, 10*60*1000);
+
+
 
 /* ===== Diagnostics (minimal) ===== */
 const diagList = document.getElementById('diagList');
