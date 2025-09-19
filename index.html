@@ -150,8 +150,9 @@
   .footer{text-align:center;opacity:.8;margin-top:10px;font-size:.95em}
   .small{font-size:.92em;opacity:.9}
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#243442;border:1px solid var(--border);margin:4px 6px 0 0}
+</style>
 
-
+<style>
 /* === Mobile-first vylepšení (≤ 768px) === */
 @media (max-width: 768px){
   :root{
@@ -177,7 +178,7 @@
   .controls{ gap:6px; }
   #cityInput{
     width:100%;
-    font-size:16px;
+    font-size:16px;           /* iOS no-zoom */
     padding:12px 38px 12px 12px;
   }
   #suggestions{ max-height:50vh; overflow:auto; }
@@ -185,6 +186,7 @@
   .top-row{ grid-template-columns: 1fr; }
   .panel{ padding:12px; }
 
+  /* Fixní výška mapy na mobilu */
   #mapPanel{ height:48vh !important; }
   #map{ height:48vh !important; }
 
@@ -991,6 +993,33 @@ document.getElementById('openDiag')?.addEventListener('click', (e)=>{ e.preventD
 document.getElementById('closeDiag')?.addEventListener('click', (e)=>{ e.preventDefault(); closeDiagModal(); });
 document.getElementById('rerunDiag')?.addEventListener('click', (e)=>{ e.preventDefault(); runDiagnostics(); });
 document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ closeDiagModal(); } });
+</script>
+
+<script>
+(function(){
+  function isSmall(){ return window.matchMedia('(max-width: 768px)').matches; }
+  function fixMapMobileHeight(){
+    var mapPanel=document.getElementById("mapPanel");
+    var mapDiv=document.getElementById("map");
+    if(!mapPanel||!mapDiv) return;
+    var vh = Math.max(320, Math.round(window.innerHeight * 0.48));
+    mapPanel.style.setProperty('height', vh + 'px', 'important');
+    mapDiv.style.setProperty('height', vh + 'px', 'important');
+    if(window._leafletMap){ setTimeout(function(){ window._leafletMap.invalidateSize(); }, 100); }
+  }
+  // Monkey-patch: keep original for desktop; override behavior only on mobile
+  var orig = window.syncMapHeight;
+  window.syncMapHeight = function(){
+    if(isSmall()){
+      fixMapMobileHeight();
+      return; // skip desktop sync
+    }
+    if(typeof orig === 'function'){ return orig.apply(this, arguments); }
+  };
+  // Apply once on load + on orientation change
+  window.addEventListener('load', function(){ if(isSmall()) fixMapMobileHeight(); });
+  window.addEventListener('orientationchange', function(){ setTimeout(function(){ if(isSmall()) fixMapMobileHeight(); }, 250); });
+})();
 </script>
 </body>
 </html>
