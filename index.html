@@ -150,6 +150,53 @@
   .footer{text-align:center;opacity:.8;margin-top:10px;font-size:.95em}
   .small{font-size:.92em;opacity:.9}
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#243442;border:1px solid var(--border);margin:4px 6px 0 0}
+
+
+/* === Mobile-first vylepšení (≤ 768px) === */
+@media (max-width: 768px){
+  :root{
+    --safe-top: env(safe-area-inset-top);
+    --safe-bottom: env(safe-area-inset-bottom);
+  }
+
+  body{ padding:8px; padding-bottom: calc(12px + var(--safe-bottom)); }
+  h1{ font-size:1.5rem; margin:6px 0 10px; }
+
+  .topbar{
+    padding:6px 8px;
+    padding-top: calc(6px + var(--safe-top));
+    gap:6px;
+    grid-template-columns:auto 1fr auto;
+  }
+  .now-status{
+    flex-wrap:wrap;
+    row-gap:4px;
+    font-size:.95em;
+  }
+
+  .controls{ gap:6px; }
+  #cityInput{
+    width:100%;
+    font-size:16px;
+    padding:12px 38px 12px 12px;
+  }
+  #suggestions{ max-height:50vh; overflow:auto; }
+
+  .top-row{ grid-template-columns: 1fr; }
+  .panel{ padding:12px; }
+
+  #mapPanel{ height:48vh !important; }
+  #map{ height:48vh !important; }
+
+  .forecast-scroll{
+    -webkit-overflow-scrolling: touch;
+    padding-bottom:10px;
+  }
+  .forecast-card{ min-width:96px; padding:8px; }
+  .scroll-left, .scroll-right{ display:none; }
+
+  .mode-tabs{ flex-wrap:wrap; }
+}
 </style>
 </head>
 <body>
