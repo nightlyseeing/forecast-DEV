@@ -205,6 +205,20 @@ body::before{
 }
 </style>
 
+<style>
+/* === Velmi pomalu rotující galaxie na pozadí === */
+
+  50%  { transform: rotate(180deg) skewX(-4deg); }
+  100% { transform: rotate(360deg) skewX(-6deg); }
+}
+
+/* Respekt k preferencím – pokud uživatel omezuje animace */
+@media (prefers-reduced-motion: reduce){
+  body::after{ animation: none; }
+}
+</style>
+
+
 
 <style>
 /* === Mobile-first vylepšení (≤ 768px) === */
@@ -252,6 +266,29 @@ body::before{
   .scroll-left, .scroll-right{ display:none; }
 
   .mode-tabs{ flex-wrap:wrap; }
+}
+</style>
+<style>
+/* === Spirální galaxie jako pomalé rotující pozadí === */
+
+  to   { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  body::after{ animation:none; }
+}
+</style>
+<style>
+/* === Animovaná Andromeda jako pozadí === */
+body::after {
+  content:"";
+  position:fixed;
+  inset:0;
+  background: url('andromeda.gif') center/cover no-repeat;
+  opacity: 0.15;       /* jemné, nerušivé */
+  filter: brightness(0.9) contrast(1.1);
+  z-index:-2;          /* pod hvězdami (::before) */
+  pointer-events:none; /* neblokuje klikání */
 }
 </style>
 </head>
