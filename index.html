@@ -150,6 +150,11 @@
   .footer{text-align:center;opacity:.8;margin-top:10px;font-size:.95em}
   .small{font-size:.92em;opacity:.9}
   .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#243442;border:1px solid var(--border);margin:4px 6px 0 0}
+
+  /* Globální přepínače v topbaru – skryté do vyhledání lokace */
+  .global-mode-tabs{ display:none; }
+  .global-mode-tabs.shown{ display:flex; }
+
 </style>
 
 <style>
@@ -251,8 +256,13 @@
         <span>🌡️ <span class="val" id="nowTemp">—</span></span>
       </div>
 
-      <!-- Pravá (třetí) buňka gridu prázdná pro symetrii -->
-      <div></div>
+      
+<div id="globalModeTabs" class="global-mode-tabs" style="gap:6px;align-items:center;">
+  <button class="mode-btn" data-mode="seeing" onclick="changeAllGraphModes('seeing')">👁️</button>
+  <button class="mode-btn" data-mode="wind" onclick="changeAllGraphModes('wind')">💨</button>
+  <button class="mode-btn" data-mode="rain" onclick="changeAllGraphModes('rain')">🌧️</button>
+</div>
+
     </div>
 
     <h1>🪐 Astronomická předpověď</h1>
@@ -372,7 +382,7 @@ window.addEventListener("resize", syncMapHeight);
 
 /* ===== Geocoding & selection ===== */
 let selectedCity=null;
-async function autocompleteCities(){const v=$("cityInput").value.trim();const s=$("suggestions");if(v.length<2){s.style.display="none";return}const res=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(v)}&count=6&language=cs&format=json`);const data=await res.json();s.innerHTML="";(data.results||[]).forEach(c=>{const li=document.createElement("li");li.textContent=`${c.name}, ${c.country}`;li.onclick=()=>{selectedCity=c;$("cityInput").value=`${c.name}, ${c.country}`;updateLocationInfo(c);initMap(c.latitude,c.longitude);fetchForecast(c.latitude,c.longitude);fetchMoonPhase(c.latitude,c.longitude);fetchPlanets(c.latitude,c.longitude);s.style.display="none"};s.appendChild(li)});s.style.display=s.children.length?"block":"none"}
+async function autocompleteCities(){const v=$("cityInput").value.trim();const s=$("suggestions");if(v.length<2){s.style.display="none";return}const res=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(v)}&count=6&language=cs&format=json`);const data=await res.json();s.innerHTML="";(data.results||[]).forEach(c=>{const li=document.createElement("li");li.textContent=`${c.name}, ${c.country}`;li.onclick=()=>{selectedCity=c;$("cityInput").value=`${c.name}, ${c.country}`;updateLocationInfo(c);initMap(c.latitude,c.longitude);fetchForecast(c.latitude,c.longitude);fetchMoonPhase(c.latitude,c.longitude);fetchPlanets(c.latitude,c.longitude);showGlobalTabs(true);s.style.display="none"};s.appendChild(li)});s.style.display=s.children.length?"block":"none"}
 
 async function getLocation(){
   if(!navigator.geolocation)return alert("Váš prohlížeč nepodporuje geolokaci.");
@@ -385,7 +395,7 @@ async function getLocation(){
     initMap(lat,lon);
     fetchForecast(lat,lon);
     fetchMoonPhase(lat,lon);
-    fetchPlanets(lat,lon);
+    fetchPlanets(lat,lon);showGlobalTabs(true);
     /* NOVĚ: po kliknutí na Moje poloha vyčistit vstup i návrhy */
     const input=$("cityInput"); if(input) input.value="";
     const s=$("suggestions"); if(s) { s.innerHTML=""; s.style.display="none"; }
@@ -993,6 +1003,47 @@ document.getElementById('openDiag')?.addEventListener('click', (e)=>{ e.preventD
 document.getElementById('closeDiag')?.addEventListener('click', (e)=>{ e.preventDefault(); closeDiagModal(); });
 document.getElementById('rerunDiag')?.addEventListener('click', (e)=>{ e.preventDefault(); runDiagnostics(); });
 document.addEventListener('keydown', (e)=>{ if(e.key==='Escape'){ closeDiagModal(); } });
+
+/* ===== Globální přepínače: zobrazit až po volbě lokace ===== */
+function showGlobalTabs(flag){
+  const box = document.getElementById('globalModeTabs');
+  if(!box) return;
+  if(flag){
+    // Nastav aktivní tlačítko podle prvního dne (pokud existuje), jinak default 'seeing'
+    let mode = 'seeing';
+    try{
+      const firstId = Object.keys(window._graphMode||{})[0];
+      if(firstId && window._graphMode[firstId]) mode = window._graphMode[firstId];
+    }catch(e){}
+    box.classList.add('shown');
+    box.querySelectorAll('.mode-btn').forEach(b=>{
+      b.classList.toggle('active', b.getAttribute('data-mode')===mode);
+    });
+  }else{
+    box.classList.remove('shown');
+  }
+}
+
+
+/* ===== Global mode change ===== */
+function changeAllGraphModes(mode){
+  // zvýraznění globálních tlačítek
+  document.querySelectorAll('.global-mode-tabs .mode-btn').forEach(b=>{
+    b.classList.toggle('active', b.getAttribute('data-mode')===mode);
+  });
+  // změna všech dnů
+  Object.keys(window._graphData).forEach(contentId=>{
+    changeGraphMode(contentId, mode);
+    // zároveň změnit zvýraznění v každém dni
+    const tabs=document.querySelector(`#${contentId}`).parentElement.querySelector('.mode-tabs');
+    if(tabs){
+      tabs.querySelectorAll('.mode-btn').forEach(b=>{
+        b.classList.toggle('active', b.getAttribute('data-mode')===mode);
+      });
+    }
+  });
+}
+
 </script>
 
 <script>
