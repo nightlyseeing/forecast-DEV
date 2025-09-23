@@ -746,8 +746,7 @@ async function fetchForecast(lat,lon){
       const todayLocal = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Prague' });
       if(date === todayLocal){
         const nowHHmm = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Prague' });
-        entries = entries.filter(e => e.time >= nowHHmm);
-      }
+        entries = entries.filter(e => e.time >= nowHHmm || e.time === '23:00'); }
     }catch(e){/* noop */}
 
     const section=document.createElement('div'); section.className='forecast-day';
