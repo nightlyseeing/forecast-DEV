@@ -25,18 +25,7 @@
     --windHigh:#03543f;  /* tmavě smaragdová */
   }
   *{box-sizing:border-box}
-  body{
-  margin:0;
-  color:var(--text);
-  padding:16px;
-  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
-
-  /* Dynamický, nerušivý gradient s pomalým posunem */
-  background: linear-gradient(120deg, #0b0c1a, #1b2c3a, #0f1f2f);
-  background-size: 400% 400%;
-  animation: gradientShift 45s ease infinite;
-  position: relative; /* pro hvězdný overlay pozadí */
-}
+  body{margin:0;background:radial-gradient(ellipse at top,#0b0c1a 0%,#1b2c3a 100%);color:var(--text);padding:16px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
 
   /* === Page layout with ad gutters === */
   .layout{
@@ -139,7 +128,7 @@
   .map-tip{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:6px 8px;border-radius:8px;font-size:.9em;border:1px solid rgba(255,255,255,.2);z-index:2}
 
   .forecast-day{border:1px solid var(--border);border-radius:10px;overflow:hidden;position:relative}
-  .forecast-day h3{margin:0;padding:10px;background:#4b3f72;color:#fff;display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;z-index:2;flex-wrap:wrap}
+  .forecast-day h3{margin:0;padding:10px;background:#4b3f72;color:#fff;display:flex;align-items:center;gap:8px;cursor:default;position:relative;z-index:2;flex-wrap:wrap}
   .mode-tabs{display:flex; gap:6px; margin-left:auto}
   .mode-btn{
     background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2);
@@ -167,58 +156,6 @@
   .global-mode-tabs.shown{ display:flex; }
 
 </style>
-
-<style>
-/* === Nerušivé dynamické pozadí === */
-@keyframes gradientShift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* Jemné hvězdy jako fixed overlay za obsahem */
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  background-image:
-    radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,0.8), transparent),
-    radial-gradient(1.5px 1.5px at 70% 60%, rgba(255,255,255,0.6), transparent),
-    radial-gradient(1px 1px at 40% 80%, rgba(255,255,255,0.5), transparent),
-    radial-gradient(2px 2px at 85% 20%, rgba(255,255,255,0.7), transparent);
-  background-repeat: repeat;
-  background-size: 400px 400px;
-  animation: twinkle 12s linear infinite;
-  pointer-events:none;
-  z-index:-1; /* bezpečně za obsahem */
-}
-
-@keyframes twinkle {
-  0%, 100% { opacity:0.65; }
-  50%      { opacity:0.9; }
-}
-
-/* Respekt k preferencím uživatele (méně pohybu) */
-@media (prefers-reduced-motion: reduce){
-  body{ animation: none; }
-  body::before{ animation: none; }
-}
-</style>
-
-<style>
-/* === Velmi pomalu rotující galaxie na pozadí === */
-
-  50%  { transform: rotate(180deg) skewX(-4deg); }
-  100% { transform: rotate(360deg) skewX(-6deg); }
-}
-
-/* Respekt k preferencím – pokud uživatel omezuje animace */
-@media (prefers-reduced-motion: reduce){
-  body::after{ animation: none; }
-}
-</style>
-
-
 
 <style>
 /* === Mobile-first vylepšení (≤ 768px) === */
@@ -266,29 +203,6 @@ body::before{
   .scroll-left, .scroll-right{ display:none; }
 
   .mode-tabs{ flex-wrap:wrap; }
-}
-</style>
-<style>
-/* === Spirální galaxie jako pomalé rotující pozadí === */
-
-  to   { transform: rotate(360deg); }
-}
-
-@media (prefers-reduced-motion: reduce){
-  body::after{ animation:none; }
-}
-</style>
-<style>
-/* === Animovaná Andromeda jako pozadí === */
-body::after {
-  content:"";
-  position:fixed;
-  inset:0;
-  background: url('andromeda.gif') center/cover no-repeat;
-  opacity: 0.15;       /* jemné, nerušivé */
-  filter: brightness(0.9) contrast(1.1);
-  z-index:-2;          /* pod hvězdami (::before) */
-  pointer-events:none; /* neblokuje klikání */
 }
 </style>
 </head>
@@ -783,7 +697,8 @@ async function fetchForecast(lat,lon){
       const todayLocal = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Prague' });
       if(date === todayLocal){
         const nowHHmm = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Prague' });
-        entries = entries.filter(e => e.time >= nowHHmm || e.time === '23:00'); }
+        entries = entries.filter(e => e.time >= nowHHmm);
+      }
     }catch(e){/* noop */}
 
     const section=document.createElement('div'); section.className='forecast-day';
@@ -792,11 +707,10 @@ async function fetchForecast(lat,lon){
 
     const leftPart = document.createElement('div');
     leftPart.style.display='flex'; leftPart.style.alignItems='center'; leftPart.style.gap='8px';
-    leftPart.innerHTML = `<span id="${contentId}-icon">⬆️</span> ${getDayName(date)}, ${date}
-      <button class="btn" style="padding:4px 8px;font-size:.85em" onclick="event.stopPropagation(); goToStart('${contentId}')">Ráno</button>
-      <button class="btn" style="padding:4px 8px;font-size:.85em" onclick="event.stopPropagation(); centerTime('${contentId}', '12:00')">Poledne</button>
-      <button class="btn" style="padding:4px 8px;font-size:.85em" onclick="event.stopPropagation(); centerTime('${contentId}', '23:00')">Půlnoc</button>
-      <span class="tiny-help">(Kliknutím na den sbalíš/rozbalíš)</span>`;
+    leftPart.innerHTML = `${getDayName(date)}, ${date}
+  <button class=\"btn\" style=\"padding:4px 8px;font-size:.85em\" onclick=\"event.stopPropagation(); goToStart('${contentId}')\">Ráno</button>
+  <button class=\"btn\" style=\"padding:4px 8px;font-size:.85em\" onclick=\"event.stopPropagation(); centerTime('${contentId}', '12:00')\">Poledne</button>
+  <button class=\"btn\" style=\"padding:4px 8px;font-size:.85em\" onclick=\"event.stopPropagation(); centerTime('${contentId}', '23:00')\">Půlnoc</button>`;
 
     const tabs = document.createElement('div');
     tabs.className='mode-tabs';
@@ -815,9 +729,9 @@ async function fetchForecast(lat,lon){
     });
 
     header.appendChild(leftPart);
-    header.appendChild(tabs);
-    header.onclick=()=>toggleForecast(contentId);
-    section.appendChild(header);
+/* tabs removed */
+/* collapse disabled */
+section.appendChild(header);
 
     const content=document.createElement('div'); content.className='forecast-content'; content.id=contentId; content.style.display='block';
     const wrapper=document.createElement('div'); wrapper.className='forecast-scroll-wrapper';
