@@ -124,6 +124,15 @@
 
   #mapPanel{padding:0;overflow:hidden;position:relative; z-index:1}
   #map{width:100%;height:100%}
+  
+  /* === NOVÉ: Přesunutí a zmenšení kontrolu vrstev (o 30% dolů/doprava) === */
+  .leaflet-control-container .leaflet-control-layers {
+    transform: scale(0.7);
+    transform-origin: bottom right; 
+    margin-right: 8px; 
+    margin-bottom: 8px; 
+  }
+  
   .zoom-badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:4px 8px;border-radius:999px;font-size:.85em;border:1px solid rgba(255,255,255,.2);z-index:2}
   .map-tip{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:6px 8px;border-radius:8px;font-size:.9em;border:1px solid rgba(255,255,255,.2);z-index:2}
 
@@ -316,7 +325,7 @@
     <div id="forecast" style="margin-top:8px;"></div>
 
     <div class="footer">
-      Zdroj fází: ipgeolocation.io • Počasí a geokódování: Open-Meteo • Planety: Astronomy Engine (fallback ipgeolocation) • Mapa: Leaflet & OSM
+      Zdroj fází: ipgeolocation.io • Počasí a geokódování: Open-Meteo • Planety: Astronomy Engine (fallback ipgeolocation) • Mapa: Leaflet & OSM/Esri
     </div>
   </main>
 
@@ -339,7 +348,7 @@
 
 <script>
 const IPGEO_API_KEY="781aa2d69af74745906e01cc68c84207";
-const VERSION = "v0.3.8";
+const VERSION = "v0.3.10"; // Updated version number
 
 /* ===== Menu ===== */
 function toggleMenu(){const m=document.getElementById("mainMenu");m.style.display=m.style.display==="block"?"none":"block"}
@@ -406,13 +415,70 @@ async function reverseGeocode(lat,lon){try{const r=await fetch(`https://nominati
 
 function updateLocationInfo(c){const name=c.name||"-";const country=c.country||"";const lat=typeof c.latitude==="number"?c.latitude:null;const lon=typeof c.longitude==="number"?c.longitude:null;$("info-name").innerHTML=country?`<span style="color:#00ffc3;font-weight:bold;">${name}</span>, ${country}`:`<span style="color:#00ffc3;font-weight:bold;">${name}</span>`;$("info-gps").textContent=(lat!=null&&lon!=null)?`${lat.toFixed(4)}, ${lon.toFixed(4)}`:"—";const link=$("bortle-link");if(lat!=null&&lon!=null){link.href=`https://www.lightpollutionmap.info/#zoom=9&lat=${lat}&lon=${lon}`;link.style.display="inline"}else{link.style.display="none"};const np=$("nowPlace");if(np){np.textContent = name || "—";}}
 
+/* === NOVÉ: Map Layers Definition === */
+
+// Standard OpenStreetMap layer
+const osmStandard = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '© OpenStreetMap'
+});
+
+// Esri World Imagery (Satellite) layer
+const esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 19,
+  attribution: 'Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, swisstopo, and the GIS User Community'
+});
+
 /* ===== Map on the right ===== */
 let map=null,marker=null,zoomEnabled=false,zoomControl=null;
+
+// Funkce pro přidání/aktualizaci Leaflet Layer Control
+function addLayerControl() {
+  if (!map) return;
+
+  // 1. Základní mapy pro přepínání
+  const baseMaps = {
+    "🗺️ Standardní mapa": osmStandard,
+    "🛰️ Satelitní snímky (Esri)": esriSat
+  };
+
+  // 2. Překryvné vrstvy (RainViewer)
+  const overlays = {};
+  if (rvState.satLayer) overlays['☁️ Oblačnost (IR)'] = rvState.satLayer;
+  if (rvState.radarLayer) overlays['🌧️ Srážkový radar'] = rvState.radarLayer;
+
+  // Odstranění stávajícího kontrolu, pokud existuje
+  if (rvState.control) {
+    map.removeControl(rvState.control);
+  }
+
+  // 3. Přidání nového kontrolu a zajištění, že je aktivní výchozí mapa
+  rvState.control = L.control.layers(baseMaps, overlays, { 
+    collapsed: false, 
+    position: 'bottomright' // <-- ZMĚNA ZDE: přesun do pravého dolního rohu
+  }).addTo(map);
+
+  // Zajištění, že je aktivní alespoň jedna základní vrstva (výchozí OSM)
+  if (!map.hasLayer(osmStandard) && !map.hasLayer(esriSat)) {
+    osmStandard.addTo(map);
+  }
+}
+
 function initMap(lat,lon){
   syncMapHeight();
   if(!map){
-    map=window._leafletMap = L.map('map', { zoomControl:false, scrollWheelZoom:false, touchZoom:false, doubleClickZoom:false, boxZoom:false, keyboard:false, dragging:true }).setView([lat,lon],10);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+    map=window._leafletMap = L.map('map', { 
+      zoomControl:false, 
+      scrollWheelZoom:false, 
+      touchZoom:false, 
+      doubleClickZoom:false, 
+      boxZoom:false, 
+      keyboard:false, 
+      dragging:true 
+    }).setView([lat,lon],10);
+    
+    // Zde již nepřidáváme jednu mapovou vrstvu, spravuje to addLayerControl
+    
     marker=L.marker([lat,lon]).addTo(map);
     map.on('contextmenu', function(){
       zoomEnabled = !zoomEnabled;
@@ -431,7 +497,11 @@ function initMap(lat,lon){
     map.setView([lat,lon], 10);
     marker.setLatLng([lat,lon]);
   }
-  // initialize RainViewer overlays once when map is ready
+  
+  // Přidání kontroly vrstev hned po inicializaci mapy
+  addLayerControl();
+  
+  // inicializace RainViewer překryvů
   enableWeatherLayers();
   setTimeout(()=> { map.invalidateSize(); syncMapHeight(); }, 150);
 }
@@ -867,7 +937,7 @@ async function fetchPlanets(lat,lon){
 
 window.addEventListener('load', syncMapHeight);
 
-/* ===== RainViewer overlays: radar + IR clouds ===== */
+/* ===== RainViewer overlays: radar + IR clouds (MODIFIED) ===== */
 let rvState = {
   host: 'https://tilecache.rainviewer.com',
   radarPath: null,
@@ -926,20 +996,8 @@ function ensureRvLayers(){
     }
   }
 
-  // add layer control once
-  if(!rvState.control){
-    const overlays = {};
-    if(rvState.satLayer) overlays['☁️ Oblačnost (IR)'] = rvState.satLayer;
-    if(rvState.radarLayer) overlays['🌧️ Srážkový radar'] = rvState.radarLayer;
-    rvState.control = L.control.layers({}, overlays, { collapsed: false, position: 'topleft' }).addTo(map);
-  } else {
-    // update existing control (Leaflet has no direct API to refresh; simple approach: remove/add control)
-    map.removeControl(rvState.control);
-    const overlays = {};
-    if(rvState.satLayer) overlays['☁️ Oblačnost (IR)'] = rvState.satLayer;
-    if(rvState.radarLayer) overlays['🌧️ Srážkový radar'] = rvState.radarLayer;
-    rvState.control = L.control.layers({}, overlays, { collapsed: false, position: 'topleft' }).addTo(map);
-  }
+  // Místo toho se volá nová funkce, která kombinuje základní mapy a překryvy
+  addLayerControl();
 }
 
 async function refreshWeatherLayers(){
