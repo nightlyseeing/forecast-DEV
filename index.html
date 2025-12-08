@@ -125,7 +125,7 @@
   #mapPanel{padding:0;overflow:hidden;position:relative; z-index:1}
   #map{width:100%;height:100%}
   
-  /* === NOVÉ: Přesunutí a zmenšení kontrolu vrstev (o 30% dolů/doprava) === */
+  /* === Přesunutí a zmenšení kontrolu vrstev (o 30% dolů/doprava) === */
   .leaflet-control-container .leaflet-control-layers {
     transform: scale(0.7);
     transform-origin: bottom right; 
@@ -348,8 +348,7 @@
 
 <script>
 const IPGEO_API_KEY="781aa2d69af74745906e01cc68c84207";
-const VERSION = "v0.3.10"; // Updated version number
-
+const VERSION = "v0.3.11"; // <--- ZMĚNA
 /* ===== Menu ===== */
 function toggleMenu(){const m=document.getElementById("mainMenu");m.style.display=m.style.display==="block"?"none":"block"}
 document.addEventListener("click",(e)=>{const m=document.getElementById("mainMenu");const t=document.querySelector(".menu-toggle");if(m&&t&&!m.contains(e.target)&&!t.contains(e.target))m.style.display="none"});
@@ -430,7 +429,7 @@ const esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/service
 });
 
 /* ===== Map on the right ===== */
-let map=null,marker=null,zoomEnabled=false,zoomControl=null;
+let map=null,marker=null,zoomEnabled=false; // <--- ODSTRANĚNÍ: zoomControl
 
 // Funkce pro přidání/aktualizaci Leaflet Layer Control
 function addLayerControl() {
@@ -455,7 +454,7 @@ function addLayerControl() {
   // 3. Přidání nového kontrolu a zajištění, že je aktivní výchozí mapa
   rvState.control = L.control.layers(baseMaps, overlays, { 
     collapsed: false, 
-    position: 'bottomright' // <-- ZMĚNA ZDE: přesun do pravého dolního rohu
+    position: 'bottomright' // <-- Přesunuto do pravého dolního rohu
   }).addTo(map);
 
   // Zajištění, že je aktivní alespoň jedna základní vrstva (výchozí OSM)
@@ -468,7 +467,7 @@ function initMap(lat,lon){
   syncMapHeight();
   if(!map){
     map=window._leafletMap = L.map('map', { 
-      zoomControl:false, 
+      zoomControl:true, // <--- ZMĚNA: Zapnutí tlačítek + a - (Leaflet default)
       scrollWheelZoom:false, 
       touchZoom:false, 
       doubleClickZoom:false, 
@@ -485,11 +484,11 @@ function initMap(lat,lon){
       const badge = $("mapZoomBadge");
       if(zoomEnabled){
         map.scrollWheelZoom.enable(); map.touchZoom.enable(); map.doubleClickZoom.enable(); map.boxZoom.enable(); map.keyboard.enable();
-        if(!zoomControl){ zoomControl = L.control.zoom({position:'topleft'}).addTo(map); }
+        // zoomControl už není manuálně spravován, je trvale zapnut v L.map
         if(badge) badge.textContent = "Zoom: zapnuto";
       } else {
         map.scrollWheelZoom.disable(); map.touchZoom.disable(); map.doubleClickZoom.disable(); map.boxZoom.disable(); map.keyboard.disable();
-        if(zoomControl){ map.removeControl(zoomControl); zoomControl=null; }
+        // zoomControl už není manuálně spravován, je trvale zapnut v L.map
         if(badge) badge.textContent = "Zoom: vypnuto";
       }
     });
