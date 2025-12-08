@@ -209,10 +209,8 @@
 <body>
 
 <div class="layout">
-  <!-- Left ad gutter -->
   <aside class="ad-slot">Rezervováno pro levý banner (220px)</aside>
 
-  <!-- Main column -->
   <main>
     <div class="topbar">
       <div class="menu-container">
@@ -233,7 +231,6 @@
               </div>
             </div>
           </div>
-          <!-- NOVĚ: Verze v menu s hover zobrazením -->
           <div class="menu-section">
             <div class="menu-item has-submenu">ℹ️ Verze ▸
               <div class="submenu">
@@ -244,7 +241,6 @@
         </div>
       </div>
 
-      <!-- Prostřední (center) buňka gridu: NOW status -->
       <div id="nowStatus" class="now-status" style="display:none">
         <span class="place" id="nowPlace">—</span><span class="sep">|</span>
         <span>👁️ <span class="val" id="nowSeeing">—</span></span>
@@ -288,8 +284,14 @@
 
         <div class="panel">
           <strong>🔭 Astronomické informace</strong>
+          <div class="kv" style="margin-top:8px; grid-template-columns: max-content 1fr;">
+            <span><strong>☀️ Východ Slunce:</strong></span><span id="sun-rise-label">—</span>
+            <span><strong>🌅 Západ Slunce:</strong></span><span id="sun-set-label">—</span>
+            <span><strong>🌙 Východ Měsíce:</strong></span><span id="moon-rise-label">—</span>
+            <span><strong>🌑 Západ Měsíce:</strong></span><span id="moon-set-label">—</span>
+          </div>
           <div style="margin-top:8px;">
-            <div><strong>🌙 Fáze Měsíce:</strong> <span id="moon-phase-label">—</span></div>
+            <div><strong>🌕 Fáze Měsíce:</strong> <span id="moon-phase-label">—</span></div>
           </div>
           <div style="margin-top:12px;">
             <div style="display:flex;align-items:center;gap:8px;">
@@ -318,11 +320,9 @@
     </div>
   </main>
 
-  <!-- Right ad gutter -->
   <aside class="ad-slot">Rezervováno pro pravý banner (220px)</aside>
 </div>
 
-<!-- Diagnostics modal -->
 <div class="modal-overlay" id="diagOverlay" role="dialog" aria-modal="true" aria-labelledby="diagTitle">
   <div class="modal">
     <header>
@@ -436,7 +436,7 @@ function initMap(lat,lon){
   setTimeout(()=> { map.invalidateSize(); syncMapHeight(); }, 150);
 }
 
-/* ===== Moon phase (ipgeolocation only) ===== */
+/* ===== Moon phase & Sun/Moon times (ipgeolocation only) ===== */
 let moonIllumByDate = {};
 function getMoonEmojiFromName(n){n=String(n||"").toLowerCase().replace(/_/g," ").trim();if(n.includes("new moon"))return"🌑 Nov";if(n.includes("waxing crescent"))return"🌒 Dorůstající srpek";if(n.includes("first quarter"))return"🌓 První čtvrť";if(n.includes("waxing gibbous"))return"🌔 Dorůstající měsíc";if(n.includes("full moon"))return"🌕 Úplněk";if(n.includes("waning gibbous"))return"🌖 Couvající měsíc";if(n.includes("last quarter"))return"🌗 Poslední čtvrť";if(n.includes("waning crescent"))return"🌘 Couvající srpek";return"🌙 Neznámá fáze"}
 async function fetchMoonPhase(lat,lon){
@@ -444,16 +444,36 @@ async function fetchMoonPhase(lat,lon){
   try{
     const r=await fetch(url);
     const d=await r.json();
+    
+    // Moon Phase
     const p=d.moon_phase||"Neznámá fáze";
     $("moon-phase-label").textContent=getMoonEmojiFromName(p);
+
+    // Sun Times (Sunrise/Sunset)
+    const sunRise = d.sunrise ? d.sunrise.substring(0, 5) : '—'; // Extract HH:MM
+    const sunSet = d.sunset ? d.sunset.substring(0, 5) : '—';   // Extract HH:MM
+    $("sun-rise-label").textContent = sunRise;
+    $("sun-set-label").textContent = sunSet;
+
+    // Moon Times (Moonrise/Moonset)
+    // ipgeolocation returns '00:00' if no event on that day. Use 'N/A' in this case.
+    const moonRise = (d.moonrise && d.moonrise !== '00:00') ? d.moonrise.substring(0, 5) : 'N/A';
+    const moonSet = (d.moonset && d.moonset !== '00:00') ? d.moonset.substring(0, 5) : 'N/A';
+    $("moon-rise-label").textContent = moonRise;
+    $("moon-set-label").textContent = moonSet;
+
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Prague' });
     const illumPct = Number(d.moon_illumination);
     if(Number.isFinite(illumPct)){
       moonIllumByDate[today] = Math.max(0, Math.min(1, illumPct/100));
     }
   }catch(e){
-    console.error("Chyba při načítání fáze:",e);
+    console.error("Chyba při načítání fáze/slunce/měsíce:",e);
     $("moon-phase-label").textContent="Chyba načítání";
+    $("sun-rise-label").textContent = "—";
+    $("sun-set-label").textContent = "—";
+    $("moon-rise-label").textContent = "—";
+    $("moon-set-label").textContent = "—";
   }
 }
 
