@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.0/astronomy.min.js"></script>
+<script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
@@ -164,6 +165,107 @@
   .global-mode-tabs{ display:none; }
   .global-mode-tabs.shown{ display:flex; }
 
+
+  /* === Astro widget (Slunce / Měsíc) === */
+  .astro-widget{
+    margin-top:10px;
+  }
+  .astro-widget-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .astro-card{
+    flex:1 1 160px;
+    background:radial-gradient(circle at top, #111827 0%, #020617 70%);
+    border-radius:12px;
+    padding:10px 12px;
+    border:1px solid rgba(255,255,255,0.08);
+    box-shadow:0 0 14px rgba(0,0,0,.7);
+  }
+  .astro-card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:4px;
+  }
+  .astro-card-title{
+    font-size:.8rem;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-weight:700;
+    color:var(--accent);
+  }
+  .astro-info-icon{
+    width:18px;height:18px;border-radius:999px;
+    border:1px solid rgba(255,255,255,0.35);
+    display:flex;align-items:center;justify-content:center;
+    font-size:.7rem;opacity:.7;
+  }
+  .astro-arc-wrapper{
+    margin-top:6px;
+    margin-bottom:4px;
+  }
+  .astro-arc-wrapper svg{
+    width:100%;
+    height:90px;
+  }
+  .astro-baseline{
+    stroke:rgba(255,255,255,0.35);
+    stroke-width:1.2;
+  }
+  .astro-sun-above{
+    fill:none;
+    stroke-width:2.2;
+    stroke-linecap:round;
+    stroke:#fbbf24;
+  }
+  .astro-sun-below{
+    fill:none;
+    stroke-width:1.6;
+    stroke-linecap:round;
+    stroke:rgba(248,250,252,0.25);
+  }
+  .astro-moon-above{
+    fill:none;
+    stroke-width:2.2;
+    stroke-linecap:round;
+    stroke:#cbd5f5;
+  }
+  .astro-moon-below{
+    fill:none;
+    stroke-width:1.6;
+    stroke-linecap:round;
+    stroke:rgba(148,163,184,0.4);
+  }
+  .astro-sun-dot{
+    fill:#fde68a;
+    stroke:#fbbf24;
+    stroke-width:2;
+    filter:drop-shadow(0 0 8px rgba(251,191,36,0.9));
+  }
+  .astro-moon-dot{
+    fill:#e5e7eb;
+    stroke:#9ca3af;
+    stroke-width:2;
+    filter:drop-shadow(0 0 6px rgba(148,163,184,0.9));
+  }
+  .astro-times{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+    font-size:.78rem;
+    color:#e5e7eb;
+  }
+  .astro-times strong{
+    color:var(--accent);
+  }
+  .astro-alt{
+    margin-top:2px;
+    font-size:.72rem;
+    color:#9ca3af;
+    text-align:right;
+  }
 </style>
 
 <style>
@@ -293,15 +395,66 @@
 
         <div class="panel">
           <strong>🔭 Astronomické informace</strong>
-          <div class="kv" style="margin-top:8px; grid-template-columns: max-content 1fr;">
-            <span><strong>☀️ Východ Slunce:</strong></span><span id="sun-rise-label">—</span>
-            <span><strong>🌅 Západ Slunce:</strong></span><span id="sun-set-label">—</span>
-            <span><strong>🌙 Východ Měsíce:</strong></span><span id="moon-rise-label">—</span>
-            <span><strong>🌑 Západ Měsíce:</strong></span><span id="moon-set-label">—</span>
-          </div>
+
           <div style="margin-top:8px;">
             <div><strong>🌕 Fáze Měsíce:</strong> <span id="moon-phase-label">—</span></div>
           </div>
+
+          <!-- NOVÝ WIDGET: Slunce & Měsíc -->
+          <div class="astro-widget">
+            <div class="astro-widget-row">
+
+              <!-- SLUNCE -->
+              <div class="astro-card">
+                <div class="astro-card-header">
+                  <span class="astro-card-title">SLUNCE</span>
+                  <span class="astro-info-icon">i</span>
+                </div>
+                <div class="astro-arc-wrapper">
+                  <svg viewBox="0 0 300 90">
+                    <line x1="20" y1="45" x2="280" y2="45" class="astro-baseline"></line>
+
+                    <path id="sun-path-above" class="astro-sun-above" d=""></path>
+                    <path id="sun-path-below" class="astro-sun-below" d=""></path>
+
+                    <!-- větší Slunce -->
+                    <circle id="sun-dot" class="astro-sun-dot" r="10" cx="20" cy="45"></circle>
+                  </svg>
+                </div>
+                <div class="astro-times">
+                  <span>Východ: <strong id="sun-rise-label">—</strong></span>
+                  <span>Západ: <strong id="sun-set-label">—</strong></span>
+                </div>
+                <div class="astro-alt" id="sun-alt-label">Výška: —</div>
+              </div>
+
+              <!-- MĚSÍC -->
+              <div class="astro-card">
+                <div class="astro-card-header">
+                  <span class="astro-card-title">MĚSÍC</span>
+                  <span class="astro-info-icon">i</span>
+                </div>
+                <div class="astro-arc-wrapper">
+                  <svg viewBox="0 0 300 90">
+                    <line x1="20" y1="45" x2="280" y2="45" class="astro-baseline"></line>
+
+                    <path id="moon-path-above" class="astro-moon-above" d=""></path>
+                    <path id="moon-path-below" class="astro-moon-below" d=""></path>
+
+                    <!-- větší Měsíc -->
+                    <circle id="moon-dot" class="astro-moon-dot" r="9" cx="20" cy="45"></circle>
+                  </svg>
+                </div>
+                <div class="astro-times">
+                  <span>Východ: <strong id="moon-rise-label">—</strong></span>
+                  <span>Západ: <strong id="moon-set-label">—</strong></span>
+                </div>
+                <div class="astro-alt" id="moon-alt-label">Výška: —</div>
+              </div>
+
+            </div>
+          </div>
+
           <div style="margin-top:12px;">
             <div style="display:flex;align-items:center;gap:8px;">
               <strong>🪐 Viditelné planety ~22:00</strong>
@@ -508,24 +661,170 @@ function initMap(lat,lon){
 /* ===== Moon phase & Sun/Moon times (ipgeolocation only) ===== */
 let moonIllumByDate = {};
 function getMoonEmojiFromName(n){n=String(n||"").toLowerCase().replace(/_/g," ").trim();if(n.includes("new moon"))return"🌑 Nov";if(n.includes("waxing crescent"))return"🌒 Dorůstající srpek";if(n.includes("first quarter"))return"🌓 První čtvrť";if(n.includes("waxing gibbous"))return"🌔 Dorůstající měsíc";if(n.includes("full moon"))return"🌕 Úplněk";if(n.includes("waning gibbous"))return"🌖 Couvající měsíc";if(n.includes("last quarter"))return"🌗 Poslední čtvrť";if(n.includes("waning crescent"))return"🌘 Couvající srpek";return"🌙 Neznámá fáze"}
+
+/* ===== Astro widget: Slunce & Měsíc (SunCalc) ===== */
+const astroState = {
+  lat: 50.0755,
+  lon: 14.4378
+};
+
+const sunDotEl       = document.getElementById("sun-dot");
+const moonDotEl      = document.getElementById("moon-dot");
+const sunPathAboveEl = document.getElementById("sun-path-above");
+const sunPathBelowEl = document.getElementById("sun-path-below");
+const moonPathAboveEl= document.getElementById("moon-path-above");
+const moonPathBelowEl= document.getElementById("moon-path-below");
+const sunAltLabel    = document.getElementById("sun-alt-label");
+const moonAltLabel   = document.getElementById("moon-alt-label");
+
+const ASTRO_MIN_X = 20;
+const ASTRO_MAX_X = 280;
+const ASTRO_BASELINE_Y = 45;
+const ASTRO_AMPLITUDE  = 32;
+const ASTRO_MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function astroDayFraction(date){
+  const midnight = new Date(date);
+  midnight.setHours(0,0,0,0);
+  return (date - midnight) / ASTRO_MS_PER_DAY;
+}
+
+// pro Měsíc – půlnoc doprostřed
+function astroNightFractionCentered(date){
+  const midnight = new Date(date);
+  midnight.setHours(0,0,0,0);
+  const msFromMidnight = date - midnight;
+  const shifted = (msFromMidnight + ASTRO_MS_PER_DAY/2) % ASTRO_MS_PER_DAY;
+  return shifted / ASTRO_MS_PER_DAY; // 0.5 = půlnoc
+}
+
+function astroAltitudeToPoint(t, altitude){
+  const altClamped = Math.max(-Math.PI/2, Math.min(Math.PI/2, altitude));
+  const x = ASTRO_MIN_X + t * (ASTRO_MAX_X - ASTRO_MIN_X);
+  const y = ASTRO_BASELINE_Y - (altClamped / (Math.PI/2)) * ASTRO_AMPLITUDE;
+  return { x, y };
+}
+
+function astroFormatDegrees(rad){
+  const deg = rad * 180 / Math.PI;
+  return deg.toFixed(1).replace(".", ",") + "°";
+}
+
+function astroBuildCurve(body, pathAboveEl, pathBelowEl, lat, lon){
+  if(!window.SunCalc || !pathAboveEl || !pathBelowEl) return;
+
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(0,0,0,0);
+
+  const steps = 120;
+  let pathAbove = "";
+  let pathBelow = "";
+  let lastAbove = null;
+
+  for(let i=0;i<=steps;i++){
+    const frac = i / steps;
+    const time = new Date(midnight.getTime() + frac * ASTRO_MS_PER_DAY);
+
+    let altitude;
+    let t;
+    if(body === "sun"){
+      const pos = SunCalc.getPosition(time, lat, lon);
+      altitude = pos.altitude;
+      t = frac; // 00–24h vlevo→vpravo
+    }else{
+      const pos = SunCalc.getMoonPosition(time, lat, lon);
+      altitude = pos.altitude;
+      const msFromMidnight = time - midnight;
+      const shifted = (msFromMidnight + ASTRO_MS_PER_DAY/2) % ASTRO_MS_PER_DAY;
+      t = shifted / ASTRO_MS_PER_DAY; // 0.5 = půlnoc uprostřed
+    }
+
+    const point = astroAltitudeToPoint(t, altitude);
+    const above = altitude >= 0;
+
+    if(above){
+      if(lastAbove !== true){
+        pathAbove += ` M ${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
+      }else{
+        pathAbove += ` L ${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
+      }
+    }else{
+      if(lastAbove !== false){
+        pathBelow += ` M ${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
+      }else{
+        pathBelow += ` L ${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
+      }
+    }
+
+    lastAbove = above;
+  }
+
+  pathAboveEl.setAttribute("d", pathAbove.trim());
+  pathBelowEl.setAttribute("d", pathBelow.trim());
+}
+
+function updateAstroWidget(){
+  if(!window.SunCalc || !sunDotEl || !moonDotEl) return;
+
+  const now = new Date();
+  const { lat, lon } = astroState;
+
+  const tNowSun  = astroDayFraction(now);
+  const tNowMoon = astroNightFractionCentered(now);
+
+  // SLUNCE
+  astroBuildCurve("sun", sunPathAboveEl, sunPathBelowEl, lat, lon);
+  const sunPos = SunCalc.getPosition(now, lat, lon);
+  const sunPointNow = astroAltitudeToPoint(tNowSun, sunPos.altitude);
+  sunDotEl.setAttribute("cx", sunPointNow.x);
+  sunDotEl.setAttribute("cy", sunPointNow.y - 1);
+  if(sunAltLabel){
+    sunAltLabel.textContent = "Výška: " + astroFormatDegrees(sunPos.altitude);
+  }
+
+  // MĚSÍC
+  astroBuildCurve("moon", moonPathAboveEl, moonPathBelowEl, lat, lon);
+  const moonPos = SunCalc.getMoonPosition(now, lat, lon);
+  const moonPointNow = astroAltitudeToPoint(tNowMoon, moonPos.altitude);
+  moonDotEl.setAttribute("cx", moonPointNow.x);
+  moonDotEl.setAttribute("cy", moonPointNow.y - 1);
+  if(moonAltLabel){
+    moonAltLabel.textContent = "Výška: " + astroFormatDegrees(moonPos.altitude);
+  }
+}
+
+function updateAstroLocation(lat, lon){
+  astroState.lat = lat;
+  astroState.lon = lon;
+  updateAstroWidget();
+}
+
+// první vykreslení + pravidelná aktualizace
+updateAstroWidget();
+setInterval(updateAstroWidget, 60*1000);
+
+
 async function fetchMoonPhase(lat,lon){
+  // napojení astro widgetu na stejné souřadnice
+  updateAstroLocation(lat, lon);
+
   const url=`https://api.ipgeolocation.io/astronomy?apiKey=${IPGEO_API_KEY}&lat=${lat}&long=${lon}`;
   try{
     const r=await fetch(url);
     const d=await r.json();
-    
+
     // Moon Phase
     const p=d.moon_phase||"Neznámá fáze";
     $("moon-phase-label").textContent=getMoonEmojiFromName(p);
 
     // Sun Times (Sunrise/Sunset)
-    const sunRise = d.sunrise ? d.sunrise.substring(0, 5) : '—'; // Extract HH:MM
-    const sunSet = d.sunset ? d.sunset.substring(0, 5) : '—';   // Extract HH:MM
+    const sunRise = d.sunrise ? d.sunrise.substring(0, 5) : '—';
+    const sunSet = d.sunset ? d.sunset.substring(0, 5) : '—';
     $("sun-rise-label").textContent = sunRise;
     $("sun-set-label").textContent = sunSet;
 
     // Moon Times (Moonrise/Moonset)
-    // ipgeolocation returns '00:00' if no event on that day. Use 'N/A' in this case.
     const moonRise = (d.moonrise && d.moonrise !== '00:00') ? d.moonrise.substring(0, 5) : 'N/A';
     const moonSet = (d.moonset && d.moonset !== '00:00') ? d.moonset.substring(0, 5) : 'N/A';
     $("moon-rise-label").textContent = moonRise;
