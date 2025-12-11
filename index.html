@@ -722,22 +722,24 @@ function astroBuildCurve(body, pathAboveEl, pathBelowEl, lat, lon){
   let pathBelow = "";
   let lastAbove = null;
 
-  for(let i=0;i<=steps;i++){
+  for(let i = 0; i <= steps; i++){
     const frac = i / steps;
     const time = new Date(midnight.getTime() + frac * ASTRO_MS_PER_DAY);
 
     let altitude;
     let t;
+
     if(body === "sun"){
+      // Slunce – osa X jde normálně od půlnoci do půlnoci
       const pos = SunCalc.getPosition(time, lat, lon);
       altitude = pos.altitude;
-      t = frac; // 00–24h vlevo→vpravo
-    }else{
+      t = frac;
+    } else {
+      // Měsíc – používáme stejnou časovou osu jako pro Slunce,
+      // bez posunu a bez skoků v X souřadnici
       const pos = SunCalc.getMoonPosition(time, lat, lon);
       altitude = pos.altitude;
-      const msFromMidnight = time - midnight;
-      const shifted = (msFromMidnight + ASTRO_MS_PER_DAY/2) % ASTRO_MS_PER_DAY;
-      t = shifted / ASTRO_MS_PER_DAY; // 0.5 = půlnoc uprostřed
+      t = frac;
     }
 
     const point = astroAltitudeToPoint(t, altitude);
@@ -746,13 +748,13 @@ function astroBuildCurve(body, pathAboveEl, pathBelowEl, lat, lon){
     if(above){
       if(lastAbove !== true){
         pathAbove += ` M ${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
-      }else{
+      } else {
         pathAbove += ` L ${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
       }
-    }else{
+    } else {
       if(lastAbove !== false){
         pathBelow += ` M ${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
-      }else{
+      } else {
         pathBelow += ` L ${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
       }
     }
@@ -764,6 +766,7 @@ function astroBuildCurve(body, pathAboveEl, pathBelowEl, lat, lon){
   pathBelowEl.setAttribute("d", pathBelow.trim());
 }
 
+
 function updateAstroWidget(){
   if(!window.SunCalc || !sunDotEl || !moonDotEl) return;
 
@@ -771,7 +774,7 @@ function updateAstroWidget(){
   const { lat, lon } = astroState;
 
   const tNowSun  = astroDayFraction(now);
-  const tNowMoon = astroNightFractionCentered(now);
+  const tNowMoon = astroDayFraction(now);
 
   // SLUNCE
   astroBuildCurve("sun", sunPathAboveEl, sunPathBelowEl, lat, lon);
