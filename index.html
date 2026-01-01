@@ -398,6 +398,7 @@
 
           <div style="margin-top:8px;">
             <div><strong>🌕 Fáze Měsíce:</strong> <span id="moon-phase-label">—</span></div>
+            <div class="small" style="margin-top:4px;"><strong>✨ Osvětlení Měsíce:</strong> <span id="moon-illum-label">—</span></div>
           </div>
 
           <!-- NOVÝ WIDGET: Slunce & Měsíc -->
@@ -959,6 +960,24 @@ async function fetchMoonPhase(lat,lon){
     // Moon Phase
     const p=d.moon_phase||"Neznámá fáze";
     $("moon-phase-label").textContent=getMoonEmojiFromName(p);
+    // Moon illumination (%) - field name differs across API versions:
+    // - moon_illumination_percentage (docs) or moon_illumination (older)
+    const illumRaw =
+      (d.moon_illumination_percentage ?? d.moon_illumination ??
+       (d.astronomy && (d.astronomy.moon_illumination_percentage ?? d.astronomy.moon_illumination)));
+
+    // Normalize to number (0..100)
+    let illumPct = null;
+    if(illumRaw != null && illumRaw !== ""){
+      const s = String(illumRaw).trim().replace("%","");
+      const n = Number(s);
+      if(!Number.isNaN(n)) illumPct = n;
+    }
+
+    const illumStr = (illumPct != null) ? (Math.round(illumPct) + "%") : "—";
+    const illumEl = document.getElementById("moon-illum-label");
+    if(illumEl) illumEl.textContent = illumStr;
+
 
     // Sun Times (Sunrise/Sunset)
     const sunRise = d.sunrise ? d.sunrise.substring(0, 5) : '—';
@@ -973,13 +992,14 @@ async function fetchMoonPhase(lat,lon){
     $("moon-set-label").textContent = moonSet;
 
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Prague' });
-    const illumPct = Number(d.moon_illumination);
-    if(Number.isFinite(illumPct)){
-      moonIllumByDate[today] = Math.max(0, Math.min(1, illumPct/100));
-    }
-  }catch(e){
+// Store illumination for 'today' so the widget can draw correctly (0..1)
+moonIllumByDate[today] = (illumPct != null) ? Math.max(0, Math.min(1, illumPct / 100)) : 0;
+
+}catch(e){
     console.error("Chyba při načítání fáze/slunce/měsíce:",e);
     $("moon-phase-label").textContent="Chyba načítání";
+    const illumEl = document.getElementById("moon-illum-label");
+    if(illumEl) illumEl.textContent = "—";
     $("sun-rise-label").textContent = "—";
     $("sun-set-label").textContent = "—";
     $("moon-rise-label").textContent = "—";
