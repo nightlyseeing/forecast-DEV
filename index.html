@@ -1546,6 +1546,8 @@ async function fetchForecast(lat,lon){
   try {
     const tzName = d.timezone || "";
     const offsetSeconds = typeof d.utc_offset_seconds === "number" ? d.utc_offset_seconds : 0;
+    window.__lastUtcOffsetSeconds = offsetSeconds;
+    window.__lastTzName = tzName;
     const nowUtc = new Date();
     const localTime = new Date(nowUtc.getTime() + offsetSeconds * 1000);
     const ltEl = document.getElementById("info-localtime");
@@ -1907,6 +1909,7 @@ function changeAllGraphModes(mode){
 })();
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
 <script>
 /* ===== Planet visibility widget (visibleplanets.dev) ===== */
 (function(){
@@ -1929,6 +1932,41 @@ function changeAllGraphModes(mode){
     const dirs = ["N","NE","E","SE","S","SW","W","NW","N"];
     const i = Math.round(Number(az)/45);
     return dirs[clamp(i,0,8)];
+  }
+
+  function fmtLocalTimeFromAstroTime(t, offsetSeconds){
+    if(!t) return null;
+    try{
+      const dt = (t.date instanceof Date) ? t.date : (t instanceof Date ? t : null);
+      if(!dt) return null;
+      const local = new Date(dt.getTime() + (offsetSeconds||0)*1000);
+      return local.toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"});
+    }catch(e){ return null; }
+  }
+
+  function computeRiseSetForBodies(bodies, lat, lon){
+    const offsetSeconds = (typeof window.__lastUtcOffsetSeconds === "number") ? window.__lastUtcOffsetSeconds : 0;
+    const observer = (window.Astronomy && Astronomy.Observer) ? new Astronomy.Observer(lat, lon, 0) : null;
+    if(!observer || !window.Astronomy || !Astronomy.SearchRiseSet){
+      return bodies; // library not loaded => keep placeholders
+    }
+
+    const now = new Date(); // UTC instant
+    const limitDays = 2;    // try to find next events
+    bodies.forEach(b=>{
+      const bodyName = b.name;
+      // visibleplanets returns planet names (Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune) and sometimes others
+      try{
+        const riseT = Astronomy.SearchRiseSet(bodyName, observer, +1, now, limitDays);
+        const setT  = Astronomy.SearchRiseSet(bodyName, observer, -1, now, limitDays);
+        b.riseLocal = fmtLocalTimeFromAstroTime(riseT, offsetSeconds) || "—";
+        b.setLocal  = fmtLocalTimeFromAstroTime(setT,  offsetSeconds) || "—";
+      }catch(e){
+        b.riseLocal = "—";
+        b.setLocal  = "—";
+      }
+    });
+    return bodies;
   }
   function qualityChip(alt, mag){
     const a = Number(alt);
@@ -1956,6 +1994,8 @@ function changeAllGraphModes(mode){
     const constel = b?.constellation || "—";
     const chip = qualityChip(alt, mag);
     const pct = altitudeToPct(alt);
+    const rise = b?.riseLocal || null;
+    const set  = b?.setLocal  || null;
 
     const el = document.createElement("div");
     el.className = "pw-card";
@@ -1985,6 +2025,7 @@ function changeAllGraphModes(mode){
         <div class="pw-kv" title="Výška nad obzorem">Alt: ${fmt(alt,1)}°</div>
         <div class="pw-kv" title="Azimut (0°=sever, 90°=východ)">Az: ${fmt(az,0)}° ${azToCompass(az)}</div>
         <div class="pw-kv" title="Zdánlivá hvězdná velikost (nižší = jasnější)">Mag: ${mag===null? "—" : fmt(mag,1)}</div>
+      <div class="pw-kv" title="Východ/Západ (lokální čas vyhledaného místa)" data-riseset="1">Východ: ${rise||"—"} · Západ: ${set||"—"}</div>
       </div>
     `;
     return el;
@@ -2027,6 +2068,8 @@ function changeAllGraphModes(mode){
         $("pw-status").textContent = filtered.length ? "Hotovo." : "Nenalezeny žádné planety (zkus „ukázat i pod obzorem“).";
       }
 
+      computeRiseSetForBodies(filtered, lat, lon);
+
       filtered.sort((a,b)=> (Number(b.altitude)||-999) - (Number(a.altitude)||-999));
       const frag = document.createDocumentFragment();
       filtered.forEach(b => frag.appendChild(makeCard(b)));
@@ -2035,6 +2078,7 @@ function changeAllGraphModes(mode){
       const metaParts = [];
       if(meta?.engineVersion) metaParts.push("engine " + meta.engineVersion);
       metaParts.push("API: visibleplanets");
+      metaParts.push("Rise/Set: Astronomy Engine");
       metaParts.push("t=" + Math.round(t1 - t0) + "ms");
       if($("pw-meta")) $("pw-meta").textContent = metaParts.join(" · ");
     }catch(err){
