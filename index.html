@@ -122,7 +122,7 @@
   .panel strong{color:var(--accent)}
   .kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 10px}
 
-  #mapPanel{padding:0;overflow:hidden;position:relative; z-index:1}
+  #mapPanel{padding:0;overflow:hidden;position:relative; z-index:1; aspect-ratio: 1 / 1;}
   #map{width:100%;height:100%}
   
   /* === Přesunutí a zmenšení kontrolu vrstev (o 30% dolů/doprava) === */
@@ -301,9 +301,9 @@
   .top-row{ grid-template-columns: 1fr; }
   .panel{ padding:12px; }
 
-  /* Fixní výška mapy na mobilu */
-  #mapPanel{ height:48vh !important; }
-  #map{ height:48vh !important; }
+  /* Mapa na mobilu: vždy čtverec (stejná šířka i výška) */
+  #mapPanel{ aspect-ratio: 1 / 1 !important; height:auto !important; }
+  #map{ height:100% !important; }
 
   .forecast-scroll{
     -webkit-overflow-scrolling: touch;
@@ -847,13 +847,18 @@ function getWeatherIcon(c,r){
 
 /* ===== Layout sync ===== */
 function syncMapHeight(){
-  const left=document.getElementById("leftTop");
+  // Keep the map always square: height = current width of the map panel
   const mapPanel=document.getElementById("mapPanel");
   const mapDiv=document.getElementById("map");
-  if(!left||!mapPanel||!mapDiv) return;
-  const h=left.getBoundingClientRect().height;
-  mapPanel.style.height=h+"px";
-  mapDiv.style.height=h+"px";
+  if(!mapPanel||!mapDiv) return;
+
+  // If CSS aspect-ratio is supported, this is mostly a safeguard + Leaflet resize trigger.
+  const w = mapPanel.getBoundingClientRect().width;
+  if(!Number.isFinite(w) || w <= 0) return;
+
+  mapPanel.style.height = w + "px";
+  mapDiv.style.height   = w + "px";
+
   if(window._leafletMap){ setTimeout(()=> window._leafletMap.invalidateSize(), 100); }
 }
 const leftObserver = new MutationObserver(()=> syncMapHeight());
@@ -1543,17 +1548,26 @@ async function fetchForecast(lat,lon){
   const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,cloudcover,precipitation,windspeed_10m&timezone=auto`);
   const d=await r.json();
   // Update local time for selected location (using Open-Meteo timezone info)
+  // IMPORTANT: don't manually add utc_offset_seconds and then format in local timezone,
+  // that causes a +1h (or other) double-offset. Always format using Intl timeZone.
   try {
     const tzName = d.timezone || "";
     const offsetSeconds = typeof d.utc_offset_seconds === "number" ? d.utc_offset_seconds : 0;
     window.__lastUtcOffsetSeconds = offsetSeconds;
     window.__lastTzName = tzName;
-    const nowUtc = new Date();
-    const localTime = new Date(nowUtc.getTime() + offsetSeconds * 1000);
+
     const ltEl = document.getElementById("info-localtime");
     if (ltEl) {
-      const timeStr = localTime.toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" });
-      ltEl.textContent = tzName ? `${timeStr} (${tzName})` : timeStr;
+      if (tzName) {
+        const timeStr = new Date().toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit", timeZone: tzName });
+        ltEl.textContent = `${timeStr} (${tzName})`;
+      } else {
+        // Fallback: format UTC+offset explicitly (avoid browser local TZ)
+        const utcMs = Date.now();
+        const shifted = new Date(utcMs + offsetSeconds * 1000);
+        const timeStr = shifted.toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" });
+        ltEl.textContent = timeStr;
+      }
     }
   } catch (e) {
     const ltEl = document.getElementById("info-localtime");
@@ -1889,9 +1903,16 @@ function changeAllGraphModes(mode){
     var mapPanel=document.getElementById("mapPanel");
     var mapDiv=document.getElementById("map");
     if(!mapPanel||!mapDiv) return;
-    var vh = Math.max(320, Math.round(window.innerHeight * 0.48));
-    mapPanel.style.setProperty('height', vh + 'px', 'important');
-    mapDiv.style.setProperty('height', vh + 'px', 'important');
+
+    // Mobile: enforce square based on actual available width
+    var w = mapPanel.getBoundingClientRect().width;
+    if(!w || w <= 0){
+      // Fallback: use viewport width minus body padding (approx)
+      w = Math.max(280, Math.round(window.innerWidth - 16));
+    }
+    mapPanel.style.setProperty('height', w + 'px', 'important');
+    mapDiv.style.setProperty('height', w + 'px', 'important');
+
     if(window._leafletMap){ setTimeout(function(){ window._leafletMap.invalidateSize(); }, 100); }
   }
   // Monkey-patch: keep original for desktop; override behavior only on mobile
