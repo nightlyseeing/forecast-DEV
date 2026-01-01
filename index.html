@@ -103,7 +103,7 @@
   .diag-item:last-child{border-bottom:none}
   .diag-name{opacity:.9}
   .diag-status{font-weight:700}
-  .ok{color:#00ff88} .fail{color:#ff6b6b} .pending{color:#ffd166}
+  .ok{color:#00ff88} .fail{color:#ff6b6b} .pending{color:#ffd166} .info{color:#7dd3fc}
   .tiny{font-size:.85em;opacity:.8}
 
   /* ===== Controls + layout ===== */
@@ -1820,25 +1820,95 @@ async function ping(url, timeout=4500){
     return {ok:r.ok, status:r.status};
   }catch(e){
     clearTimeout(id);
-    return {ok:false, status:'—'};
+    return {ok:false, status:'—', error: e && (e.name||e.message) ? (e.name||e.message) : 'error'};
   }
+}
+// Ping an image/tile URL (useful for map tile servers). Does not require CORS.
+function imagePing(url, timeout=4500){
+  return new Promise((resolve)=>{
+    const img = new Image();
+    let done = false;
+    const t = setTimeout(()=>{
+      if(done) return;
+      done = true;
+      try{ img.src = ""; }catch(_){}
+      resolve({ok:false, status:'timeout'});
+    }, timeout);
+
+    img.onload = ()=>{
+      if(done) return;
+      done = true;
+      clearTimeout(t);
+      resolve({ok:true, status:'OK'});
+    };
+    img.onerror = ()=>{
+      if(done) return;
+      done = true;
+      clearTimeout(t);
+      resolve({ok:false, status:'error'});
+    };
+    // Prevent cached false positives; keep it lightweight
+    const sep = url.includes('?') ? '&' : '?';
+    img.src = url + sep + 't=' + Date.now();
+  });
 }
 async function runDiagnostics(){
   if(!diagList) return;
   diagList.innerHTML = "";
+
+  // Quick, lightweight checks. Some endpoints are "on-demand" in normal usage,
+  // but we still ping them here using a safe sample query/coords.
   const endpoints = [
-    { name: "Open-Meteo Forecast", url: "https://api.open-meteo.com/v1/forecast?latitude=50.08&longitude=14.44&hourly=temperature_2m&timezone=Europe%2FPrague" },
-    { name: "ipgeolocation Astronomy", url: `https://api.ipgeolocation.io/astronomy?apiKey=${IPGEO_API_KEY}&lat=50.08&long=14.44` },
-    { name: "Nominatim Reverse", url: "https://nominatim.openstreetmap.org/reverse?format=json&lat=50.08&lon=14.44&zoom=10&addressdetails=1" }
+    // Open-Meteo
+    { name: "Open-Meteo Forecast", type:"fetch", url: "https://api.open-meteo.com/v1/forecast?latitude=50.08&longitude=14.44&hourly=temperature_2m&timezone=Europe%2FPrague" },
+    { name: "Open-Meteo Geocoding", type:"fetch", url: "https://geocoding-api.open-meteo.com/v1/search?name=Prague&count=1&language=cs&format=json" },
+
+    // Astronomy
+    { name: "ipgeolocation Astronomy", type:"fetch", url: `https://api.ipgeolocation.io/astronomy?apiKey=${IPGEO_API_KEY}&lat=50.08&long=14.44` },
+
+    // Reverse geocoding
+    { name: "Nominatim Reverse", type:"fetch", url: "https://nominatim.openstreetmap.org/reverse?format=json&lat=50.08&lon=14.44&zoom=10&addressdetails=1" },
+
+    // Planets
+    { name: "VisiblePlanets.dev", type:"fetch", url: "https://api.visibleplanets.dev/v3?latitude=50.08&longitude=14.44&aboveHorizon=true" },
+
+    // RainViewer meta (radar/sat layers)
+    { name: "RainViewer Meta", type:"fetch", url: "https://api.rainviewer.com/public/weather-maps.json" },
+
+    // Map tile sources (image ping)
+    { name: "OSM Tiles (Leaflet)", type:"image", url: "https://a.tile.openstreetmap.org/0/0/0.png" },
+    { name: "Esri World Imagery Tiles", type:"image", url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/0/0/0" }
   ];
+
   for(const ep of endpoints){
     const row = statusRow(ep.name, 'pending', 'čekám…');
     diagList.appendChild(row);
-    ping(ep.url).then(res=>{
-      const s = row.querySelector('.diag-status');
-      if(res.ok){ s.className='diag-status ok'; s.textContent='OK '+res.status; }
-      else { s.className='diag-status fail'; s.textContent='Chyba '+res.status; }
-    });
+    const s = row.querySelector('.diag-status');
+
+    try{
+      let res;
+      if(ep.type === "image"){
+        res = await imagePing(ep.url);
+        if(res.ok){ s.className='diag-status ok'; s.textContent='OK'; }
+        else { s.className='diag-status fail'; s.textContent = (res.status === 'timeout') ? 'Timeout' : 'Chyba'; }
+      }else{
+        res = await ping(ep.url);
+        if(res.ok){ s.className='diag-status ok'; s.textContent='OK '+res.status; }
+        else { s.className='diag-status fail'; s.textContent = (res.status && res.status !== '—') ? ('Chyba '+res.status) : 'Chyba'; }
+      }
+    }catch(_e){
+      s.className='diag-status fail';
+      s.textContent='Chyba';
+    }
+  }
+
+  // Informational items (not strict HTTP tests)
+  const infoItems = [
+    { name: "Leaflet (mapová knihovna)", text: (window.L ? "Načteno" : "Nenačteno") },
+  ];
+  for(const it of infoItems){
+    const row = statusRow(it.name, 'info', it.text);
+    diagList.appendChild(row);
   }
 }
 function openDiagModal(){
@@ -2140,6 +2210,21 @@ function changeAllGraphModes(mode){
   loadPlanets(50.0755, 14.4378, { showBelow: false, label: "Praha" });
 })();
 </script>
+
+
+<!-- ===== API DIAGNOSTIKA ===== -->
+<section id="api-diagnostics" style="margin-top:20px">
+  <h3>Diagnostika API</h3>
+  <ul>
+    <li><strong>Open-Meteo Geocoding API</strong> – vyhledávání měst a souřadnic</li>
+    <li><strong>Open-Meteo Forecast API</strong> – počasí, časová zóna, lokální čas</li>
+    <li><strong>ipgeolocation.io Astronomy API</strong> – fáze Měsíce, osvětlení, východ a západ Slunce / Měsíce</li>
+    <li><strong>VisiblePlanets.dev API</strong> – viditelnost planet Sluneční soustavy</li>
+    <li><strong>RainViewer API</strong> – radarové a satelitní mapové vrstvy</li>
+    <li><strong>Nominatim (OpenStreetMap)</strong> – reverzní geokódování (název lokality)</li>
+    <li><strong>Leaflet + OSM / Esri Tiles</strong> – mapové podklady</li>
+  </ul>
+</section>
 
 </body>
 </html>
