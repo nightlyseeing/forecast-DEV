@@ -23,6 +23,10 @@
     /* Vítr: světle → tmavě zelená (dole → nahoře) */
     --windLow:#c7f9cc;   /* světle mint */
     --windHigh:#03543f;  /* tmavě smaragdová */
+
+    /* Teplota: světle → tmavě oranžová/červená (dole → nahoře) */
+    --tempLow:#fde68a;   /* světle oranžová */
+    --tempHigh:#ef4444;  /* červená */
   }
   *{box-sizing:border-box}
   body{margin:0;background:radial-gradient(ellipse at top,#0b0c1a 0%,#1b2c3a 100%);color:var(--text);padding:16px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
@@ -658,6 +662,7 @@
   <button class="mode-btn" data-mode="seeing" onclick="changeAllGraphModes('seeing')">👁️</button>
   <button class="mode-btn" data-mode="wind" onclick="changeAllGraphModes('wind')">💨</button>
   <button class="mode-btn" data-mode="rain" onclick="changeAllGraphModes('rain')">🌧️</button>
+  <button class="mode-btn" data-mode="temp" onclick="changeAllGraphModes('temp')" title="Teplota">🌡️</button>
 </div>
 
     </div>
@@ -1366,6 +1371,7 @@ function measureCardsWidth(scrollEl){
 /* ===== Scaling ===== */
 const RAIN_MAX_MM = 5;     // 0..5 mm/h => 100 %
 const WIND_MAX_KMH = 50;   // 0..50 km/h => 100 %
+const TEMP_MAX_C = 35;     // pro fallback normalizaci (pokud by chyběl rozsah dne)
 
 /* ===== Mode score (0..100) ===== */
 function scoreForMode(entry, mode, dateStr){
@@ -1385,6 +1391,55 @@ function scoreForMode(entry, mode, dateStr){
 }
 
 /* ===== Graph drawing ===== */
+function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+function hexToRgb(hex){
+  const h = String(hex || '').trim().replace('#','');
+  if(h.length === 3){
+    return {
+      r: parseInt(h[0]+h[0], 16),
+      g: parseInt(h[1]+h[1], 16),
+      b: parseInt(h[2]+h[2], 16)
+    };
+  }
+  if(h.length === 6){
+    return {
+      r: parseInt(h.slice(0,2), 16),
+      g: parseInt(h.slice(2,4), 16),
+      b: parseInt(h.slice(4,6), 16)
+    };
+  }
+  return {r:255,g:255,b:255};
+}
+function mixRgb(a,b,t){
+  const tt = clamp01(t);
+  return {
+    r: Math.round(a.r + (b.r - a.r) * tt),
+    g: Math.round(a.g + (b.g - a.g) * tt),
+    b: Math.round(a.b + (b.b - a.b) * tt)
+  };
+}
+function rgbaStr(rgb, a){
+  return `rgba(${rgb.r},${rgb.g},${rgb.b},${a})`;
+}
+function tempColor(tempC, rangeAbs){
+  // rangeAbs = max(abs(min), abs(max)) pro daný den; 0 => fallback
+  const range = Math.max(0.5, Number(rangeAbs) || 0);
+  if(tempC <= 0){
+    // světle modrá -> hluboká modrá
+    const coldT = clamp01(Math.abs(tempC) / range);
+    const light = hexToRgb('#7dd3fc');
+    const deep  = hexToRgb('#1d4ed8');
+    return mixRgb(light, deep, coldT);
+  }
+  // žlutá -> oranžová -> červená
+  const hotT = clamp01(tempC / range);
+  const yellow = hexToRgb('#facc15');
+  const orange = hexToRgb('#fb923c');
+  const red    = hexToRgb('#ef4444');
+  if(hotT < 0.5) return mixRgb(yellow, orange, hotT * 2);
+  return mixRgb(orange, red, (hotT - 0.5) * 2);
+}
+
 function drawBackgroundGraph(scrollEl, entries, dateStr, mode='seeing'){
   const old = scrollEl.querySelector('.bg-graph');
   if(old) old.remove();
@@ -1420,6 +1475,7 @@ function drawBackgroundGraph(scrollEl, entries, dateStr, mode='seeing'){
   };
   defs.appendChild(mkGrad('rainGrad','--rainLow','--rainHigh'));
   defs.appendChild(mkGrad('windGrad','--windLow','--windHigh'));
+  defs.appendChild(mkGrad('tempGrad','--tempLow','--tempHigh'));
   svg.appendChild(defs);
 
   if(mode === 'seeing'){
@@ -1464,7 +1520,71 @@ function drawBackgroundGraph(scrollEl, entries, dateStr, mode='seeing'){
     linePath.setAttribute('stroke', 'rgba(255,255,255,0.6)');
     linePath.setAttribute('stroke-width', '1.6');
     svg.appendChild(linePath);
+  } else if(mode === 'temp') {
+    // Teplota: 0 °C je uprostřed (symetrické škálování) + barvy podle znaménka a velikosti
+    const midY = totalH/2;
+    const amp = (totalH/2) * 0.9;
+
+    const zeroLine = document.createElementNS(svgNS, 'line');
+    zeroLine.setAttribute('x1', 0); zeroLine.setAttribute('y1', midY);
+    zeroLine.setAttribute('x2', totalW); zeroLine.setAttribute('y2', midY);
+    zeroLine.setAttribute('stroke', 'rgba(255,255,255,0.22)');
+    zeroLine.setAttribute('stroke-width', '1');
+    svg.appendChild(zeroLine);
+
+    const n = entries.length;
+    if(n<2){ wrap.appendChild(svg); scrollEl.insertAdjacentElement('afterbegin', wrap); return; }
+
+    // Najdi min/max a udělej symetrický rozsah kolem nuly
+    let tMin = Infinity, tMax = -Infinity;
+    for(const e of entries){
+      const t = Number(e.temp);
+      if(Number.isFinite(t)){
+        if(t < tMin) tMin = t;
+        if(t > tMax) tMax = t;
+      }
+    }
+    let rangeAbs = Math.max(Math.abs(tMin), Math.abs(tMax));
+    if(!Number.isFinite(rangeAbs) || rangeAbs < 0.5) rangeAbs = TEMP_MAX_C;
+
+    const pts = [];
+    for(let i=0;i<n;i++){
+      const x = (totalW-1) * (i/(n-1));
+      const t = Number(entries[i].temp);
+      const tt = Number.isFinite(t) ? t : 0;
+      const y = midY - (tt / rangeAbs) * amp;
+      pts.push({x,y,t:tt});
+    }
+
+    // Výplň po segmentech (trapezoidy k nulové linii) + barva dle průměru segmentu
+    for(let i=0;i<n-1;i++){
+      const a = pts[i], b = pts[i+1];
+      const tAvg = (a.t + b.t) / 2;
+      const col = tempColor(tAvg, rangeAbs);
+      const p = document.createElementNS(svgNS,'path');
+      const d = `M ${a.x} ${midY} L ${a.x} ${a.y} L ${b.x} ${b.y} L ${b.x} ${midY} Z`;
+      p.setAttribute('d', d);
+      p.setAttribute('fill', rgbaStr(col, 0.22));
+      p.setAttribute('stroke', 'none');
+      svg.appendChild(p);
+    }
+
+    // Čára po segmentech, aby mohla měnit barvu
+    for(let i=0;i<n-1;i++){
+      const a = pts[i], b = pts[i+1];
+      const tAvg = (a.t + b.t) / 2;
+      const col = tempColor(tAvg, rangeAbs);
+      const seg = document.createElementNS(svgNS,'path');
+      seg.setAttribute('d', `M ${a.x} ${a.y} L ${b.x} ${b.y}`);
+      seg.setAttribute('fill','none');
+      seg.setAttribute('stroke', rgbaStr(col, 0.95));
+      seg.setAttribute('stroke-width','1.9');
+      seg.setAttribute('stroke-linecap','round');
+      seg.setAttribute('stroke-linejoin','round');
+      svg.appendChild(seg);
+    }
   } else {
+    // Vítr / Déšť: klasická plocha 0..100 % (dole -> nahoře)
     const baseY = totalH - 2;
     const topPad = 6;
     const usableH = Math.max(20, baseY - topPad);
@@ -1481,7 +1601,7 @@ function drawBackgroundGraph(scrollEl, entries, dateStr, mode='seeing'){
     const points=[];
     for(let i=0;i<n;i++){
       const x=(totalW-1)*(i/(n-1));
-      const score=scoreForMode(entries[i], mode, dateStr);
+      const score = scoreForMode(entries[i], mode, dateStr);
       const y= baseY - (score/100)*usableH;
       points.push([x,y]);
     }
@@ -1499,8 +1619,8 @@ function drawBackgroundGraph(scrollEl, entries, dateStr, mode='seeing'){
     line.setAttribute('d', dLine);
     line.setAttribute('fill','none');
     line.setAttribute('stroke', mode==='rain'
-      ? getComputedStyle(document.documentElement).getPropertyValue('--rainHigh').trim() || '#1e3a8a'
-      : getComputedStyle(document.documentElement).getPropertyValue('--windHigh').trim() || '#03543f'
+      ? (getComputedStyle(document.documentElement).getPropertyValue('--rainHigh').trim() || '#1e3a8a')
+      : (getComputedStyle(document.documentElement).getPropertyValue('--windHigh').trim() || '#03543f')
     );
     line.setAttribute('stroke-width','1.8');
     svg.appendChild(line);
@@ -1628,7 +1748,8 @@ async function fetchForecast(lat,lon){
     tabs.innerHTML = `
       <button class="mode-btn active" data-mode="seeing" title="Seeing (lepší ↑)">👁️</button>
       <button class="mode-btn" data-mode="wind" title="Vítr (světlá ↓ → tmavá ↑)">💨</button>
-      <button class="mode-btn" data-mode="rain" title="Déšť (světlá ↓ → tmavá ↑)">🌧️</button>`;
+      <button class="mode-btn" data-mode="rain" title="Déšť (světlá ↓ → tmavá ↑)">🌧️</button>
+      <button class="mode-btn" data-mode="temp" title="Teplota">🌡️</button>`;
     tabs.addEventListener('click', (e)=>{
       if(!(e.target instanceof HTMLElement)) return;
       const btn = e.target.closest('.mode-btn'); if(!btn) return;
