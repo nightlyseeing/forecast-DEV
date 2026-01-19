@@ -9,7 +9,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@400;600&display=swap" rel="stylesheet"/>
 <style>
   :root{
     --bg:#0b0c10; --panel:#1f2833; --accent:#00ffc3; --border:#3e5363; --text:#dcdcdc; --shadow:0 0 12px rgba(0,255,195,0.5);
@@ -29,7 +29,7 @@
     --tempHigh:#ef4444;  /* červená */
   }
   *{box-sizing:border-box}
-  body{margin:0;background:radial-gradient(ellipse at top,#0b0c1a 0%,#1b2c3a 100%);color:var(--text);padding:16px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+  body{margin:0;background:radial-gradient(ellipse at top,#0b0c1a 0%,#1b2c3a 100%);color:var(--text);padding:16px;font-family:'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif}
 
   /* === Page layout with ad gutters === */
   .layout{
@@ -122,9 +122,282 @@
   .left-col{display:flex;flex-direction:column;gap:16px}
   .right-col{position:relative}
 
-  .panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:14px;box-shadow:0 2px 12px rgba(0,0,0,.5)}
+  .panel{background:rgba(15,23,42,0.55);border:1px solid rgba(255,255,255,0.10);border-radius:14px;padding:14px;box-shadow:0 10px 24px rgba(0,0,0,.35);backdrop-filter:saturate(140%) blur(6px)}
   .panel strong{color:var(--accent)}
   .kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 10px}
+
+  /* === Modern info panels (Location + Astronomy) === */
+  .info-panel{
+    position:relative;
+    overflow:hidden;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,0.10);
+    background:
+      radial-gradient(900px 220px at 0% 0%, rgba(0,255,195,0.10), transparent 60%),
+      radial-gradient(700px 200px at 100% 20%, rgba(124,58,237,0.10), transparent 60%),
+      rgba(15,23,42,0.50);
+    box-shadow:0 14px 32px rgba(0,0,0,.45);
+    backdrop-filter:saturate(140%) blur(6px);
+  }
+  .info-panel::before{
+    content:'';
+    position:absolute; inset:-1px;
+    background:radial-gradient(600px 160px at 50% 0%, rgba(0,255,195,0.16), transparent 70%);
+    pointer-events:none;
+  }
+  .info-panel .panel-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:2px 2px 10px;
+    margin-bottom:10px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+    position:relative;
+    z-index:1;
+  }
+  .info-panel .panel-icon{
+    width:28px;
+    height:28px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    background:rgba(0,0,0,0.22);
+    border:1px solid rgba(255,255,255,0.12);
+    box-shadow:0 0 14px rgba(0,255,195,.10);
+  }
+  .info-panel .panel-title{
+    font-family:'Orbitron','Inter',system-ui,sans-serif;
+    letter-spacing:.06em;
+    font-weight:600;
+    color:#fff;
+  }
+  .info-panel .kv{position:relative; z-index:1;}
+  .info-panel .kv strong{color:rgba(255,255,255,0.72); font-weight:700;}
+  .info-panel .kv span{color:rgba(255,255,255,0.92);}
+  .accent-text{color:var(--accent); font-weight:700;}
+  .bortle-link{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:4px 10px;
+    border-radius:999px;
+    background:rgba(0,0,0,0.22);
+    border:1px solid rgba(255,255,255,0.12);
+    color:#fff;
+    text-decoration:none;
+    font-weight:800;
+    transition:filter .12s ease, transform .08s ease;
+  }
+  .bortle-link:hover{filter:brightness(1.18)}
+  .bortle-link:active{transform:translateY(1px)}
+  .info-rows{position:relative; z-index:1; margin-top:6px;}
+  .info-rows strong{color:rgba(255,255,255,0.72); font-weight:700;}
+  .info-rows .small strong{color:rgba(255,255,255,0.72);}
+
+
+  /* === Modern info panels (Location + Astronomy) === */
+  .info-panel{
+    position:relative;
+    overflow:hidden;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,0.10);
+    background:
+      radial-gradient(900px 220px at 0% 0%, rgba(0,255,195,0.10), transparent 60%),
+      radial-gradient(700px 200px at 100% 20%, rgba(124,58,237,0.10), transparent 60%),
+      rgba(15,23,42,0.50);
+    box-shadow:0 12px 28px rgba(0,0,0,.42);
+    backdrop-filter:saturate(150%) blur(8px);
+  }
+  .info-panel::before{
+    content:"";
+    position:absolute; inset:0;
+    background:radial-gradient(600px 160px at 50% 0%, rgba(0,255,195,0.10), transparent 70%);
+    pointer-events:none;
+  }
+  .info-panel .panel-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:2px 0 10px;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+    position:relative;
+    z-index:1;
+  }
+  .info-panel .panel-icon{
+    width:26px;
+    height:26px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:10px;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.10);
+    box-shadow:0 8px 18px rgba(0,0,0,.22);
+  }
+  .info-panel .panel-title{
+    font-family:"Orbitron", "Inter", system-ui, sans-serif;
+    letter-spacing:.06em;
+    font-weight:650;
+    color:#fff;
+  }
+  .info-panel .kv{
+    position:relative;
+    z-index:1;
+    gap:8px 14px;
+  }
+  .info-panel .kv strong{
+    color:rgba(255,255,255,0.78);
+    font-weight:700;
+  }
+  .info-panel .kv span{
+    color:rgba(255,255,255,0.92);
+  }
+  .accent-text{
+    color:var(--accent);
+    font-weight:750;
+  }
+  .bortle-link{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:5px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,0.12);
+    background:rgba(0,0,0,0.22);
+    color:#fff;
+    text-decoration:none;
+    font-weight:800;
+    font-size:.88rem;
+    transition:filter .12s ease, transform .08s ease, background .12s ease;
+  }
+  .bortle-link:hover{filter:brightness(1.15)}
+  .bortle-link:active{transform:translateY(1px)}
+
+
+  /* === Modern info panels (Location + Astronomy) === */
+  .info-panel{
+    background:
+      radial-gradient(900px 220px at 0% 0%, rgba(0,255,195,0.10), transparent 60%),
+      radial-gradient(700px 200px at 100% 20%, rgba(124,58,237,0.10), transparent 60%),
+      rgba(15,23,42,0.50);
+  }
+  .info-panel .panel-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:2px 2px 10px;
+    margin:-2px -2px 10px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .info-panel .panel-icon{
+    width:28px;height:28px;
+    display:grid;place-items:center;
+    border-radius:10px;
+    background:rgba(0,0,0,0.22);
+    border:1px solid rgba(255,255,255,0.12);
+    box-shadow:0 6px 16px rgba(0,0,0,0.25);
+  }
+  .info-panel .panel-title{
+    font-family:'Orbitron', 'Inter', system-ui, sans-serif;
+    letter-spacing:.06em;
+    font-weight:600;
+    color:#fff;
+  }
+  .info-panel .kv{
+    gap:8px 12px;
+  }
+  .info-panel .kv span:nth-child(odd) strong{
+    color:rgba(255,255,255,0.70);
+    font-weight:700;
+  }
+  .info-panel .kv span:nth-child(even){
+    color:rgba(255,255,255,0.92);
+  }
+  .accent-text{
+    color:var(--accent);
+    font-weight:800;
+  }
+  .bortle-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:4px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,0.12);
+    background:rgba(0,0,0,0.22);
+    color:#fff;
+    text-decoration:none;
+    font-weight:800;
+    box-shadow:0 8px 18px rgba(0,0,0,0.25);
+  }
+  .bortle-link:hover{
+    filter:brightness(1.12);
+  }
+
+  /* === Modern info panels (Location + Astronomy) === */
+  .info-panel{
+    background:radial-gradient(900px 220px at 0% 0%, rgba(0,255,195,0.10), transparent 60%),
+               radial-gradient(700px 200px at 100% 20%, rgba(124,58,237,0.10), transparent 60%),
+               rgba(15,23,42,0.50);
+    border:1px solid rgba(255,255,255,0.10);
+    border-radius:16px;
+    padding:14px 14px 12px;
+  }
+  .info-panel .panel-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding-bottom:10px;
+    margin-bottom:10px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .info-panel .panel-icon{
+    width:28px; height:28px;
+    display:grid; place-items:center;
+    border-radius:10px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.10);
+    box-shadow:0 0 16px rgba(0,0,0,0.25);
+  }
+  .info-panel .panel-title{
+    font-family:"Orbitron", "Inter", system-ui, sans-serif;
+    letter-spacing:.05em;
+    font-weight:600;
+    color:#fff;
+    text-transform:uppercase;
+    font-size:0.98rem;
+  }
+  .info-panel .kv{
+    gap:8px 12px;
+  }
+  .info-panel .kv strong{
+    color:rgba(255,255,255,0.78);
+    font-weight:700;
+  }
+  .info-panel .kv span:nth-child(2n){
+    color:rgba(255,255,255,0.95);
+  }
+  .accent-text{
+    color:var(--accent);
+    font-weight:800;
+  }
+  .bortle-link{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:4px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,0.14);
+    background:rgba(0,0,0,0.22);
+    color:#fff;
+    text-decoration:none;
+    font-weight:800;
+    box-shadow:0 0 14px rgba(0,255,195,0.18);
+  }
+  .bortle-link:hover{
+    filter:brightness(1.15);
+  }
 
   #mapPanel{padding:0;overflow:hidden;position:relative; z-index:1; aspect-ratio: 1 / 1;}
   #map{width:100%;height:100%}
@@ -140,22 +413,115 @@
   .zoom-badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:4px 8px;border-radius:999px;font-size:.85em;border:1px solid rgba(255,255,255,.2);z-index:2}
   .map-tip{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.55);color:#fff;padding:6px 8px;border-radius:8px;font-size:.9em;border:1px solid rgba(255,255,255,.2);z-index:2}
 
-  .forecast-day{border:1px solid var(--border);border-radius:10px;overflow:hidden;position:relative}
-  .forecast-day h3{margin:0;padding:10px;background:#4b3f72;color:#fff;display:flex;align-items:center;gap:8px;cursor:default;position:relative;z-index:2;flex-wrap:wrap}
+  /* === Modern forecast day cards (match astro widgets) === */
+  .forecast-day{
+    position:relative;
+    overflow:hidden;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,0.10);
+    background:radial-gradient(circle at top, #111827 0%, #020617 72%);
+    box-shadow:0 10px 24px rgba(0,0,0,.45);
+  }
+  .forecast-day::before{
+    content:'';
+    position:absolute; inset:0;
+    background:radial-gradient(600px 180px at 50% 0%, rgba(0,255,195,0.10), transparent 70%);
+    pointer-events:none;
+  }
+  .forecast-day h3{
+    margin:0;
+    padding:12px 12px 10px;
+    background:linear-gradient(180deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0) 100%);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    position:relative;
+    z-index:2;
+    flex-wrap:wrap;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+  .forecast-day h3 .day-title{
+    font-family:'Orbitron', 'Inter', system-ui, sans-serif;
+    letter-spacing:.06em;
+    font-weight:600;
+    font-size:1.05rem;
+  }
+  .forecast-day h3 .day-sub{
+    font-size:.85rem;
+    opacity:.85;
+    padding:2px 8px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,0.12);
+    background:rgba(0,0,0,0.22);
+  }
+
+  .day-actions{display:inline-flex; gap:6px; align-items:center; flex-wrap:wrap}
+  .mini-btn{
+    background:rgba(0,0,0,0.22);
+    color:#fff;
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:999px;
+    padding:4px 10px;
+    font-weight:700;
+    font-size:.82rem;
+    cursor:pointer;
+    transition:filter .12s ease, transform .08s ease;
+  }
+  .mini-btn:hover{filter:brightness(1.18)}
+  .mini-btn:active{transform:translateY(1px)}
+
   .mode-tabs{display:flex; gap:6px; margin-left:auto}
   .mode-btn{
-    background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.2);
-    border-radius:999px; padding:4px 10px; cursor:pointer; font-weight:700; font-size:.9em
+    background:rgba(255,255,255,0.08);
+    color:#fff;
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:999px;
+    padding:6px 10px;
+    cursor:pointer;
+    font-weight:800;
+    font-size:.9em;
+    letter-spacing:.02em;
+    transition:transform .08s ease, filter .12s ease, background .12s ease;
   }
-  .mode-btn.active{background:var(--accent); color:#000; box-shadow:0 0 10px rgba(0,255,195,.5)}
-  .mode-btn:hover{filter:brightness(1.1)}
-  .tiny-help{font-size:.85em;opacity:.85;margin-left:6px}
+  .mode-btn:active{transform:translateY(1px)}
+  .mode-btn.active{
+    background:var(--accent);
+    color:#000;
+    border-color:rgba(0,0,0,0.12);
+    box-shadow:0 0 14px rgba(0,255,195,.35);
+  }
+  .mode-btn:hover{filter:brightness(1.12)}
+  .tiny-help{font-size:.85em;opacity:.78;margin-left:6px}
 
-  .forecast-content{display:none;padding:10px;position:relative}
-  .forecast-scroll-wrapper{position:relative; overflow:hidden;} /* prevent vertical scrollbars */
-  .forecast-scroll{position:relative;display:flex;gap:8px;overflow-x:auto; overflow-y:hidden; padding:6px 0;z-index:2} /* hide vertical scroll */
-  .bg-graph{position:absolute;top:0;left:0;z-index:1;pointer-events:none;}
-  .forecast-card{min-width:80px;font-size:.9em;background:rgba(44,47,51,0.72);border:1px solid var(--border);border-radius:8px;padding:6px;text-align:center;position:relative;z-index:2}
+  .forecast-content{display:none;padding:12px;position:relative}
+  .forecast-scroll-wrapper{position:relative; overflow:hidden;}
+  .forecast-scroll{
+    position:relative;
+    display:flex;
+    gap:10px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding:8px 2px 4px;
+    z-index:2;
+    scroll-behavior:smooth;
+  }
+  .bg-graph{position:absolute;top:0;left:0;z-index:1;pointer-events:none; opacity:.95;}
+  .forecast-card{
+    min-width:86px;
+    font-size:.92em;
+    background:rgba(15,23,42,0.55);
+    border:1px solid rgba(255,255,255,0.10);
+    border-radius:12px;
+    padding:8px 8px 7px;
+    text-align:center;
+    position:relative;
+    z-index:2;
+    box-shadow:0 8px 18px rgba(0,0,0,.25);
+    backdrop-filter:saturate(140%) blur(4px);
+  }
+  .forecast-card .t{font-weight:800; letter-spacing:.02em;}
+  .forecast-card .v{opacity:.92;}
   .scroll-left,.scroll-right{background:none;border:none;color:#fff;font-size:1.5em;padding:6px 10px;cursor:pointer;position:absolute;top:50%;transform:translateY(-50%);opacity:.6;text-shadow:0 0 6px rgba(255,255,255,.3);z-index:3}
   .scroll-left{left:6px}.scroll-right{right:6px}
   .spinner{display:none;width:44px;height:44px;margin:8px auto;border:6px solid #333;border-top:6px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite}
@@ -679,20 +1045,26 @@
 
     <div class="top-row">
       <div class="left-col" id="leftTop">
-        <div class="panel">
-          <strong>📍 Informace o místě</strong>
+        <div class="panel info-panel">
+          <div class="panel-head">
+            <span class="panel-icon">📍</span>
+            <span class="panel-title">Informace o místě</span>
+          </div>
           <div class="kv" style="margin-top:8px;">
             <span><strong>Název:</strong></span><span id="info-name">—</span>
             <span><strong>GPS:</strong></span><span id="info-gps">—</span>
             <span><strong>Místní čas:</strong></span><span id="info-localtime">—</span>
-            <span><strong>Mapa LP:</strong></span><span><a id="bortle-link" href="#" target="_blank" style="display:none;color:#00ffc3;text-decoration:underline;font-weight:bold;">Zobrazit Bortle</a></span>
+            <span><strong>Mapa LP:</strong></span><span><a id="bortle-link" class="bortle-link" href="#" target="_blank" style="display:none">Zobrazit Bortle</a></span>
           </div>
         </div>
 
-        <div class="panel">
-          <strong>🔭 Astronomické informace</strong>
+        <div class="panel info-panel">
+          <div class="panel-head">
+            <span class="panel-icon">🔭</span>
+            <span class="panel-title">Astronomické informace</span>
+          </div>
 
-          <div style="margin-top:8px;">
+          <div class="info-rows">
             <div><strong>🌕 Fáze Měsíce:</strong> <span id="moon-phase-label">—</span></div>
             <div class="small" style="margin-top:4px;"><strong>✨ Osvětlení Měsíce:</strong> <span id="moon-illum-label">—</span></div>
           </div>
@@ -937,7 +1309,7 @@ async function getLocation(){
 
 async function reverseGeocode(lat,lon){try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`);const d=await r.json();return d.address?.city||d.address?.town||d.address?.village||d.address?.municipality||d.display_name||`${lat.toFixed(4)}, ${lon.toFixed(4)}`}catch{return `${lat.toFixed(4)}, ${lon.toFixed(4)}`}} 
 
-function updateLocationInfo(c){const name=c.name||"-";const country=c.country||"";const lat=typeof c.latitude==="number"?c.latitude:null;const lon=typeof c.longitude==="number"?c.longitude:null;$("info-name").innerHTML=country?`<span style="color:#00ffc3;font-weight:bold;">${name}</span>, ${country}`:`<span style="color:#00ffc3;font-weight:bold;">${name}</span>`;$("info-gps").textContent=(lat!=null&&lon!=null)?`${lat.toFixed(4)}, ${lon.toFixed(4)}`:"—";const link=$("bortle-link");if(lat!=null&&lon!=null){link.href=`https://www.lightpollutionmap.info/#zoom=9&lat=${lat}&lon=${lon}`;link.style.display="inline"}else{link.style.display="none"};const np=$("nowPlace");if(np){np.textContent = name || "—";}}
+function updateLocationInfo(c){const name=c.name||"-";const country=c.country||"";const lat=typeof c.latitude==="number"?c.latitude:null;const lon=typeof c.longitude==="number"?c.longitude:null;$("info-name").innerHTML=country?`<span class="accent-text">${name}</span>, ${country}`:`<span class="accent-text">${name}</span>`;$("info-gps").textContent=(lat!=null&&lon!=null)?`${lat.toFixed(4)}, ${lon.toFixed(4)}`:"—";const link=$("bortle-link");if(lat!=null&&lon!=null){link.href=`https://www.lightpollutionmap.info/#zoom=9&lat=${lat}&lon=${lon}`;link.style.display="inline"}else{link.style.display="none"};const np=$("nowPlace");if(np){np.textContent = name || "—";}}
 
 /* === NOVÉ: Map Layers Definition === */
 
@@ -1737,11 +2109,18 @@ async function fetchForecast(lat,lon){
     header.dataset.date=date;
 
     const leftPart = document.createElement('div');
-    leftPart.style.display='flex'; leftPart.style.alignItems='center'; leftPart.style.gap='8px';
-    leftPart.innerHTML = `${getDayName(date)}, ${date}
-  <button class=\"btn\" style=\"padding:4px 8px;font-size:.85em\" onclick=\"event.stopPropagation(); goToStart('${contentId}')\">Ráno</button>
-  <button class=\"btn\" style=\"padding:4px 8px;font-size:.85em\" onclick=\"event.stopPropagation(); centerTime('${contentId}', '12:00')\">Poledne</button>
-  <button class=\"btn\" style=\"padding:4px 8px;font-size:.85em\" onclick=\"event.stopPropagation(); centerTime('${contentId}', '23:00')\">Půlnoc</button>`;
+    leftPart.style.display='flex';
+    leftPart.style.alignItems='center';
+    leftPart.style.gap='10px';
+    leftPart.style.flexWrap='wrap';
+    leftPart.innerHTML = `
+      <span class="day-title">${getDayName(date)}</span>
+      <span class="day-sub">${date}</span>
+      <span class="day-actions">
+        <button class="mini-btn" onclick="event.stopPropagation(); goToStart('${contentId}')">Ráno</button>
+        <button class="mini-btn" onclick="event.stopPropagation(); centerTime('${contentId}', '12:00')">Poledne</button>
+        <button class="mini-btn" onclick="event.stopPropagation(); centerTime('${contentId}', '23:00')">Půlnoc</button>
+      </span>`;
 
     const tabs = document.createElement('div');
     tabs.className='mode-tabs';
