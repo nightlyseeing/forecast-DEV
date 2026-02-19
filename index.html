@@ -635,9 +635,12 @@
     color:#9ca3af;
     text-align:right;
   }
+
 </style>
 
 <style>
+.astro-static{ user-select:text; }
+
 /* === Mobile-first vylepšení (≤ 768px) === */
 @media (max-width: 768px){
   :root{
@@ -1067,6 +1070,10 @@
           <div class="info-rows">
             <div><strong>🌕 Fáze Měsíce:</strong> <span id="moon-phase-label">—</span></div>
             <div class="small" style="margin-top:4px;"><strong>✨ Osvětlení Měsíce:</strong> <span id="moon-illum-label">—</span></div>
+            <div class="small" style="margin-top:6px;"><strong>🌌 Pozorování hvězd (nautická noc):</strong> <span id="nautical-night-label">—</span></div>
+            <div class="small"><strong>🖤 Úplná tma (astronomická noc):</strong> <span id="astro-night-label">—</span></div>
+            <div class="tiny" style="margin-top:4px;opacity:.75;">Datum: <span id="astro-night-date">—</span></div>
+
           </div>
 
           <!-- NOVÝ WIDGET: Slunce & Měsíc -->
@@ -1412,6 +1419,116 @@ const astroState = {
   lon: 14.4378
 };
 
+/* ===== Astronomická noc (nautická + astronomická) =====
+   - "Pozorování hvězd" = nautická noc: Sun < -12° (nauticalDusk → nauticalDawn)
+   - "Úplná tma"        = astronomická noc: Sun < -18° (night → nightEnd)
+   Časy jsou vždy v lokální časové zóně vyhledaného místa (Open-Meteo timezone=auto).
+*/
+window.__selectedNightDate = null;
+
+function _pad2(n){ return String(n).padStart(2,'0'); }
+
+function _tzOffsetMinutes(date, tzName){
+  // Returns offset minutes such that: dateInTz = dateUTC + offset
+  try{
+    const dtf = new Intl.DateTimeFormat('en-US', {
+      timeZone: tzName,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false
+    });
+    const parts = dtf.formatToParts(date);
+    const map = {};
+    parts.forEach(p=>{ map[p.type]=p.value; });
+    const asUTC = Date.UTC(
+      Number(map.year),
+      Number(map.month)-1,
+      Number(map.day),
+      Number(map.hour),
+      Number(map.minute),
+      Number(map.second)
+    );
+    return (asUTC - date.getTime()) / 60000;
+  }catch(e){
+    return 0;
+  }
+}
+
+function _zonedDate(dateStr, timeStr, tzName){
+  // Creates a Date that represents local time (dateStr + timeStr) in tzName.
+  // Uses an offset-calc trick (good enough for DST).
+  try{
+    const [y,m,d] = dateStr.split('-').map(Number);
+    const [hh,mm] = timeStr.split(':').map(Number);
+    let dt = new Date(Date.UTC(y, m-1, d, hh||0, mm||0, 0));
+    const off = _tzOffsetMinutes(dt, tzName);
+    dt = new Date(dt.getTime() - off*60000);
+    // one more pass to stabilize on DST boundaries
+    const off2 = _tzOffsetMinutes(dt, tzName);
+    if(Math.abs(off2-off) > 0.1){
+      dt = new Date(dt.getTime() - (off2-off)*60000);
+    }
+    return dt;
+  }catch(e){
+    return new Date(dateStr + 'T' + timeStr + ':00');
+  }
+}
+
+function _fmtTime(dateObj, tzName){
+  if(!(dateObj instanceof Date) || isNaN(dateObj)) return '—';
+  try{
+    return dateObj.toLocaleTimeString('cs-CZ', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone: tzName });
+  }catch(e){
+    return dateObj.toLocaleTimeString('cs-CZ', { hour:'2-digit', minute:'2-digit', hour12:false });
+  }
+}
+
+function _minFromHHmm(hhmm){
+  const m = String(hhmm||'').match(/^(\d{1,2}):(\d{2})/);
+  if(!m) return null;
+  const hh = Number(m[1]), mm = Number(m[2]);
+  if(!Number.isFinite(hh) || !Number.isFinite(mm)) return null;
+  return hh*60 + mm;
+}
+
+function getNightWindowsForDate(dateStr, lat, lon){
+  if(!window.SunCalc) return null;
+  const tzName = window.__lastTzName || 'Europe/Prague';
+  // Noon in local TZ avoids sunrise edge cases.
+  const noonLocal = _zonedDate(dateStr, '12:00', tzName);
+  const t = SunCalc.getTimes(noonLocal, lat, lon);
+  return {
+    tzName,
+    // nautical night (start observing stars)
+    nauticalStart: t.nauticalDusk,
+    nauticalEnd:   t.nauticalDawn,
+    // astronomical night (full dark)
+    astroStart:    t.night,
+    astroEnd:      t.nightEnd
+  };
+}
+
+function updateNightInfo(dateStr){
+  const lat = astroState.lat, lon = astroState.lon;
+  const w = getNightWindowsForDate(dateStr, lat, lon);
+  const elN = document.getElementById('nautical-night-label');
+  const elA = document.getElementById('astro-night-label');
+  const elD = document.getElementById('astro-night-date');
+  if(elD) elD.textContent = dateStr || '—';
+  if(!w){
+    if(elN) elN.textContent = '—';
+    if(elA) elA.textContent = '—';
+    return;
+  }
+  const tzName = w.tzName;
+  const naut = _fmtTime(w.nauticalStart, tzName) + ' – ' + _fmtTime(w.nauticalEnd, tzName);
+  const astro = _fmtTime(w.astroStart, tzName) + ' – ' + _fmtTime(w.astroEnd, tzName);
+  if(elN) elN.textContent = naut;
+  if(elA) elA.textContent = astro;
+}
+
+
+
 const sunDotEl       = document.getElementById("sun-dot");
 const moonDotEl      = document.getElementById("moon-dot");
 const sunPathAboveEl = document.getElementById("sun-path-above");
@@ -1662,6 +1779,7 @@ setInterval(updateAstroWidget, 60*1000);
 async function fetchMoonPhase(lat,lon){
   // napojení astro widgetu na stejné souřadnice
   updateAstroLocation(lat, lon);
+  try{ if(window.__selectedNightDate){ updateNightInfo(window.__selectedNightDate); } }catch(e){}
 
   const url=`https://api.ipgeolocation.io/astronomy?apiKey=${IPGEO_API_KEY}&lat=${lat}&long=${lon}`;
   try{
@@ -2107,6 +2225,13 @@ async function fetchForecast(lat,lon){
     const section=document.createElement('div'); section.className='forecast-day';
     const header=document.createElement('h3'); const contentId=`day-${idx++}`;
     header.dataset.date=date;
+    header.style.cursor = 'pointer';
+    header.title = 'Klikni: zobrazit astronomickou noc pro tento den';
+    header.addEventListener('click', ()=>{
+      window.__selectedNightDate = date;
+      updateNightInfo(date);
+    });
+
 
     const leftPart = document.createElement('div');
     leftPart.style.display='flex';
@@ -2173,6 +2298,16 @@ section.appendChild(header);
     window._graphMode[contentId] = 'seeing';
     requestAnimationFrame(()=> drawBackgroundGraph(scroll, entries, date, 'seeing'));
   });
+
+  // === Astronomická noc: zvol výchozí den a vykresli indikátory ===
+  try{
+    const dates = Object.keys(days).sort();
+    if(dates.length){
+      const todayLocal = new Date().toLocaleDateString('en-CA', { timeZone: window.__lastTzName || 'Europe/Prague' });
+      window.__selectedNightDate = (dates.includes(todayLocal) ? todayLocal : dates[0]);
+      updateNightInfo(window.__selectedNightDate);
+    }
+  }catch(e){}
 
   syncMapHeight();
 }
