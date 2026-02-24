@@ -502,10 +502,12 @@
     gap:10px;
     overflow-x:auto;
     overflow-y:hidden;
-    padding:8px 2px 4px;
+    padding: 8px 2px 18px;
     z-index:2;
     scroll-behavior:smooth;
-  }
+  
+    scrollbar-gutter: stable both-edges;
+}
   .bg-graph{position:absolute;top:0;left:0;z-index:1;pointer-events:none; opacity:.95;}
   .forecast-card{
     min-width:86px;
@@ -977,6 +979,188 @@
   opacity: 1;
   transform: translateY(0);
 }
+</style>
+
+
+<style>
+/* === Astronomická noc indikátor v předpovědi (osa 24h) === */
+.night-indicator{
+  margin: 10px 12px 12px;
+  padding: 10px 10px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.16);
+  position: relative;
+  z-index: 2;
+}
+.night-indicator .ni-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom: 6px;
+}
+.night-indicator .ni-title{
+  font-weight: 800;
+  letter-spacing: .02em;
+  font-size: .9rem;
+  color: rgba(255,255,255,0.92);
+}
+.night-indicator .ni-legend{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  font-size: .78rem;
+  opacity: .9;
+}
+.night-indicator .ni-leg{
+  display:inline-flex; align-items:center; gap:6px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border:1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+}
+.night-indicator .sw{
+  width:10px; height:10px; border-radius:3px;
+  border:1px solid rgba(255,255,255,0.14);
+}
+.sw.naut{ background: rgba(59,130,246,0.45); }
+.sw.astro{ background: rgba(0,0,0,0.55); box-shadow: 0 0 10px rgba(0,0,0,0.35) inset, 0 0 10px rgba(59,130,246,0.18); }
+
+.night-bar{
+  position:relative;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: linear-gradient(90deg, rgba(251,191,36,0.20) 0%, rgba(125,211,252,0.16) 50%, rgba(251,191,36,0.20) 100%), linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.18));
+  overflow:hidden;
+}
+.night-bar .seg{
+  position:absolute; top:0; bottom:0;
+}
+.night-bar .seg.naut{
+  /* Nautická noc – jemný modrý gradient */
+  background: linear-gradient(90deg,
+    rgba(59,130,246,0.00) 0%,
+    rgba(59,130,246,0.45) 18%,
+    rgba(59,130,246,0.55) 50%,
+    rgba(59,130,246,0.45) 82%,
+    rgba(59,130,246,0.00) 100%
+  );
+  z-index: 1;
+}
+.night-bar .seg.astro{
+  /* Astronomická noc – tmavší gradient (nejtmavší uprostřed) */
+  background: linear-gradient(90deg,
+    rgba(5,20,80,0.00) 0%,
+    rgba(5,20,90,0.70) 20%,
+    rgba(5,20,90,0.95) 50%,
+    rgba(5,20,90,0.70) 80%,
+    rgba(5,20,80,0.00) 100%
+  );
+  box-shadow: 0 0 10px rgba(0,0,0,0.35) inset, 0 0 10px rgba(59,130,246,0.18);
+  z-index: 2;
+}
+.night-bar .tick{
+  position:absolute; top:-2px; bottom:-2px;
+  width:1px; background: rgba(255,255,255,0.10);
+}
+.night-bar .tick.major{ background: rgba(255,255,255,0.18); }
+.night-axis{
+  margin-top:6px;
+  display:flex;
+  justify-content:space-between;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: .74rem;
+  color: rgba(255,255,255,0.75);
+}
+.night-note{
+  margin-top:6px;
+  font-size:.78rem;
+  color: rgba(255,255,255,0.72);
+  opacity:.95;
+}
+
+/* Inline indikátor v hodinovém slideru */
+.forecast-scroll{ display:block; } /* override původní flex-row */
+.forecast-scroll-inner{
+  display:flex;
+  flex-direction:column;
+  width:max-content;
+  gap:8px;
+  padding-bottom:2px;
+}
+.forecast-cards-row{
+  display:flex;
+  gap:10px;
+  position:relative; /* pro bg-graph */
+}
+.night-inline{
+    margin-top:2px;
+  margin-bottom:6px;
+padding:0 2px 2px;
+}
+.night-inline-bar{
+  position:relative;
+  height: 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: linear-gradient(90deg, rgba(251,191,36,0.20) 0%, rgba(125,211,252,0.16) 50%, rgba(251,191,36,0.20) 100%), linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.18));
+  overflow: visible;
+}
+.night-inline-bar .seg{ position:absolute; top:0; bottom:0; }
+.night-inline-bar .seg.naut{ 
+  /* Nautická noc – jemný modrý gradient */
+  background: linear-gradient(90deg,
+    rgba(59,130,246,0.00) 0%,
+    rgba(59,130,246,0.42) 18%,
+    rgba(59,130,246,0.52) 50%,
+    rgba(59,130,246,0.42) 82%,
+    rgba(59,130,246,0.00) 100%
+  );
+  z-index: 1;
+}
+.night-inline-bar .seg.astro{ 
+  /* Astronomická noc – tmavší gradient (nejtmavší uprostřed) */
+  background: linear-gradient(90deg,
+    rgba(5,20,80,0.00) 0%,
+    rgba(5,20,90,0.70) 20%,
+    rgba(5,20,90,0.95) 50%,
+    rgba(5,20,90,0.70) 80%,
+    rgba(5,20,80,0.00) 100%
+  );
+  box-shadow: 0 0 10px rgba(0,0,0,0.35) inset, 0 0 10px rgba(59,130,246,0.18);
+  z-index: 2;
+}
+.night-inline-bar .tick{
+  position:absolute; top:-2px; bottom:-2px;
+  width:1px; background: rgba(255,255,255,0.10);
+}
+.night-inline-bar .tick.major{ background: rgba(255,255,255,0.18); }
+.night-inline-meta{ margin-top:6px; font-size:.78rem; color: rgba(255,255,255,0.72); }
+
+/* === Sun markers on night/day indicator === */
+.night-inline-bar .sunmark{
+  position:absolute;
+  top:4px;
+  transform:translateX(-50%);
+  font-size:16px;
+  line-height:14px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.45));
+  opacity:1;
+  z-index:5;
+  pointer-events:none;
+}
+.night-inline-bar .sunmark .lbl{
+  display:block;
+  margin-top:2px;
+  font-size:10px;
+  opacity:0.85;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  text-align:center;
+}
+
 </style>
 
 </head>
@@ -1497,14 +1681,31 @@ function getNightWindowsForDate(dateStr, lat, lon){
   // Noon in local TZ avoids sunrise edge cases.
   const noonLocal = _zonedDate(dateStr, '12:00', tzName);
   const t = SunCalc.getTimes(noonLocal, lat, lon);
+
+  // SunCalc returns times around the given date; for night intervals, the "end" (dawn)
+  // can be earlier than the "start" (dusk) on the same civil date. Normalize to a
+  // continuous interval spanning midnight by pushing the end to the next day when needed.
+  const MS_DAY = 24*60*60*1000;
+  const nautStart = t.nauticalDusk;
+  let   nautEnd   = t.nauticalDawn;
+  if(nautStart instanceof Date && nautEnd instanceof Date && nautEnd.getTime() <= nautStart.getTime()){
+    nautEnd = new Date(nautEnd.getTime() + MS_DAY);
+  }
+
+  const astroStart = t.night;    // Sun < -18° (astronomical dusk)
+  let   astroEnd   = t.nightEnd; // Sun < -18° (astronomical dawn)
+  if(astroStart instanceof Date && astroEnd instanceof Date && astroEnd.getTime() <= astroStart.getTime()){
+    astroEnd = new Date(astroEnd.getTime() + MS_DAY);
+  }
+
   return {
     tzName,
     // nautical night (start observing stars)
-    nauticalStart: t.nauticalDusk,
-    nauticalEnd:   t.nauticalDawn,
+    nauticalStart: nautStart,
+    nauticalEnd:   nautEnd,
     // astronomical night (full dark)
-    astroStart:    t.night,
-    astroEnd:      t.nightEnd
+    astroStart:    astroStart,
+    astroEnd:      astroEnd
   };
 }
 
@@ -1527,6 +1728,247 @@ function updateNightInfo(dateStr){
   if(elA) elA.textContent = astro;
 }
 
+/* === Indikátor astronomické noci pro jednotlivé dny (osa 0–24h) === */
+function _dateAddDays(dateStr, delta){
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m-1, d, 12, 0, 0));
+  dt.setUTCDate(dt.getUTCDate() + delta);
+  const yy = dt.getUTCFullYear();
+  const mm = String(dt.getUTCMonth()+1).padStart(2,'0');
+  const dd = String(dt.getUTCDate()).padStart(2,'0');
+  return `${yy}-${mm}-${dd}`;
+}
+
+function _dayRange(dateStr, tzName){
+  const start = _zonedDate(dateStr, '00:00', tzName);
+  const end   = _zonedDate(_dateAddDays(dateStr, 1), '00:00', tzName);
+  return { start, end };
+}
+
+function _clipIntervalToDay(a, b, dayStart, dayEnd){
+  if(!(a instanceof Date) || !(b instanceof Date) || isNaN(a) || isNaN(b)) return null;
+  const s = Math.max(a.getTime(), dayStart.getTime());
+  const e = Math.min(b.getTime(), dayEnd.getTime());
+  if(e <= s) return null;
+  return { start: new Date(s), end: new Date(e) };
+}
+
+function _minsFromDayStart(dt, dayStart){
+  return (dt.getTime() - dayStart.getTime()) / 60000;
+}
+
+function _mergeIntervals(intervals){
+  const arr = (intervals||[]).slice().filter(Boolean).sort((x,y)=>x.start - y.start);
+  if(!arr.length) return [];
+  const out = [arr[0]];
+  for(let i=1;i<arr.length;i++){
+    const cur = arr[i];
+    const last = out[out.length-1];
+    if(cur.start.getTime() <= last.end.getTime() + 60*1000){
+      last.end = new Date(Math.max(last.end.getTime(), cur.end.getTime()));
+    }else{
+      out.push(cur);
+    }
+  }
+  return out;
+}
+
+function getNightIntervalsForDay(dateStr, lat, lon){
+  if(!window.SunCalc) return { tzName: (window.__lastTzName || 'Europe/Prague'), astro: [], naut: [] };
+
+  const tzName = window.__lastTzName || 'Europe/Prague';
+  const {start: dayStart, end: dayEnd} = _dayRange(dateStr, tzName);
+
+  // We need both "this date" and "previous date" to capture the after-midnight part of the same night.
+  const datesToCheck = [_dateAddDays(dateStr,-1), dateStr];
+  const astroIntervals = [];
+  const nautIntervals = [];
+
+  for(const ds of datesToCheck){
+    const w = getNightWindowsForDate(ds, lat, lon);
+    if(!w) continue;
+
+    // nautical: Sun < -12° (nauticalDusk → nauticalDawn)
+    const naut = _clipIntervalToDay(w.nauticalStart, w.nauticalEnd, dayStart, dayEnd);
+    if(naut) nautIntervals.push(naut);
+
+    // astro: Sun < -18° (night → nightEnd)
+    const ast = _clipIntervalToDay(w.astroStart, w.astroEnd, dayStart, dayEnd);
+    if(ast) astroIntervals.push(ast);
+  }
+
+  return {
+    tzName,
+    astro: _mergeIntervals(astroIntervals),
+    naut:  _mergeIntervals(nautIntervals)
+  };
+}
+
+function _fmtIntervalList(intervals, tzName){
+  if(!intervals || !intervals.length) return '—';
+  return intervals.map(iv => _fmtTime(iv.start, tzName) + '–' + _fmtTime(iv.end, tzName)).join(', ');
+}
+
+function createNightIndicatorEl(dateStr, lat, lon){
+  const { tzName, astro, naut } = getNightIntervalsForDay(dateStr, lat, lon);
+
+  const box = document.createElement('div');
+  box.className = 'night-indicator';
+
+  const head = document.createElement('div');
+  head.className = 'ni-head';
+  head.innerHTML = `
+    <div class="ni-title">🌌 Tma vhodná pro pozorování (24h osa)</div>
+    <div class="ni-legend">
+      <span class="ni-leg"><span class="sw naut"></span>nautická</span>
+      <span class="ni-leg"><span class="sw astro"></span>astronomická</span>
+    </div>
+  `;
+  box.appendChild(head);
+
+  const bar = document.createElement('div');
+  bar.className = 'night-bar';
+
+  // ticks: every 3h (minor) + major at 0/6/12/18/24
+  for(let h=0; h<=24; h+=3){
+    const t = document.createElement('div');
+    t.className = 'tick' + ((h % 6 === 0) ? ' major' : '');
+    t.style.left = (h/24*100) + '%';
+    bar.appendChild(t);
+  }
+
+  function addSeg(iv, cls){
+    const dayStart = _dayRange(dateStr, tzName).start;
+    const a = _minsFromDayStart(iv.start, dayStart);
+    const b = _minsFromDayStart(iv.end, dayStart);
+    const left = Math.max(0, Math.min(1440, a)) / 1440 * 100;
+    const right = Math.max(0, Math.min(1440, b)) / 1440 * 100;
+    const seg = document.createElement('div');
+    seg.className = 'seg ' + cls;
+    seg.style.left = left + '%';
+    seg.style.width = Math.max(0, right - left) + '%';
+    bar.appendChild(seg);
+  }
+
+  // Nautical first, then astro on top.
+  naut.forEach(iv => addSeg(iv, 'naut'));
+  astro.forEach(iv => addSeg(iv, 'astro'));
+
+  box.appendChild(bar);
+
+  const axis = document.createElement('div');
+  axis.className = 'night-axis';
+  axis.innerHTML = `<span>00</span><span>06</span><span>12</span><span>18</span><span>24</span>`;
+  box.appendChild(axis);
+
+  const note = document.createElement('div');
+  note.className = 'night-note';
+  note.innerHTML = `
+    <span class="pill">naut: <strong>${_fmtIntervalList(naut, tzName)}</strong></span>
+    <span class="pill">astro: <strong>${_fmtIntervalList(astro, tzName)}</strong></span>
+  `;
+  box.appendChild(note);
+
+  return box;
+}
+
+
+/* === Inline indikátor astronomické/nautické noci (součást hodinového slideru) === */
+function _clipIntervalToRange(a, b, rangeStart, rangeEnd){
+  if(!(a instanceof Date) || !(b instanceof Date) || isNaN(a) || isNaN(b)) return null;
+  const s = Math.max(a.getTime(), rangeStart.getTime());
+  const e = Math.min(b.getTime(), rangeEnd.getTime());
+  if(e <= s) return null;
+  return { start: new Date(s), end: new Date(e) };
+}
+
+function createNightInlineIndicatorForEntries(entries, dateStr, lat, lon){
+  const tzName = window.__lastTzName || 'Europe/Prague';
+  const wrap = document.createElement('div');
+  wrap.className = 'night-inline';
+
+  if(!entries || !entries.length || !window.SunCalc){
+    return wrap;
+  }
+
+  // Range of displayed hours (e.g. "from now" for today) → align bar to what user actually scrolls.
+  const rangeStart = _zonedDate(dateStr, entries[0].time, tzName);
+  let rangeEnd = _zonedDate(dateStr, entries[entries.length-1].time, tzName);
+  rangeEnd = new Date(rangeEnd.getTime() + 60*60*1000); // include last hour block
+
+  // Pull intervals from this day + next day (range can cross midnight when showing late hours).
+  const d1 = getNightIntervalsForDay(dateStr, lat, lon);
+  const d2 = getNightIntervalsForDay(_dateAddDays(dateStr, 1), lat, lon);
+
+  const astro = _mergeIntervals(
+    [...(d1.astro||[]), ...(d2.astro||[])].map(iv => _clipIntervalToRange(iv.start, iv.end, rangeStart, rangeEnd)).filter(Boolean)
+  );
+  const naut = _mergeIntervals(
+    [...(d1.naut||[]), ...(d2.naut||[])].map(iv => _clipIntervalToRange(iv.start, iv.end, rangeStart, rangeEnd)).filter(Boolean)
+  );
+
+  const bar = document.createElement('div');
+  bar.className = 'night-inline-bar';
+
+  // hour ticks aligned to cards (1 tick per hour)
+  const n = entries.length;
+  for(let i=0;i<=n;i++){
+    const t = document.createElement('div');
+    const hour = i<n ? entries[i].time.slice(0,2) : '';
+    const isMajor = (i===0 || i===n || (hour && Number(hour)%3===0));
+    t.className = 'tick' + (isMajor ? ' major' : '');
+    t.style.left = (i / n * 100) + '%';
+    bar.appendChild(t);
+  }
+
+  // Sunrise / Sunset markers (actual times for this date & location)
+  try{
+    if(window.SunCalc){
+      const noonLocal = _zonedDate(dateStr, '12:00', tzName);
+      const st = SunCalc.getTimes(noonLocal, lat, lon);
+      const sunrise = st.sunrise;
+      const sunset  = st.sunset;
+      const addMark = (dt, emoji, title) => {
+        if(!(dt instanceof Date) || isNaN(dt)) return;
+        if(dt.getTime() < rangeStart.getTime() || dt.getTime() > rangeEnd.getTime()) return;
+        const x = (dt.getTime() - rangeStart.getTime()) / (rangeEnd.getTime() - rangeStart.getTime()) * 100;
+        const mk = document.createElement('div');
+        mk.className = 'sunmark';
+        mk.style.left = Math.max(0, Math.min(100, x)) + '%';
+        mk.title = title + ' ' + _fmtTime(dt, tzName);
+        mk.innerHTML = `${emoji}<span class="lbl">${_fmtTime(dt, tzName)}</span>`;
+        bar.appendChild(mk);
+      };
+      addMark(sunrise, '🌅', 'Východ');
+      addMark(sunset,  '🌇', 'Západ');
+    }
+  }catch(e){}
+
+  function addSeg(iv, cls){
+    const left = (iv.start.getTime() - rangeStart.getTime()) / (rangeEnd.getTime() - rangeStart.getTime()) * 100;
+    const right = (iv.end.getTime() - rangeStart.getTime()) / (rangeEnd.getTime() - rangeStart.getTime()) * 100;
+    const seg = document.createElement('div');
+    seg.className = 'seg ' + cls;
+    seg.style.left = Math.max(0, Math.min(100, left)) + '%';
+    seg.style.width = Math.max(0, Math.min(100, right) - Math.max(0, Math.min(100, left))) + '%';
+    bar.appendChild(seg);
+  }
+
+  naut.forEach(iv => addSeg(iv, 'naut'));
+  astro.forEach(iv => addSeg(iv, 'astro'));
+
+  wrap.appendChild(bar);
+
+  const meta = document.createElement('div');
+  meta.className = 'night-inline-meta';
+  meta.innerHTML = `
+    <span class="pill">naut: <strong>${_fmtIntervalList(naut, tzName)}</strong></span>
+    <span class="pill">astro: <strong>${_fmtIntervalList(astro, tzName)}</strong></span>
+  `;
+  wrap.appendChild(meta);
+
+  return wrap;
+}
 
 
 const sunDotEl       = document.getElementById("sun-dot");
@@ -2274,9 +2716,13 @@ section.appendChild(header);
     const leftBtn=document.createElement('button'); leftBtn.className='scroll-left'; leftBtn.textContent='◀';
     const rightBtn=document.createElement('button'); rightBtn.className='scroll-right'; rightBtn.textContent='▶';
     const scroll=document.createElement('div'); scroll.className='forecast-scroll';
-    leftBtn.onclick=()=>scroll.scrollBy({left:-250,behavior:'smooth'});
-    rightBtn.onclick=()=>scroll.scrollBy({left:250,behavior:'smooth'});
-    wrapper.appendChild(leftBtn); wrapper.appendChild(scroll); wrapper.appendChild(rightBtn);
+    // Scroll arrows (desktop): scroll the horizontally-scrollable container
+    const _step = ()=> Math.max(260, Math.round(scroll.clientWidth * 0.85));
+    leftBtn.addEventListener('click', (ev)=>{ ev.preventDefault(); scroll.scrollBy({left: -_step(), behavior: 'smooth'}); });
+    rightBtn.addEventListener('click', (ev)=>{ ev.preventDefault(); scroll.scrollBy({left:  _step(), behavior: 'smooth'}); });
+
+    const inner=document.createElement('div'); inner.className='forecast-scroll-inner';
+    const cardsRow=document.createElement('div'); cardsRow.className='forecast-cards-row';
 
     entries.forEach(e => {
       const card=document.createElement('div'); card.className='forecast-card';
@@ -2287,16 +2733,47 @@ section.appendChild(header);
                       <div>☁️ ${Math.round(e.cloud)}%</div>
                       <div>🌧️ ${e.rain} mm</div>
                       <div>💨 ${Math.round(e.wind)} km/h</div>`;
-      scroll.appendChild(card);
+      cardsRow.appendChild(card);
     });
 
+    // Inline indikátor tmy (součást horizontálního slideru)
+    let nightInline=null;
+    try{
+      nightInline = createNightInlineIndicatorForEntries(entries, date, lat, lon);
+    }catch(e){
+      nightInline = document.createElement('div');
+    }
+
+    inner.appendChild(cardsRow);
+    if(nightInline) inner.appendChild(nightInline);
+    scroll.appendChild(inner);
+
+    wrapper.appendChild(leftBtn); wrapper.appendChild(scroll); wrapper.appendChild(rightBtn);
+
     content.appendChild(wrapper);
+    // Move night time labels under the slider so they don't scroll out of view
+    try{
+      if(nightInline){
+        const metaEl = nightInline.querySelector('.night-inline-meta');
+        if(metaEl){
+          metaEl.style.margin = '8px 2px 0';
+          metaEl.style.textAlign = 'left';
+          metaEl.style.position = 'relative';
+          metaEl.style.zIndex = '2';
+          // detach from the scrollable strip
+          metaEl.parentElement && metaEl.parentElement.removeChild(metaEl);
+          content.appendChild(metaEl);
+        }
+      }
+    }catch(e){}
     section.appendChild(content);
+
+
     div.appendChild(section);
 
     window._graphData[contentId] = { entries, date };
     window._graphMode[contentId] = 'seeing';
-    requestAnimationFrame(()=> drawBackgroundGraph(scroll, entries, date, 'seeing'));
+    requestAnimationFrame(()=> drawBackgroundGraph(cardsRow, entries, date, 'seeing'));
   });
 
   // === Astronomická noc: zvol výchozí den a vykresli indikátory ===
@@ -2335,7 +2812,7 @@ function centerTime(contentId,target){
 /* Change graph mode for a given day */
 function changeGraphMode(contentId, mode){
   window._graphMode[contentId] = mode;
-  const sc = document.querySelector(`#${contentId} .forecast-scroll`);
+  const sc = document.querySelector(`#${contentId} .forecast-cards-row`);
   const data = window._graphData[contentId];
   if(sc && data){
     drawBackgroundGraph(sc, data.entries, data.date, mode);
