@@ -399,7 +399,29 @@
     filter:brightness(1.15);
   }
 
-  #mapPanel{padding:0;overflow:hidden;position:relative; z-index:1; aspect-ratio: 1 / 1;}
+  
+#mapPanel{padding:0;overflow:hidden;position:relative; z-index:1; aspect-ratio: 1 / 1;}
+.map-compass{position:absolute;left:10px;bottom:10px;z-index:900;width:48px;height:48px;border-radius:50%;
+  display:grid;place-items:center;background:rgba(11,12,16,.82);border:1px solid rgba(0,255,195,.32);
+  color:var(--accent);font-size:.7rem;font-weight:800;backdrop-filter:blur(8px);pointer-events:none}
+.map-compass:before{content:"N";position:absolute;top:3px}.map-compass:after{content:"▲";font-size:1rem;margin-top:-3px}
+.location-card{margin-top:16px;padding:16px;background:
+  radial-gradient(circle at 10% 0%,rgba(0,255,195,.08),transparent 34%),
+  radial-gradient(circle at 100% 100%,rgba(124,58,237,.07),transparent 38%),
+  rgba(15,23,42,.55);border:1px solid rgba(255,255,255,.10);border-radius:16px;
+  box-shadow:0 10px 24px rgba(0,0,0,.20);backdrop-filter:blur(10px)}
+.location-card h2{font-size:1rem;margin:0 0 12px;color:#fff}
+.loc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.loc-stat{padding:10px;border:1px solid rgba(255,255,255,.08);border-radius:11px;background:rgba(5,12,20,.38);min-width:0}
+.loc-stat .k{font-size:.7rem;color:rgba(220,220,220,.62);margin-bottom:3px}
+.loc-stat .v{font-size:.92rem;font-weight:800;color:#fff;overflow-wrap:anywhere}
+.loc-stat .v.accent{color:var(--accent)}
+.loc-wide{grid-column:1/-1}
+.loc-note{font-size:.68rem;line-height:1.35;color:rgba(220,220,220,.58);margin-top:9px}
+.loc-bortle-link{color:var(--accent);text-decoration:none;font-weight:800}
+.loc-bortle-link:hover{text-decoration:underline}
+@media(max-width:520px){.loc-grid{grid-template-columns:1fr 1fr}}
+
   #map{width:100%;height:100%}
   
   /* === Přesunutí a zmenšení kontrolu vrstev (o 30% dolů/doprava) === */
@@ -1234,6 +1256,130 @@ padding:0 2px 2px;
   text-align:center;
 }
 
+
+/* ===== NightlySeeing 4.0 — immersive dashboard ===== */
+:root{--ns-blue:#1992ff;--ns-green:#59df79;--ns-gold:#ffc43d;--ns-red:#ff5147;--ns-card:#0c1723;--ns-card2:#101d2b}
+body{background:radial-gradient(circle at 50% -20%,#132b3d 0,#07111b 36%,#050b12 100%);color:#edf5ff}
+.container{max-width:1540px}
+h1{font-size:1.8rem;letter-spacing:-.04em;margin:4px 0 14px}
+.controls{background:rgba(8,18,29,.74);border:1px solid rgba(110,170,220,.13);border-radius:16px;padding:10px;box-shadow:0 12px 35px rgba(0,0,0,.24)}
+.top-row{grid-template-columns:minmax(420px,1.12fr) minmax(420px,.92fr);gap:14px}
+.left-col,.right-col{min-width:0}
+.panel,.ns-card,.location-card{background:linear-gradient(145deg,rgba(13,27,40,.96),rgba(7,17,27,.96));border:1px solid rgba(113,171,218,.19);box-shadow:none;border-radius:14px}
+#mapPanel{border-radius:14px;aspect-ratio:auto!important;height:560px!important}
+#map{height:100%!important}
+.map-compass{left:16px!important;top:70px!important;bottom:auto!important;width:62px!important;height:62px!important;background:rgba(5,13,22,.96)!important;border:1px solid rgba(255,255,255,.18)!important;box-shadow:0 8px 24px rgba(0,0,0,.45);z-index:1100!important}
+.map-compass:before{top:5px!important}
+.map-compass:after{color:#ff3b30}
+.location-card{padding:0;margin-top:12px;overflow:hidden}
+.location-card h2,.loc-note,.loc-wide{display:none!important}
+.loc-grid{grid-template-columns:1fr 1fr;gap:0}
+.loc-stat{border:0;border-radius:0;background:transparent;padding:18px 20px;min-height:96px}
+.loc-stat+ .loc-stat{border-left:1px solid rgba(113,171,218,.18)}
+.loc-stat .k{font-size:.76rem;text-transform:uppercase;letter-spacing:.07em;color:#9fb2c5}
+.loc-stat .v{font-size:1.65rem;margin-top:8px}
+#locBortle{color:var(--ns-green)}
+#locNsScore{color:var(--ns-gold)}
+.ns-dashboard{display:grid!important;grid-template-columns:1fr!important;gap:10px;margin:0 0 12px}
+.ns-dashboard .ns-card:first-child{padding:20px}
+.ns-dashboard .ns-card:nth-child(2){padding:14px 16px}
+.ns-dashboard .ns-wide{display:none}
+.ns-score-wrap{gap:22px}
+.ns-score-ring{width:128px;height:128px;background:conic-gradient(var(--ns-green) calc(var(--score)*1%),#263545 0);box-shadow:inset 0 0 0 1px rgba(255,255,255,.04)}
+.ns-score-ring:after{background:#091522;inset:11px}
+.ns-score-ring strong{font-size:2rem}
+.ns-best{font-size:1.12rem;color:var(--ns-green)}
+.ns-timeline{height:92px}
+.ns-hour-bar{background:#142437}
+.ns-hour-bar:after{background:linear-gradient(to top,rgba(52,146,255,.45),var(--ns-green))}
+.ns-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.ns-tab{border:1px solid rgba(113,171,218,.20);background:#0b1825;color:#dbe9f7;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+.ns-tab.active{background:var(--ns-blue);border-color:var(--ns-blue);color:white}
+.ns-tab:hover{filter:brightness(1.1)}
+.ns-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 12px}
+.ns-metric{background:linear-gradient(145deg,#0d1c2a,#091522);border:1px solid rgba(113,171,218,.18);border-radius:12px;padding:13px;min-width:0}
+.ns-metric .ico{font-size:1.35rem}.ns-metric .num{font-size:1.05rem;font-weight:800;margin-left:5px}.ns-metric .lab{font-size:.72rem;color:#9fb2c5;margin-top:5px}
+#leftTop>.info-panel,#planet-widget{display:none}
+#leftTop>.info-panel.ns-tab-visible,#planet-widget.ns-tab-visible{display:block}
+.forecast-section-title{margin-top:18px;padding:0 4px}
+#forecast>.day-card,.forecast-day,.day-section{background:linear-gradient(145deg,rgba(13,27,40,.94),rgba(7,17,27,.94));border-color:rgba(113,171,218,.17)}
+.now-status{background:rgba(5,14,23,.88);border:1px solid rgba(113,171,218,.15);border-radius:12px}
+@media(max-width:1000px){.top-row{grid-template-columns:1fr}#mapPanel{height:500px!important}}
+@media(max-width:650px){.ns-metrics{grid-template-columns:1fr 1fr}#mapPanel{height:390px!important}.ns-score-ring{width:105px;height:105px}.loc-stat{padding:14px}}
+
+/* ===== NightlySeeing 4.5 — reference-layout polish ===== */
+body{margin:0;background:#050b12;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+.topbar{min-height:72px;background:rgba(5,13,22,.97);border-bottom:1px solid #203243;box-shadow:0 6px 24px rgba(0,0,0,.24)}
+.topbar .brand{font-size:1.35rem;font-weight:900;letter-spacing:-.035em}.topbar .brand::first-letter{color:#fff}
+.container{max-width:1580px;padding:14px 14px 28px}
+.controls{margin:0 0 12px;border-radius:12px}
+.top-row{grid-template-columns:minmax(500px,1.06fr) minmax(500px,.94fr);gap:14px;align-items:start}
+#leftTop{background:linear-gradient(145deg,#0b1722,#07111a);border:1px solid #203344;border-radius:14px;padding:16px;box-sizing:border-box}
+#leftTop:before{content:attr(data-place);display:block;color:#fff;font-weight:900;font-size:1.55rem;letter-spacing:-.03em;margin-bottom:10px}
+.ns-tabs{margin-bottom:14px}.ns-tab{padding:10px 17px;border-radius:9px}.ns-tab.active{box-shadow:0 5px 18px rgba(25,146,255,.22)}
+.ns-dashboard{margin:0!important}
+.ns-dashboard .ns-card:first-child{min-height:176px;display:flex;align-items:center}
+.ns-score-wrap{width:100%}
+.ns-score-ring{flex:0 0 auto}
+.ns-score-ring strong{font-size:2.15rem}
+.ns-score-wrap>div:last-child{flex:1;position:relative;padding-right:180px}
+.ns-score-wrap>div:last-child:after{content:"Nejlepší hodina";position:absolute;right:28px;top:8px;color:#d9e4ef;font-size:.75rem;font-weight:700}
+.ns-score-wrap>div:last-child:before{content:attr(data-best);position:absolute;right:20px;top:34px;color:#fff;font-size:1.7rem;font-weight:900}
+#nsBestWindow{position:absolute;right:14px;top:75px;background:#55d978;color:#04110a;border-radius:999px;padding:5px 13px;font-weight:900;font-size:.78rem;max-width:150px;overflow:hidden;white-space:nowrap}
+#nsScoreWhy{margin-top:7px}
+.ns-dashboard .ns-card:nth-child(2){margin-top:10px}
+.ns-metrics{margin-top:10px}
+.ns-metric{min-height:76px;display:flex;align-items:center;flex-wrap:wrap;align-content:center;padding:12px 14px}
+.ns-metric .ico{font-size:1.6rem}.ns-metric .num{font-size:1.05rem}.ns-metric .lab{width:100%;padding-left:35px;margin-top:-1px}
+.right-col{display:flex;flex-direction:column;gap:10px}
+#mapPanel{height:500px!important;margin:0}
+.map-tip{background:rgba(5,13,22,.78);border:1px solid rgba(255,255,255,.13);border-radius:8px}
+.map-compass{top:58px!important;left:18px!important}
+.location-card{margin-top:0!important}
+.loc-grid{min-height:116px}
+.loc-stat{display:flex;flex-direction:column;justify-content:center;padding:18px 28px}
+.loc-stat .k{font-size:.8rem;font-weight:800;text-transform:none;letter-spacing:0;color:#e7eef7}
+.loc-stat .v{font-size:2.35rem;line-height:1;color:#59df79!important}
+#locNsScore{color:#59df79!important}
+.forecast-section-title{margin-top:18px;border-top:1px solid rgba(113,171,218,.10);padding-top:18px}
+.forecast-section-title h2{font-size:1.25rem}
+#forecast{margin-top:8px!important}
+.forecast-section-sub{color:#8297aa}
+@media(max-width:1100px){.top-row{grid-template-columns:1fr}#mapPanel{height:500px!important}}
+@media(max-width:700px){#leftTop{padding:11px}.ns-score-wrap>div:last-child{padding-right:0}.ns-score-wrap>div:last-child:after,.ns-score-wrap>div:last-child:before{display:none}#nsBestWindow{position:static;margin-top:8px;display:inline-block}.top-row{grid-template-columns:1fr}.loc-stat{padding:14px}.loc-stat .v{font-size:1.7rem}}
+
+/* ===== v46: one dynamic information banner ===== */
+#leftTop{display:flex;flex-direction:column;min-height:626px}
+#nsMainTabs{flex:0 0 auto}
+#leftTop .ns-metrics,
+#leftTop #nightlyDashboard,
+#leftTop [data-ns-panel]{display:none!important}
+#leftTop .ns-metrics.ns46-active{display:grid!important}
+#leftTop #nightlyDashboard.ns46-active{display:grid!important}
+#leftTop [data-ns-panel].ns46-active{display:block!important}
+#leftTop .info-panel.ns46-active{margin:0;box-shadow:none;background:transparent;border:0;padding:4px 0}
+#leftTop [data-ns-panel="astro"].ns46-active{display:block!important}
+#leftTop [data-ns-panel="astro"].ns46-active #planet-widget{display:none!important}
+#leftTop #planet-widget.ns46-active{display:block!important;margin:0}
+#leftTop #planet-widget.ns46-active .pw-panel{margin-top:0}
+#leftTop #nsObserveCard.ns46-active{display:block!important;margin:0;padding:6px 0;background:transparent;border:0}
+#leftTop #nsObserveCard .ns-observe{grid-template-columns:repeat(2,minmax(0,1fr))}
+#leftTop #nightlyDashboard.ns46-active #nsObserveCard{display:none!important}
+#leftTop #nightlyDashboard.ns46-active{grid-template-columns:1fr;gap:10px;margin:0!important}
+#leftTop #nightlyDashboard.ns46-active .ns-card{display:block!important}
+#leftTop #nightlyDashboard.ns46-active .ns-card:nth-child(2){display:block!important}
+#leftTop .ns-metrics.ns46-active{order:3;margin:10px 0 0}
+#leftTop #nightlyDashboard.ns46-active{order:2}
+#leftTop .info-panel .panel-title{font-size:1.03rem}
+#leftTop [data-ns-panel="place"] .kv{font-size:1.02rem;grid-template-columns:110px 1fr;gap:10px 12px}
+#leftTop [data-ns-panel="astro"] .astro-widget-row{gap:10px}
+#leftTop [data-ns-panel="astro"] .astro-card{background:#07101c}
+#leftTop #planet-widget .pw-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+#leftTop #nsObserveCard .ns-note{margin-top:12px}
+@media(max-width:700px){
+ #leftTop{min-height:0}
+ #leftTop #planet-widget .pw-grid,#leftTop #nsObserveCard .ns-observe{grid-template-columns:1fr}
+}
 </style>
 
 </head>
@@ -1304,8 +1450,21 @@ padding:0 2px 2px;
     </div>
 
     <div class="top-row">
-      <div class="left-col" id="leftTop">
-        <div class="panel info-panel">
+      <div class="left-col" id="leftTop" data-place="Vyberte lokalitu">
+        <div class="ns-tabs" id="nsMainTabs">
+          <button class="ns-tab active" data-target="overview">Přehled</button>
+          <button class="ns-tab" data-target="place">Lokalita</button>
+          <button class="ns-tab" data-target="observe">Co pozorovat</button>
+          <button class="ns-tab" data-target="astro">Slunce a Měsíc</button>
+          <button class="ns-tab" data-target="planets">Planety</button>
+        </div>
+        <div class="ns-metrics">
+          <div class="ns-metric"><span class="ico">☁️</span><span class="num" id="dashCloud">—</span><div class="lab">Oblačnost</div></div>
+          <div class="ns-metric"><span class="ico">💧</span><span class="num" id="dashRain">—</span><div class="lab">Srážky</div></div>
+          <div class="ns-metric"><span class="ico">💨</span><span class="num" id="dashWind">—</span><div class="lab">Vítr</div></div>
+          <div class="ns-metric"><span class="ico">🌡️</span><span class="num" id="dashTemp">—</span><div class="lab">Teplota</div></div>
+        </div>
+        <div class="panel info-panel" data-ns-panel="place">
           <div class="panel-head">
             <span class="panel-icon">📍</span>
             <span class="panel-title">Informace o místě</span>
@@ -1318,7 +1477,7 @@ padding:0 2px 2px;
           </div>
         </div>
 
-        <div class="panel info-panel">
+        <div class="panel info-panel" data-ns-panel="astro">
           <div class="panel-head">
             <span class="panel-icon">🔭</span>
             <span class="panel-title">Astronomické informace</span>
@@ -1390,7 +1549,7 @@ padding:0 2px 2px;
 
 
           <!-- NOVÝ WIDGET: Viditelnost planet -->
-          <div id="planet-widget" class="astro-widget">
+          <div id="planet-widget" class="astro-widget" data-ns-panel="planets">
             <div class="pw-panel">
               <div class="pw-hdr">
                 <div style="min-width:0">
@@ -1430,6 +1589,19 @@ padding:0 2px 2px;
           <div id="map"></div>
           <div id="mapZoomBadge" class="zoom-badge">Zoom: vypnuto</div>
           <div class="map-tip">Klikni <b>pravým</b> na mapu pro zapnutí/vypnutí zoomu</div>
+          <div class="map-compass" aria-hidden="true"></div>
+        </div>
+        <div class="location-card" id="locationSummary">
+          <div class="loc-grid">
+            <div class="loc-stat">
+              <div class="k">💡 Bortle · světelné znečištění</div>
+              <div class="v" id="locBortle">—</div>
+            </div>
+            <div class="loc-stat">
+              <div class="k">✨ NightlySeeing Index</div>
+              <div class="v accent" id="locNsScore">—</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1452,7 +1624,7 @@ padding:0 2px 2px;
         <div class="ns-muted">Kombinace oblačnosti, srážek, větru a skutečné astronomické tmy.</div>
         <div class="ns-timeline" id="nsTimeline"></div>
       </div>
-      <div class="ns-card ns-wide">
+      <div class="ns-card ns-wide" id="nsObserveCard" data-ns-panel="observe">
         <h2>🔭 Co má právě teď smysl pozorovat – planety i deep‑sky</h2>
         <div class="ns-observe" id="nsObserve"><span class="ns-muted">Počítám objekty…</span></div>
         <div class="ns-note">Objekty se počítají až po výběru lokace. Planety používají Astronomy Engine; deep‑sky katalog používá souřadnice J2000 a aktuální výšku nad obzorem. Počasí je z Open‑Meteo.</div>
@@ -1490,7 +1662,7 @@ padding:0 2px 2px;
 
 <script>
 const IPGEO_API_KEY="781aa2d69af74745906e01cc68c84207";
-const VERSION = "v 0.2 NightlySeeing"; // <--- ZMĚNA
+const VERSION = "v 0.46 NightlySeeing"; // <--- ZMĚNA
 /* ===== Menu ===== */
 function toggleMenu(){const m=document.getElementById("mainMenu");m.style.display=m.style.display==="block"?"none":"block"}
 document.addEventListener("click",(e)=>{const m=document.getElementById("mainMenu");const t=document.querySelector(".menu-toggle");if(m&&t&&!m.contains(e.target)&&!t.contains(e.target))m.style.display="none"});
@@ -1613,7 +1785,7 @@ async function reverseGeocode(lat,lon){
   }
 } 
 
-function updateLocationInfo(c){const name=c.name||"-";const country=c.country||"";const lat=typeof c.latitude==="number"?c.latitude:null;const lon=typeof c.longitude==="number"?c.longitude:null;$("info-name").innerHTML=country?`<span class="accent-text">${name}</span>, ${country}`:`<span class="accent-text">${name}</span>`;$("info-gps").textContent=(lat!=null&&lon!=null)?`${lat.toFixed(4)}, ${lon.toFixed(4)}`:"—";const link=$("bortle-link");if(lat!=null&&lon!=null){link.href=`https://www.lightpollutionmap.info/#zoom=9&lat=${lat}&lon=${lon}`;link.style.display="inline"}else{link.style.display="none"};const np=$("nowPlace");if(np){np.textContent = name || "—";}}
+function updateLocationInfo(c){const name=c.name||"-";const country=c.country||"";const lat=typeof c.latitude==="number"?c.latitude:null;const lon=typeof c.longitude==="number"?c.longitude:null;$("info-name").innerHTML=country?`<span class="accent-text">${name}</span>, ${country}`:`<span class="accent-text">${name}</span>`;$("info-gps").textContent=(lat!=null&&lon!=null)?`${lat.toFixed(4)}, ${lon.toFixed(4)}`:"—";const link=$("bortle-link");if(lat!=null&&lon!=null){link.href=`https://www.lightpollutionmap.info/#zoom=9&lat=${lat}&lon=${lon}`;link.style.display="inline"}else{link.style.display="none"};const lp=$("locBortleLink");if(lp&&lat!=null&&lon!=null)lp.href=`https://www.lightpollutionmap.info/#zoom=11&lat=${lat}&lon=${lon}`;const np=$("nowPlace");if(np){np.textContent = name || "—";} updateLocationSummary();}
 
 /* === NOVÉ: Map Layers Definition === */
 
@@ -2383,6 +2555,7 @@ async function fetchMoonPhase(lat,lon){
 
     const today=now.toLocaleDateString('en-CA',{timeZone:tz});
     moonIllumByDate[today]=fraction;
+    updateLocationSummary(); updateMapPopup();
   }catch(e){
     console.error("Chyba při lokálním výpočtu Slunce/Měsíce:",e);
     $("moon-phase-label").textContent="Chyba výpočtu";
@@ -2676,6 +2849,36 @@ function drawBackgroundGraph(scrollEl, entries, dateStr, mode='seeing'){
   scrollEl.insertBefore(wrap, scrollEl.firstChild);
 }
 
+function updateLocationSummary(){
+  const score=document.getElementById("locNsScore");
+  const top=document.getElementById("nowNightlyScore");
+  if(score) score.textContent=(top&&top.textContent.trim())?top.textContent:"—";
+  const moon=document.getElementById("locMoon");
+  const illum=document.getElementById("moon-illum-label");
+  if(moon) moon.textContent=(illum&&illum.textContent.trim()!=="—")?illum.textContent+" osvětlení":"—";
+  const dark=document.getElementById("locDark");
+  const astro=document.getElementById("astro-night-label");
+  if(dark) dark.textContent=(astro&&astro.textContent.trim())?astro.textContent:"—";
+  const bortle=document.getElementById("locBortle");
+  if(bortle) bortle.textContent="—";
+}
+function updateMapPopup(){
+  if(!marker) return;
+  const name=(document.getElementById("info-name")?.textContent||"Vybraná lokalita").trim();
+  const score=(document.getElementById("nowNightlyScore")?.textContent||"—").trim();
+  const moon=(document.getElementById("moon-illum-label")?.textContent||"—").trim();
+  const cloud=(window.__nsForecast?.days)?(()=>{
+    try{
+      const tz=window.__lastTzName||"Europe/Prague";
+      const ds=new Date().toLocaleDateString("en-CA",{timeZone:tz});
+      const hh=new Date().toLocaleTimeString("en-GB",{timeZone:tz,hour:"2-digit",hour12:false});
+      const e=(window.__nsForecast.days[ds]||[]).find(x=>String(x.time).slice(0,2)===hh);
+      return e?Math.round(Number(e.cloud)||0)+" %":"—";
+    }catch(_){return "—";}
+  })():"—";
+  marker.bindPopup(`<div style="min-width:170px"><b>${name}</b><br>✨ NightlySeeing <b>${score}</b><br>☁️ Oblačnost ${cloud}<br>🌙 Měsíc ${moon}</div>`);
+}
+
 /* ===== Forecast ===== */
 window._graphData = {};
 window._graphMode = {};
@@ -2770,7 +2973,7 @@ function nsVerdict(score){
 }
 function nsRenderDashboard(lat,lon,days){
   const box=document.getElementById('nightlyDashboard'); if(!box)return;
-  box.style.display='grid';
+  if(box.classList.contains('ns46-active')) box.style.display='grid';
   if(!window.__nsLocationReady){
     const sc=document.getElementById('nsScore'); if(sc) sc.textContent='—';
     const nsTop=document.getElementById('nowNightlyScore'); if(nsTop) nsTop.textContent='—';
@@ -2799,6 +3002,7 @@ function nsRenderDashboard(lat,lon,days){
   const nightlyScoreText=dark.length?avg+'/100':'—';
   document.getElementById('nsScore').textContent=nightlyScoreText;
   const nsTop=document.getElementById('nowNightlyScore'); if(nsTop) nsTop.textContent=nightlyScoreText;
+  updateLocationSummary(); updateMapPopup();
   document.getElementById('nsScoreRing').style.setProperty('--score',dark.length?avg:0);
   document.getElementById('nsVerdict').textContent=dark.length?nsVerdict(avg):'Dnes bez astronomické tmy';
   document.getElementById('nsBestWindow').textContent=best?`Nejlepší hodina: ${best.time} · ${best.q}/100`:'Nejlepší čas: —';
@@ -3530,5 +3734,84 @@ function changeAllGraphModes(mode){
 <section id="api-diagnostics" style="margin-top:20px">
   </section>
 
+<script>
+/* ===== NightlySeeing v46: one dynamic banner ===== */
+(function(){
+  function initNS46(){
+    const left=document.getElementById('leftTop');
+    const dash=document.getElementById('nightlyDashboard');
+    const metrics=document.querySelector('.ns-metrics');
+    const place=document.querySelector('[data-ns-panel="place"]');
+    const astro=document.querySelector('[data-ns-panel="astro"]');
+    const planets=document.getElementById('planet-widget');
+    const observe=document.getElementById('nsObserveCard');
+    if(!left||!dash||!metrics) return;
+
+    // Move reusable original components into one stable left-hand stage.
+    metrics.insertAdjacentElement('afterend',dash);
+    if(observe) left.appendChild(observe);
+    if(planets) left.appendChild(planets);
+
+    const tabs=Array.from(document.querySelectorAll('#nsMainTabs .ns-tab'));
+    function hideAll(){
+      metrics.classList.remove('ns46-active');
+      dash.classList.remove('ns46-active');
+      [place,astro,planets,observe].forEach(el=>el&&el.classList.remove('ns46-active'));
+    }
+    function setTab(name){
+      hideAll();
+      tabs.forEach(b=>b.classList.toggle('active',b.dataset.target===name));
+      if(name==='overview'){
+        dash.classList.add('ns46-active');
+        metrics.classList.add('ns46-active');
+      } else if(name==='place' && place) place.classList.add('ns46-active');
+      else if(name==='astro' && astro) astro.classList.add('ns46-active');
+      else if(name==='planets' && planets) planets.classList.add('ns46-active');
+      else if(name==='observe' && observe) observe.classList.add('ns46-active');
+      setTimeout(()=>{try{window._leafletMap?.invalidateSize();}catch(_){}},60);
+    }
+    tabs.forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.target)));
+    setTab('overview');
+
+    function mirror(){
+      for(const [src,dst] of [['nowTemp','dashTemp'],['nowWind','dashWind'],['nowRain','dashRain']]){
+        const a=document.getElementById(src),b=document.getElementById(dst); if(a&&b)b.textContent=a.textContent;
+      }
+      try{
+        const f=window.__nsForecast,tz=window.__lastTzName||'Europe/Prague';
+        if(f?.days){
+          const ds=new Date().toLocaleDateString('en-CA',{timeZone:tz});
+          const hh=new Date().toLocaleTimeString('en-GB',{timeZone:tz,hour:'2-digit',hour12:false});
+          const e=(f.days[ds]||[]).find(x=>String(x.time).slice(0,2)===hh);
+          const el=document.getElementById('dashCloud'); if(el&&e)el.textContent=Math.round(Number(e.cloud)||0)+' %';
+        }
+      }catch(_){}
+    }
+    setInterval(mirror,1000); mirror();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initNS46);else initNS46();
+})();
+</script>
+<script>
+(function(){
+  function ns45Sync(){
+    const left=document.getElementById('leftTop');
+    const name=(document.getElementById('info-name')?.textContent||'').trim();
+    if(left) left.dataset.place=(name && name!=='—')?name:'Vyberte lokalitu';
+
+    const best=document.getElementById('nsBestWindow');
+    const scoreWhy=document.getElementById('nsScoreWhy');
+    const scoreBox=document.querySelector('.ns-score-wrap>div:last-child');
+    if(scoreBox && best){
+      const m=(best.textContent||'').match(/(\d{1,2}:\d{2})/);
+      scoreBox.dataset.best=m?m[1]:'—';
+    }
+    const b=document.getElementById('locBortle');
+    if(b && (!b.textContent.trim() || b.textContent.trim()==='—')) b.title='Bortle třída vyžaduje samostatný zdroj dat světelného znečištění.';
+  }
+  setInterval(ns45Sync,800);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ns45Sync);else ns45Sync();
+})();
+</script>
 </body>
 </html>
