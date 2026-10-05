@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Astronomická předpověď – seeing (👁️), vítr, déšť</title>
+<title>NightlySeeing – astronomická předpověď a podmínky pozorování</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -1274,7 +1274,7 @@ padding:0 2px 2px;
 
       <div id="nowStatus" class="now-status" style="display:none">
         <span class="place" id="nowPlace">—</span><span class="sep">|</span>
-        <span>👁️ <span class="val" id="nowSeeing">—</span></span>
+        <span title="NightlySeeing Score pro dnešní pozorovací noc">✨ <span class="val" id="nowNightlyScore">—</span></span>
         <span class="sep">•</span>
         <span>💨 <span class="val" id="nowWind">—</span></span>
         <span class="sep">•</span>
@@ -2700,11 +2700,10 @@ function updateNowStatusFromArrays(timeArr, tempArr, cloudArr, rainArr, windArr)
     const cloud = cloudArr[idx];
     const rain = rainArr[idx];
     const wind = Math.round(windArr[idx]);
-    const seeing = visibilityScore(cloud, rain, dateStr);
     $("nowTemp").textContent = `${temp}°C`;
     $("nowWind").textContent = `${wind} km/h`;
     $("nowRain").textContent = `${rain} mm/h`;
-    $("nowSeeing").textContent = `${seeing}/100`;
+    const nsTop=$("nowNightlyScore"); if(nsTop && !nsTop.textContent.trim()) nsTop.textContent="—";
     $("nowStatus").style.display = "flex";
   }catch(e){ console.warn("NOW status update failed", e); }
 }
@@ -2774,6 +2773,7 @@ function nsRenderDashboard(lat,lon,days){
   box.style.display='grid';
   if(!window.__nsLocationReady){
     const sc=document.getElementById('nsScore'); if(sc) sc.textContent='—';
+    const nsTop=document.getElementById('nowNightlyScore'); if(nsTop) nsTop.textContent='—';
     const vd=document.getElementById('nsVerdict'); if(vd) vd.textContent='Čekám na lokalitu';
     const bw=document.getElementById('nsBestWindow'); if(bw) bw.textContent='Nejlepší čas: —';
     const why=document.getElementById('nsScoreWhy'); if(why) why.textContent='Po výběru místa načtu hodinovou předpověď a astronomickou tmu.';
@@ -2796,7 +2796,9 @@ function nsRenderDashboard(lat,lon,days){
   const avg=dark.length?Math.round(dark.reduce((a,e)=>a+e.q,0)/dark.length):0;
   const best=dark.slice().sort((a,b)=>b.q-a.q)[0];
 
-  document.getElementById('nsScore').textContent=dark.length?avg+'/100':'—';
+  const nightlyScoreText=dark.length?avg+'/100':'—';
+  document.getElementById('nsScore').textContent=nightlyScoreText;
+  const nsTop=document.getElementById('nowNightlyScore'); if(nsTop) nsTop.textContent=nightlyScoreText;
   document.getElementById('nsScoreRing').style.setProperty('--score',dark.length?avg:0);
   document.getElementById('nsVerdict').textContent=dark.length?nsVerdict(avg):'Dnes bez astronomické tmy';
   document.getElementById('nsBestWindow').textContent=best?`Nejlepší hodina: ${best.time} · ${best.q}/100`:'Nejlepší čas: —';
