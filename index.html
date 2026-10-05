@@ -1467,7 +1467,7 @@ padding:0 2px 2px;
     <div id="forecast" style="margin-top:8px;"></div>
 
     <div class="footer">
-      Zdroj fází: ipgeolocation.io • Počasí a geokódování: Open-Meteo • Mapa: Leaflet & Esri
+      Fáze Měsíce: lokální výpočet SunCalc • Počasí a geokódování: Open-Meteo • Mapa: Leaflet & Esri
     </div>
   </main>
 
@@ -1707,7 +1707,7 @@ function initMap(lat,lon){
   setTimeout(()=> { map.invalidateSize(); syncMapHeight(); }, 150);
 }
 
-/* ===== Moon phase & Sun/Moon times (ipgeolocation only) ===== */
+/* ===== Moon phase & Sun/Moon times (local SunCalc) ===== */
 let moonIllumByDate = {};
 function getMoonEmojiFromName(n){n=String(n||"").toLowerCase().replace(/_/g," ").trim();if(n.includes("new moon"))return"🌑 Nov";if(n.includes("waxing crescent"))return"🌒 Dorůstající srpek";if(n.includes("first quarter"))return"🌓 První čtvrť";if(n.includes("waxing gibbous"))return"🌔 Dorůstající měsíc";if(n.includes("full moon"))return"🌕 Úplněk";if(n.includes("waning gibbous"))return"🌖 Couvající měsíc";if(n.includes("last quarter"))return"🌗 Poslední čtvrť";if(n.includes("waning crescent"))return"🌘 Couvající srpek";return"🌙 Neznámá fáze"}
 
@@ -2343,64 +2343,52 @@ setInterval(updateAstroWidget, 60*1000);
 
 
 async function fetchMoonPhase(lat,lon){
-  // napojení astro widgetu na stejné souřadnice
+  // Fáze, osvětlení i východ/západ Měsíce se počítají lokálně pomocí SunCalc.
+  // Nejsme tak závislí na externím astronomy API a osvětlení je vždy 0–100 %.
   updateAstroLocation(lat, lon);
   try{ if(window.__selectedNightDate){ updateNightInfo(window.__selectedNightDate); } }catch(e){}
 
-  const url=`https://api.ipgeolocation.io/astronomy?apiKey=${IPGEO_API_KEY}&lat=${lat}&long=${lon}`;
   try{
-    const r=await fetch(url);
-    const d=await r.json();
-    if(!r.ok) throw new Error(`Astronomy API HTTP ${r.status}`);
-    if(!d || typeof d !== "object") throw new Error("Astronomy API vrátilo neplatná data");
+    if(!window.SunCalc) throw new Error("SunCalc není načten");
 
-    // Moon Phase
-    const p=d.moon_phase || d.moon_phase_name || (d.astronomy && (d.astronomy.moon_phase || d.astronomy.moon_phase_name)) || "";
-    $("moon-phase-label").textContent = p ? getMoonEmojiFromName(p) : "—";
-    // Moon illumination (%) - field name differs across API versions:
-    // - moon_illumination_percentage (docs) or moon_illumination (older)
-    const illumRaw =
-      (d.moon_illumination_percentage ?? d.moon_illumination ??
-       (d.astronomy && (d.astronomy.moon_illumination_percentage ?? d.astronomy.moon_illumination)));
+    const now=new Date();
+    const tz=window.__lastTzName||'Europe/Prague';
+    const moon=SunCalc.getMoonIllumination(now);
+    const fraction=Math.max(0,Math.min(1,Number(moon.fraction)||0));
+    const phase=((Number(moon.phase)||0)%1+1)%1;
+    const illumPct=Math.round(fraction*100);
 
-    // Normalize to number (0..100)
-    let illumPct = null;
-    if(illumRaw != null && illumRaw !== ""){
-      const s = String(illumRaw).trim().replace("%","");
-      const n = Number(s);
-      if(!Number.isNaN(n)) illumPct = n;
+    function moonPhaseLabel(x){
+      if(x < 0.03125 || x >= 0.96875) return "🌑 Nov";
+      if(x < 0.21875) return "🌒 Dorůstající srpek";
+      if(x < 0.28125) return "🌓 První čtvrť";
+      if(x < 0.46875) return "🌔 Dorůstající měsíc";
+      if(x < 0.53125) return "🌕 Úplněk";
+      if(x < 0.71875) return "🌖 Couvající měsíc";
+      if(x < 0.78125) return "🌗 Poslední čtvrť";
+      return "🌘 Couvající srpek";
     }
 
-    const illumStr = (illumPct != null) ? (Math.round(illumPct) + "%") : "—";
-    const illumEl = document.getElementById("moon-illum-label");
-    if(illumEl) illumEl.textContent = illumStr;
+    $("moon-phase-label").textContent=moonPhaseLabel(phase);
+    const illumEl=$("moon-illum-label");
+    if(illumEl) illumEl.textContent=`${illumPct}%`;
 
+    const sunTimes=SunCalc.getTimes(now,lat,lon);
+    $("sun-rise-label").textContent=_fmtTime(sunTimes.sunrise,tz);
+    $("sun-set-label").textContent=_fmtTime(sunTimes.sunset,tz);
 
-    // Sun Times (Sunrise/Sunset)
-    const sunRise = d.sunrise ? d.sunrise.substring(0, 5) : '—';
-    const sunSet = d.sunset ? d.sunset.substring(0, 5) : '—';
-    $("sun-rise-label").textContent = sunRise;
-    $("sun-set-label").textContent = sunSet;
+    const moonTimes=SunCalc.getMoonTimes(now,lat,lon);
+    $("moon-rise-label").textContent=moonTimes.rise ? _fmtTime(moonTimes.rise,tz) : "N/A";
+    $("moon-set-label").textContent=moonTimes.set ? _fmtTime(moonTimes.set,tz) : "N/A";
 
-    // Moon Times (Moonrise/Moonset)
-    const moonRise = (d.moonrise && d.moonrise !== '00:00') ? d.moonrise.substring(0, 5) : 'N/A';
-    const moonSet = (d.moonset && d.moonset !== '00:00') ? d.moonset.substring(0, 5) : 'N/A';
-    $("moon-rise-label").textContent = moonRise;
-    $("moon-set-label").textContent = moonSet;
-
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: window.__lastTzName || 'Europe/Prague' });
-// Store illumination for 'today' so the widget can draw correctly (0..1)
-moonIllumByDate[today] = (illumPct != null) ? Math.max(0, Math.min(1, illumPct / 100)) : 0;
-
-}catch(e){
-    console.error("Chyba při načítání fáze/slunce/měsíce:",e);
-    $("moon-phase-label").textContent="Chyba načítání";
-    const illumEl = document.getElementById("moon-illum-label");
-    if(illumEl) illumEl.textContent = "—";
-    $("sun-rise-label").textContent = "—";
-    $("sun-set-label").textContent = "—";
-    $("moon-rise-label").textContent = "—";
-    $("moon-set-label").textContent = "—";
+    const today=now.toLocaleDateString('en-CA',{timeZone:tz});
+    moonIllumByDate[today]=fraction;
+  }catch(e){
+    console.error("Chyba při lokálním výpočtu Slunce/Měsíce:",e);
+    $("moon-phase-label").textContent="Chyba výpočtu";
+    const illumEl=$("moon-illum-label"); if(illumEl) illumEl.textContent="—";
+    $("sun-rise-label").textContent="—"; $("sun-set-label").textContent="—";
+    $("moon-rise-label").textContent="—"; $("moon-set-label").textContent="—";
   }
 }
 
