@@ -638,6 +638,79 @@
     text-align:right;
   }
 
+
+
+/* ===== NightlySeeing dashboard — sjednoceno s designem webu ===== */
+.ns-dashboard{display:grid;grid-template-columns:1fr 1.5fr;gap:14px;margin:16px 0}
+.ns-card{
+  position:relative;overflow:hidden;
+  background:
+    radial-gradient(900px 220px at 0% 0%,rgba(0,255,195,.10),transparent 60%),
+    radial-gradient(700px 200px at 100% 20%,rgba(124,58,237,.10),transparent 60%),
+    rgba(15,23,42,.55);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;padding:16px;
+  box-shadow:0 10px 24px rgba(0,0,0,.35);
+  backdrop-filter:saturate(140%) blur(6px);
+}
+.ns-card:before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(600px 160px at 50% 0%,rgba(0,255,195,.08),transparent 70%);
+}
+.ns-card>*{position:relative;z-index:1}
+.ns-card h2{font-size:1.05rem;margin:0 0 10px;color:rgba(255,255,255,.92)}
+.ns-score-wrap{display:flex;align-items:center;gap:16px}
+.ns-score-ring{
+  --score:0;width:92px;height:92px;border-radius:50%;display:grid;place-items:center;
+  background:conic-gradient(var(--accent) calc(var(--score)*1%),rgba(255,255,255,.10) 0);
+  position:relative;flex:0 0 auto;
+  filter:drop-shadow(0 0 8px rgba(0,255,195,.16));
+}
+.ns-score-ring:after{content:"";position:absolute;inset:8px;border-radius:50%;background:#111b29;border:1px solid rgba(255,255,255,.06)}
+.ns-score-ring strong{position:relative;z-index:1;font-size:1.45rem;color:#fff}
+.ns-muted{color:rgba(255,255,255,.68);font-size:.88rem;line-height:1.45}
+.ns-best{font-weight:800;margin:4px 0;color:var(--accent)}
+.ns-timeline{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:10px}
+.ns-hour{min-width:0;text-align:center}
+.ns-hour-bar{height:34px;border-radius:6px;background:rgba(255,255,255,.06);position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.04)}
+.ns-hour-bar:after{content:"";position:absolute;left:0;right:0;bottom:0;height:calc(var(--q)*1%);background:linear-gradient(to top,rgba(0,255,195,.55),var(--accent));box-shadow:0 0 8px rgba(0,255,195,.25)}
+.ns-hour-label{font-size:.68rem;color:rgba(255,255,255,.62);margin-top:4px}
+.ns-observe{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ns-object{
+  padding:9px 11px;border-radius:10px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(0,0,0,.22);font-size:.88rem;
+}
+.ns-object b{display:block;margin-bottom:2px;color:rgba(255,255,255,.94)}
+.ns-object .ns-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.ns-tag{
+  font-size:.7rem;padding:2px 7px;border-radius:999px;
+  background:rgba(0,255,195,.08);
+  border:1px solid rgba(0,255,195,.24);
+  color:var(--accent);
+}
+.ns-empty{
+  padding:12px 14px;border:1px dashed rgba(0,255,195,.22);
+  background:rgba(0,0,0,.14);border-radius:10px;color:rgba(255,255,255,.68)
+}
+.ns-wide{grid-column:1/-1}
+.ns-note{font-size:.76rem;color:rgba(255,255,255,.56);margin-top:8px}
+.diag-status.external{color:#ffd36a}
+@media(max-width:800px){.ns-dashboard{grid-template-columns:1fr}.ns-timeline{grid-template-columns:repeat(6,1fr);row-gap:8px}}
+
+
+/* Forecast section heading + per-night NightlySeeing badge */
+.forecast-section-title{margin:24px 0 10px;padding:0 2px}
+.forecast-section-title h2{margin:0;color:rgba(255,255,255,.94);font-size:1.28rem}
+.forecast-section-sub{margin-top:4px;color:rgba(255,255,255,.58);font-size:.84rem}
+.ns-day-score{display:inline-flex;align-items:center;gap:7px;padding:5px 9px;border-radius:999px;
+  border:1px solid rgba(0,255,195,.24);background:rgba(0,255,195,.08);color:var(--accent);
+  font-size:.76rem;font-weight:800;white-space:nowrap}
+.ns-day-score .ns-day-value{color:#fff}
+.ns-day-score.ns-day-none{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:rgba(255,255,255,.55)}
+
+
+.next-day-mark{font-size:.58rem;line-height:1;color:var(--accent);margin-top:2px;font-weight:700}
 </style>
 
 <style>
@@ -1328,7 +1401,7 @@ padding:0 2px 2px;
                       <span class="astro-info-icon" data-tip="Planety nad/pod obzorem pro zadané souřadnice. Hodnocení je orientační: výška nad obzorem + jasnost (magnituda). Výpočet probíhá lokálně pomocí Astronomy Engine.">i</span>
                     </span>
                   </div>
-                  <div class="pw-sub">Planety se aktualizují po vyhledání místa (používá stejné souřadnice jako Slunce/Měsíc).</div>
+                  <div class="pw-sub">Detail planet: výška, azimut, jasnost a nejbližší východ/západ. Panel „Co pozorovat“ výše je stručné doporučení; zde zůstávají kompletní efemeridy.</div>
                 </div>
                 <div class="pw-controls">
                   <label title="Zobrazit i objekty pod obzorem">
@@ -1361,7 +1434,36 @@ padding:0 2px 2px;
       </div>
     </div>
 
+
+    <section class="ns-dashboard" id="nightlyDashboard" style="display:none">
+      <div class="ns-card">
+        <h2>✨ NightlySeeing Score</h2>
+        <div class="ns-score-wrap">
+          <div class="ns-score-ring" id="nsScoreRing"><strong id="nsScore">—</strong></div>
+          <div>
+            <div class="ns-best" id="nsVerdict">Čekám na předpověď…</div>
+            <div class="ns-muted" id="nsBestWindow">Nejlepší čas: —</div>
+            <div class="ns-muted" id="nsScoreWhy">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="ns-card">
+        <h2>🌌 Kvalita dnešní noci po hodinách</h2>
+        <div class="ns-muted">Kombinace oblačnosti, srážek, větru a skutečné astronomické tmy.</div>
+        <div class="ns-timeline" id="nsTimeline"></div>
+      </div>
+      <div class="ns-card ns-wide">
+        <h2>🔭 Co má právě teď smysl pozorovat – planety i deep‑sky</h2>
+        <div class="ns-observe" id="nsObserve"><span class="ns-muted">Počítám objekty…</span></div>
+        <div class="ns-note">Objekty se počítají až po výběru lokace. Planety používají Astronomy Engine; deep‑sky katalog používá souřadnice J2000 a aktuální výšku nad obzorem. Počasí je z Open‑Meteo.</div>
+      </div>
+    </section>
+
     <div class="spinner" id="spinner" style="margin-top:16px;"></div>
+    <div class="forecast-section-title">
+      <h2>📅 Předpověď na následující dny</h2>
+      <div class="forecast-section-sub">Hodinová předpověď: dnešek od aktuální hodiny do rána; následující dny od 00:00 až do rána dalšího dne. Součástí je astronomická tma a NightlySeeing Score.</div>
+    </div>
     <div id="forecast" style="margin-top:8px;"></div>
 
     <div class="footer">
@@ -1388,7 +1490,7 @@ padding:0 2px 2px;
 
 <script>
 const IPGEO_API_KEY="781aa2d69af74745906e01cc68c84207";
-const VERSION = "v 0.1"; // <--- ZMĚNA
+const VERSION = "v 0.2 NightlySeeing"; // <--- ZMĚNA
 /* ===== Menu ===== */
 function toggleMenu(){const m=document.getElementById("mainMenu");m.style.display=m.style.display==="block"?"none":"block"}
 document.addEventListener("click",(e)=>{const m=document.getElementById("mainMenu");const t=document.querySelector(".menu-toggle");if(m&&t&&!m.contains(e.target)&&!t.contains(e.target))m.style.display="none"});
@@ -1404,7 +1506,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
 /* ===== Helpers ===== */
 const $=(id)=>document.getElementById(id);
 function showSpinner(b){$("spinner").style.display=b?"block":"none"}
-function getDayName(d){const today=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Prague'});if(d===today)return"Dnes";const arr=['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'];return arr[new Date(d+'T00:00:00').getDay()]}
+function getDayName(d){const today=new Date().toLocaleDateString('en-CA',{timeZone:window.__lastTzName||'Europe/Prague'});if(d===today)return"Dnes";const arr=['Neděle','Pondělí','Úterý','Středa','Čtvrtek','Pátek','Sobota'];return arr[new Date(d+'T00:00:00').getDay()]}
 function getWeatherIcon(c,r){
   if(r>2)return'🌧️';
   if(r>0)return'🌦️';
@@ -1498,7 +1600,18 @@ async function getLocation(){
   },e=>alert("Nepodařilo se zjistit polohu."));
 }
 
-async function reverseGeocode(lat,lon){try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`);const d=await r.json();return d.address?.city||d.address?.town||d.address?.village||d.address?.municipality||d.display_name||`${lat.toFixed(4)}, ${lon.toFixed(4)}`}catch{return `${lat.toFixed(4)}, ${lon.toFixed(4)}`}} 
+async function reverseGeocode(lat,lon){
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=cs`);
+    if(!r.ok) throw new Error(`Nominatim HTTP ${r.status}`);
+    const d=await r.json(), a=d.address||{};
+    // U GPS polohy preferujeme nejkonkrétnější obec před nadřazeným městem/regionem.
+    return a.village||a.town||a.municipality||a.hamlet||a.city||a.city_district||a.suburb||d.name||d.display_name||`${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+  }catch(e){
+    console.warn("Reverse geocoding failed",e);
+    return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+  }
+} 
 
 function updateLocationInfo(c){const name=c.name||"-";const country=c.country||"";const lat=typeof c.latitude==="number"?c.latitude:null;const lon=typeof c.longitude==="number"?c.longitude:null;$("info-name").innerHTML=country?`<span class="accent-text">${name}</span>, ${country}`:`<span class="accent-text">${name}</span>`;$("info-gps").textContent=(lat!=null&&lon!=null)?`${lat.toFixed(4)}, ${lon.toFixed(4)}`:"—";const link=$("bortle-link");if(lat!=null&&lon!=null){link.href=`https://www.lightpollutionmap.info/#zoom=9&lat=${lat}&lon=${lon}`;link.style.display="inline"}else{link.style.display="none"};const np=$("nowPlace");if(np){np.textContent = name || "—";}}
 
@@ -1676,38 +1789,48 @@ function _minFromHHmm(hhmm){
   return hh*60 + mm;
 }
 
+function _sunAltitudeDegAt(dt,lat,lon){
+  return SunCalc.getPosition(dt,lat,lon).altitude * 180/Math.PI;
+}
+function _findSunCrossing(a,b,lat,lon,threshold,descending){
+  let lo=a.getTime(), hi=b.getTime();
+  let flo=_sunAltitudeDegAt(new Date(lo),lat,lon)-threshold;
+  let fhi=_sunAltitudeDegAt(new Date(hi),lat,lon)-threshold;
+  if(flo===0) return new Date(lo);
+  if(fhi===0) return new Date(hi);
+  if(flo*fhi>0) return null;
+  for(let i=0;i<32;i++){
+    const mid=(lo+hi)/2, fm=_sunAltitudeDegAt(new Date(mid),lat,lon)-threshold;
+    if((flo<=0 && fm<=0)||(flo>=0 && fm>=0)){ lo=mid; flo=fm; } else { hi=mid; fhi=fm; }
+  }
+  const dt=new Date((lo+hi)/2);
+  // Validate direction around crossing.
+  const before=_sunAltitudeDegAt(new Date(dt.getTime()-60000),lat,lon);
+  const after=_sunAltitudeDegAt(new Date(dt.getTime()+60000),lat,lon);
+  if(descending && !(after<before)) return null;
+  if(!descending && !(after>before)) return null;
+  return dt;
+}
+function _thresholdNightWindow(dateStr,lat,lon,threshold){
+  const tzName=window.__lastTzName||'Europe/Prague';
+  const from=_zonedDate(dateStr,'12:00',tzName);
+  const to=_zonedDate(_dateAddDays(dateStr,1),'12:00',tzName);
+  const step=20*60*1000;
+  let dusk=null,dawn=null, prev=from, prevV=_sunAltitudeDegAt(prev,lat,lon)-threshold;
+  for(let ms=from.getTime()+step;ms<=to.getTime();ms+=step){
+    const cur=new Date(ms), v=_sunAltitudeDegAt(cur,lat,lon)-threshold;
+    if(!dusk && prevV>0 && v<=0) dusk=_findSunCrossing(prev,cur,lat,lon,threshold,true);
+    if(dusk && prevV<=0 && v>0){ dawn=_findSunCrossing(prev,cur,lat,lon,threshold,false); break; }
+    prev=cur; prevV=v;
+  }
+  return {start:dusk,end:dawn};
+}
 function getNightWindowsForDate(dateStr, lat, lon){
   if(!window.SunCalc) return null;
-  const tzName = window.__lastTzName || 'Europe/Prague';
-  // Noon in local TZ avoids sunrise edge cases.
-  const noonLocal = _zonedDate(dateStr, '12:00', tzName);
-  const t = SunCalc.getTimes(noonLocal, lat, lon);
-
-  // SunCalc returns times around the given date; for night intervals, the "end" (dawn)
-  // can be earlier than the "start" (dusk) on the same civil date. Normalize to a
-  // continuous interval spanning midnight by pushing the end to the next day when needed.
-  const MS_DAY = 24*60*60*1000;
-  const nautStart = t.nauticalDusk;
-  let   nautEnd   = t.nauticalDawn;
-  if(nautStart instanceof Date && nautEnd instanceof Date && nautEnd.getTime() <= nautStart.getTime()){
-    nautEnd = new Date(nautEnd.getTime() + MS_DAY);
-  }
-
-  const astroStart = t.night;    // Sun < -18° (astronomical dusk)
-  let   astroEnd   = t.nightEnd; // Sun < -18° (astronomical dawn)
-  if(astroStart instanceof Date && astroEnd instanceof Date && astroEnd.getTime() <= astroStart.getTime()){
-    astroEnd = new Date(astroEnd.getTime() + MS_DAY);
-  }
-
-  return {
-    tzName,
-    // nautical night (start observing stars)
-    nauticalStart: nautStart,
-    nauticalEnd:   nautEnd,
-    // astronomical night (full dark)
-    astroStart:    astroStart,
-    astroEnd:      astroEnd
-  };
+  const tzName=window.__lastTzName||'Europe/Prague';
+  const naut=_thresholdNightWindow(dateStr,lat,lon,-12);
+  const astro=_thresholdNightWindow(dateStr,lat,lon,-18);
+  return {tzName,nauticalStart:naut.start,nauticalEnd:naut.end,astroStart:astro.start,astroEnd:astro.end};
 }
 
 function updateNightInfo(dateStr){
@@ -1893,8 +2016,8 @@ function createNightInlineIndicatorForEntries(entries, dateStr, lat, lon){
   }
 
   // Range of displayed hours (e.g. "from now" for today) → align bar to what user actually scrolls.
-  const rangeStart = _zonedDate(dateStr, entries[0].time, tzName);
-  let rangeEnd = _zonedDate(dateStr, entries[entries.length-1].time, tzName);
+  const rangeStart = _zonedDate(entries[0].date || dateStr, entries[0].time, tzName);
+  let rangeEnd = _zonedDate(entries[entries.length-1].date || dateStr, entries[entries.length-1].time, tzName);
   rangeEnd = new Date(rangeEnd.getTime() + 60*60*1000); // include last hour block
 
   // Pull intervals from this day + next day (range can cross midnight when showing late hours).
@@ -2228,10 +2351,12 @@ async function fetchMoonPhase(lat,lon){
   try{
     const r=await fetch(url);
     const d=await r.json();
+    if(!r.ok) throw new Error(`Astronomy API HTTP ${r.status}`);
+    if(!d || typeof d !== "object") throw new Error("Astronomy API vrátilo neplatná data");
 
     // Moon Phase
-    const p=d.moon_phase||"Neznámá fáze";
-    $("moon-phase-label").textContent=getMoonEmojiFromName(p);
+    const p=d.moon_phase || d.moon_phase_name || (d.astronomy && (d.astronomy.moon_phase || d.astronomy.moon_phase_name)) || "";
+    $("moon-phase-label").textContent = p ? getMoonEmojiFromName(p) : "—";
     // Moon illumination (%) - field name differs across API versions:
     // - moon_illumination_percentage (docs) or moon_illumination (older)
     const illumRaw =
@@ -2263,7 +2388,7 @@ async function fetchMoonPhase(lat,lon){
     $("moon-rise-label").textContent = moonRise;
     $("moon-set-label").textContent = moonSet;
 
-    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Prague' });
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: window.__lastTzName || 'Europe/Prague' });
 // Store illumination for 'today' so the widget can draw correctly (0..1)
 moonIllumByDate[today] = (illumPct != null) ? Math.max(0, Math.min(1, illumPct / 100)) : 0;
 
@@ -2571,7 +2696,7 @@ function updateNowStatusFromArrays(timeArr, tempArr, cloudArr, rainArr, windArr)
   if(!(timeArr && timeArr.length)) return;
   try{
     const nowDate = new Date();
-    const tz = 'Europe/Prague';
+    const tz = window.__lastTzName || 'Europe/Prague';
     const y = nowDate.toLocaleString('en-CA', { timeZone: tz, year:'numeric' });
     const m = nowDate.toLocaleString('en-CA', { timeZone: tz, month:'2-digit' });
     const d = nowDate.toLocaleString('en-CA', { timeZone: tz, day:'2-digit' });
@@ -2596,6 +2721,162 @@ function updateNowStatusFromArrays(timeArr, tempArr, cloudArr, rainArr, windArr)
   }catch(e){ console.warn("NOW status update failed", e); }
 }
 
+
+/* ===== NightlySeeing 3.0: score + timeline + planets + deep-sky ===== */
+window.__nsForecast = null;
+window.__nsPlanets = [];
+window.__nsLocationReady = false;
+
+const NS_DEEPSKY = [
+  {name:"M31", title:"Galaxie v Andromedě", type:"galaxie", ra:0.712, dec:41.269, mag:3.4, icon:"🌌"},
+  {name:"M42", title:"Velká mlhovina v Orionu", type:"mlhovina", ra:5.588, dec:-5.391, mag:4.0, icon:"☁️"},
+  {name:"M45", title:"Plejády", type:"otevřená hvězdokupa", ra:3.792, dec:24.117, mag:1.6, icon:"✨"},
+  {name:"M13", title:"Kulová hvězdokupa v Herkulu", type:"kulová hvězdokupa", ra:16.695, dec:36.467, mag:5.8, icon:"✨"},
+  {name:"M57", title:"Prstencová mlhovina", type:"planetární mlhovina", ra:18.894, dec:33.029, mag:8.8, icon:"💍"},
+  {name:"M27", title:"Činka", type:"planetární mlhovina", ra:19.993, dec:22.721, mag:7.5, icon:"☁️"},
+  {name:"M81", title:"Bodeho galaxie", type:"galaxie", ra:9.926, dec:69.065, mag:6.9, icon:"🌌"},
+  {name:"M82", title:"Doutníková galaxie", type:"galaxie", ra:9.932, dec:69.679, mag:8.4, icon:"🌌"},
+  {name:"M51", title:"Vírová galaxie", type:"galaxie", ra:13.498, dec:47.195, mag:8.4, icon:"🌌"},
+  {name:"M44", title:"Jesličky", type:"otevřená hvězdokupa", ra:8.667, dec:19.667, mag:3.1, icon:"✨"},
+  {name:"M8", title:"Laguna", type:"emisní mlhovina", ra:18.061, dec:-24.386, mag:6.0, icon:"☁️"},
+  {name:"M20", title:"Trifid", type:"mlhovina", ra:18.045, dec:-23.030, mag:6.3, icon:"☁️"},
+  {name:"M3", title:"Kulová hvězdokupa M3", type:"kulová hvězdokupa", ra:13.703, dec:28.377, mag:6.2, icon:"✨"},
+  {name:"M5", title:"Kulová hvězdokupa M5", type:"kulová hvězdokupa", ra:15.309, dec:2.082, mag:5.7, icon:"✨"}
+];
+
+function nsIsDark(dateStr, hourStr, lat, lon){
+  try{
+    const n=getNightIntervalsForDay(dateStr,lat,lon);
+    const tz=n.tzName||window.__lastTzName||'Europe/Prague';
+    const dt=_zonedDate(dateStr, (hourStr||"00:00").slice(0,5), tz);
+    return (n.astro||[]).some(iv=>dt>=iv.start && dt<iv.end);
+  }catch(e){ console.warn("Night darkness calculation",e); return false; }
+}
+function nsQuality(e, dark){
+  if(!dark) return 0;
+  const cloud=Math.max(0,Math.min(100,Number(e.cloud)||0));
+  const rain=Math.max(0,Number(e.rain)||0);
+  const wind=Math.max(0,Number(e.wind)||0);
+  let q=100-cloud*0.72-Math.min(28,rain*18)-Math.max(0,wind-10)*0.8;
+  return Math.max(0,Math.min(100,Math.round(q)));
+}
+function nsDayNightScore(date,days,lat,lon){
+  const next=_dateAddDays(date,1);
+  const rows=[
+    ...(days[date]||[]).filter(e=>parseInt(e.time,10)>=18),
+    ...(days[next]||[]).filter(e=>parseInt(e.time,10)<=8)
+  ];
+  const dark=rows.map(e=>({...e,dark:nsIsDark(e.date,e.time,lat,lon)}))
+                 .filter(e=>e.dark)
+                 .map(e=>({...e,q:nsQuality(e,true)}));
+  if(!dark.length) return null;
+  const avg=Math.round(dark.reduce((a,e)=>a+e.q,0)/dark.length);
+  const best=dark.slice().sort((a,b)=>b.q-a.q)[0];
+  return {score:avg,best};
+}
+function nsVerdict(score){
+  if(score>=85)return 'Výborné podmínky';
+  if(score>=70)return 'Velmi dobré podmínky';
+  if(score>=50)return 'Použitelné podmínky';
+  if(score>=30)return 'Spíše slabé podmínky';
+  return 'Nevhodné podmínky';
+}
+function nsRenderDashboard(lat,lon,days){
+  const box=document.getElementById('nightlyDashboard'); if(!box)return;
+  box.style.display='grid';
+  if(!window.__nsLocationReady){
+    const sc=document.getElementById('nsScore'); if(sc) sc.textContent='—';
+    const vd=document.getElementById('nsVerdict'); if(vd) vd.textContent='Čekám na lokalitu';
+    const bw=document.getElementById('nsBestWindow'); if(bw) bw.textContent='Nejlepší čas: —';
+    const why=document.getElementById('nsScoreWhy'); if(why) why.textContent='Po výběru místa načtu hodinovou předpověď a astronomickou tmu.';
+    const tl=document.getElementById('nsTimeline'); if(tl) tl.innerHTML='<div class="ns-empty">Časová osa se zobrazí po načtení předpovědi.</div>';
+    nsRenderObserve();
+    return;
+  }
+  const tz=window.__lastTzName||'Europe/Prague';
+  const today=new Date().toLocaleDateString('en-CA',{timeZone:tz});
+  let entries=[];
+  for(const ds of [today,_dateAddDays(today,1)]){
+    for(const e of (days[ds]||[])){
+      const h=parseInt(e.time,10);
+      if((ds===today&&h>=18)||(ds!==today&&h<=8)) entries.push(e);
+    }
+  }
+  const scored=entries.map(e=>({...e,dark:nsIsDark(e.date,e.time,lat,lon)}))
+                      .map(e=>({...e,q:nsQuality(e,e.dark)}));
+  const dark=scored.filter(e=>e.dark);
+  const avg=dark.length?Math.round(dark.reduce((a,e)=>a+e.q,0)/dark.length):0;
+  const best=dark.slice().sort((a,b)=>b.q-a.q)[0];
+
+  document.getElementById('nsScore').textContent=dark.length?avg+'/100':'—';
+  document.getElementById('nsScoreRing').style.setProperty('--score',dark.length?avg:0);
+  document.getElementById('nsVerdict').textContent=dark.length?nsVerdict(avg):'Dnes bez astronomické tmy';
+  document.getElementById('nsBestWindow').textContent=best?`Nejlepší hodina: ${best.time} · ${best.q}/100`:'Nejlepší čas: —';
+  document.getElementById('nsScoreWhy').textContent=best
+    ?`☁️ ${Math.round(best.cloud)} % · 🌧️ ${Number(best.rain).toFixed(1)} mm · 💨 ${Math.round(best.wind)} km/h`
+    :'Pro tuto noc není v předpovědi interval se Sluncem pod −18°.';
+
+  const tl=document.getElementById('nsTimeline'); tl.innerHTML='';
+  const sample=scored.filter((_,i)=>i%Math.max(1,Math.ceil(scored.length/12))===0).slice(0,12);
+  sample.forEach(e=>{
+    const d=document.createElement('div'); d.className='ns-hour';
+    d.title=`${e.date} ${e.time} · ${e.dark?'astronomická tma':'mimo astronomickou tmu'} · kvalita ${e.q}/100 · oblačnost ${Math.round(e.cloud)} %`;
+    d.innerHTML=`<div class="ns-hour-bar" style="--q:${e.q};opacity:${e.dark?1:.35}"></div><div class="ns-hour-label">${e.time.slice(0,2)}</div>`;
+    tl.appendChild(d);
+  });
+  box.style.display='grid';
+  nsRenderObserve();
+}
+try{ setTimeout(()=>nsRenderDashboard(0,0,{}),0); }catch(_){}
+function nsDeepSkyNow(){
+  if(!window.__nsLocationReady || !window.Astronomy || !window.__lastObserverLatLon) return [];
+  const p=window.__lastObserverLatLon, observer=new Astronomy.Observer(p.lat,p.lon,0), now=new Date();
+  return NS_DEEPSKY.map(o=>{
+    try{
+      const h=Astronomy.Horizon(now,observer,o.ra,o.dec,"normal");
+      const score=Math.max(0,h.altitude) + Math.max(0,9-o.mag)*1.4;
+      return {...o,altitude:h.altitude,azimuth:h.azimuth,score};
+    }catch(_){ return null; }
+  }).filter(Boolean);
+}
+function nsAzCompass(az){
+  return ["S","SV","V","JV","J","JZ","Z","SZ"][Math.round(((Number(az)%360)+360)%360/45)%8];
+}
+function nsRenderObserve(){
+  const out=document.getElementById('nsObserve'); if(!out)return;
+  if(!window.__nsLocationReady){
+    out.innerHTML='<div class="ns-empty">Nejdřív vyhledej lokalitu nebo použij „Moje poloha“. Potom spočítám planety i deep‑sky objekty pro skutečné místo pozorování.</div>';
+    return;
+  }
+  const planets=(window.__nsPlanets||[]).filter(p=>p.altitude>8).sort((a,b)=>b.score-a.score).slice(0,4);
+  const deep=nsDeepSkyNow().filter(o=>o.altitude>12).sort((a,b)=>b.score-a.score).slice(0,6);
+  const cards=[];
+  planets.forEach(p=>cards.push(`<div class="ns-object"><b>${p.icon||'🪐'} ${p.cz||p.name}</b>${Math.round(p.altitude)}° nad obzorem · mag ${Number(p.mag).toFixed(1)}<div class="ns-tags"><span class="ns-tag">planeta</span><span class="ns-tag">${p.altitude>=30?'dobrá výška':'nízko'}</span></div></div>`));
+  deep.forEach(o=>cards.push(`<div class="ns-object"><b>${o.icon} ${o.name} · ${o.title}</b>${Math.round(o.altitude)}° nad obzorem · ${nsAzCompass(o.azimuth)} · mag ${o.mag.toFixed(1)}<div class="ns-tags"><span class="ns-tag">${o.type}</span><span class="ns-tag">${o.altitude>=35?'dobrá výška':o.altitude>=20?'použitelná výška':'nízko'}</span></div></div>`));
+  out.innerHTML=cards.length?cards.join(''):'<span class="ns-muted">Právě teď není žádný z vybraných objektů dostatečně vysoko nad obzorem.</span>';
+}
+
+function buildObservingNightEntries(date,days){
+  const next=_dateAddDays(date,1);
+  const tz=window.__lastTzName||'Europe/Prague';
+  let todayLocal='';
+  try{ todayLocal=new Date().toLocaleDateString('en-CA',{timeZone:tz}); }catch(e){}
+
+  // Dnes: základní rozsah od poledne do dalšího rána; níže se ještě ořízne od aktuální hodiny.
+  if(date===todayLocal){
+    return [
+      ...(days[date]||[]).filter(e=>parseInt(e.time,10)>=12),
+      ...(days[next]||[]).filter(e=>parseInt(e.time,10)<12)
+    ];
+  }
+
+  // Následující dny: celý kalendářní den od 00:00 + ráno následujícího dne.
+  // Díky tomu lze posuvníkem zobrazit i ranní hodiny vybraného dne.
+  return [
+    ...(days[date]||[]),
+    ...(days[next]||[]).filter(e=>parseInt(e.time,10)<12)
+  ];
+}
 async function fetchForecast(lat,lon){
   showSpinner(true);
   const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,cloudcover,precipitation,windspeed_10m&timezone=auto`);
@@ -2657,13 +2938,24 @@ async function fetchForecast(lat,lon){
   let idx=0;
   Object.entries(days).sort((a,b)=> a[0]<b[0]? -1 : a[0]>b[0]? 1 : 0).forEach(([date,entries])=>{
     if(!entries.length) return;
+    // Astronomická předpověď patří k noci, ne pouze ke kalendářnímu dni:
+    // zobrazujeme od poledne daného dne až do 11:00 následujícího dne.
+    entries = buildObservingNightEntries(date,days);
+    if(!entries.length) return;
+    
+    // U dneška minulost nezobrazujeme. Pozorovací osa začne aktuální hodinou
+    // a pokračuje přes půlnoc až do rána následujícího dne.
     try{
-      const todayLocal = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Prague' });
+      const tz = window.__lastTzName || 'Europe/Prague';
+      const todayLocal = new Date().toLocaleDateString('en-CA', {timeZone:tz});
       if(date === todayLocal){
-        const nowHHmm = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/Prague' });
-        entries = entries.filter(e => e.time >= nowHHmm);
+        const nowHour = Number(new Date().toLocaleTimeString('en-GB', {
+          hour:'2-digit', hour12:false, timeZone:tz
+        }).slice(0,2));
+        entries = entries.filter(e => e.date !== date || Number(e.time.slice(0,2)) >= nowHour);
       }
     }catch(e){/* noop */}
+
 
     const section=document.createElement('div'); section.className='forecast-day';
     const header=document.createElement('h3'); const contentId=`day-${idx++}`;
@@ -2689,6 +2981,18 @@ async function fetchForecast(lat,lon){
         <button class="mini-btn" onclick="event.stopPropagation(); centerTime('${contentId}', '12:00')">Poledne</button>
         <button class="mini-btn" onclick="event.stopPropagation(); centerTime('${contentId}', '23:00')">Půlnoc</button>
       </span>`;
+
+    const nightScore = nsDayNightScore(date, days, lat, lon);
+    const scoreBadge = document.createElement('span');
+    scoreBadge.className = 'ns-day-score' + (nightScore ? '' : ' ns-day-none');
+    if(nightScore){
+      scoreBadge.innerHTML = `✨ NightlySeeing <span class="ns-day-value">${nightScore.score}/100</span>`;
+      scoreBadge.title = `${nsVerdict(nightScore.score)} · nejlepší hodina ${nightScore.best.time} (${nightScore.best.q}/100)`;
+    }else{
+      scoreBadge.textContent = '✨ NightlySeeing —';
+      scoreBadge.title = 'Pro tuto noc není v dostupné předpovědi astronomická tma.';
+    }
+    leftPart.appendChild(scoreBadge);
 
     const tabs = document.createElement('div');
     tabs.className='mode-tabs';
@@ -2728,7 +3032,8 @@ section.appendChild(header);
     entries.forEach(e => {
       const card=document.createElement('div'); card.className='forecast-card';
       const icon=getWeatherIcon(e.cloud, e.rain);
-      card.innerHTML=`<div><strong>${e.time}</strong></div>
+      const nextDayMark = e.date!==date ? '<div class="next-day-mark">+1 den</div>' : '';
+      card.innerHTML=`<div><strong>${e.time}</strong>${nextDayMark}</div>
                       <div style="font-size:1.4em">${icon}</div>
                       <div>${Math.round(e.temp)}°C</div>
                       <div>☁️ ${Math.round(e.cloud)}%</div>
@@ -2787,6 +3092,12 @@ section.appendChild(header);
     }
   }catch(e){}
 
+  try{
+    window.__nsForecast={lat:Number(lat),lon:Number(lon),days};
+    window.__nsLocationReady=true;
+    window.__lastObserverLatLon={lat:Number(lat),lon:Number(lon)};
+    nsRenderDashboard(Number(lat),Number(lon),days);
+  }catch(e){ console.warn("NightlySeeing dashboard",e); }
   syncMapHeight();
 }
 
@@ -2984,7 +3295,7 @@ async function runDiagnostics(){
     { name: "ipgeolocation Astronomy", type:"fetch", url: `https://api.ipgeolocation.io/astronomy?apiKey=${IPGEO_API_KEY}&lat=50.08&long=14.44` },
 
     // Reverse geocoding
-    { name: "Nominatim Reverse", type:"fetch", url: "https://nominatim.openstreetmap.org/reverse?format=json&lat=50.08&lon=14.44&zoom=10&addressdetails=1" },
+    { name: "Nominatim Reverse", type:"external", url: "https://nominatim.openstreetmap.org/reverse?format=json&lat=50.08&lon=14.44&zoom=18&addressdetails=1&accept-language=cs" },
 
     // Planets
     
@@ -3004,7 +3315,12 @@ async function runDiagnostics(){
 
     try{
       let res;
-      if(ep.type === "image"){
+      if(ep.type === "external"){
+        s.className='diag-status external';
+        s.textContent='Externí služba';
+        s.title='Veřejný Nominatim má vlastní usage policy; diagnostika jej zbytečně automaticky nezatěžuje.';
+        continue;
+      }else if(ep.type === "image"){
         res = await imagePing(ep.url);
         if(res.ok){ s.className='diag-status ok'; s.textContent='OK'; }
         else { s.className='diag-status fail'; s.textContent = (res.status === 'timeout') ? 'Timeout' : 'Chyba'; }
@@ -3142,7 +3458,7 @@ function changeAllGraphModes(mode){
   function localTime(t){
     if(!t) return "—";
     const d=t.date instanceof Date?t.date:(t instanceof Date?t:null);
-    return d ? d.toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"}) : "—";
+    return d ? d.toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit",timeZone:window.__lastTzName||undefined}) : "—";
   }
   function calcPlanet(name,observer,now){
     const eq=Astronomy.Equator(name,now,observer,true,true);
@@ -3169,6 +3485,12 @@ function changeAllGraphModes(mode){
       if(!window.Astronomy) throw new Error("Astronomy Engine se nepodařilo načíst");
       const t0=performance.now(), now=new Date(), observer=new Astronomy.Observer(Number(lat),Number(lon),0);
       let bodies=PLANETS.map(n=>calcPlanet(n,observer,now));
+      window.__nsPlanets=bodies.map(b=>({
+        name:b.name, cz:({Mercury:'Merkur',Venus:'Venuše',Mars:'Mars',Jupiter:'Jupiter',Saturn:'Saturn',Uranus:'Uran',Neptune:'Neptun'})[b.name]||b.name,
+        icon:ICONS[b.name]||'🪐', altitude:b.altitude, mag:b.magnitude,
+        score:Math.max(0,b.altitude)+(Number.isFinite(Number(b.magnitude))?Math.max(0,6-Number(b.magnitude))*3:0)
+      }));
+      try{ if(typeof nsRenderObserve==='function') nsRenderObserve(); }catch(_){}
       if(!opts.showBelow) bodies=bodies.filter(b=>b.altitude>=0);
       bodies.sort((a,b)=>b.altitude-a.altitude);
       const frag=document.createDocumentFragment(); bodies.forEach(b=>frag.appendChild(makeCard(b))); if(grid) grid.appendChild(frag);
@@ -3181,20 +3503,35 @@ function changeAllGraphModes(mode){
     }
   }
   window.setObserverLocation=function(lat,lon,label){
-    window.__lastObserverLatLon={lat:Number(lat),lon:Number(lon)};
-    loadPlanets(lat,lon,{showBelow:$("pw-show-below")?.checked,label:label||"—"});
+    const nlat=Number(lat), nlon=Number(lon);
+    window.__lastObserverLatLon={lat:nlat,lon:nlon};
+    window.__nsLocationReady=true;
+    loadPlanets(nlat,nlon,{showBelow:$("pw-show-below")?.checked,label:label||"—"});
+    try{
+      const f=window.__nsForecast;
+      if(f && f.days) nsRenderDashboard(nlat,nlon,f.days);
+      else nsRenderObserve();
+    }catch(e){ console.warn("NightlySeeing render",e); }
   };
   $("pw-show-below")?.addEventListener("change",()=>{
-    const p=window.__lastObserverLatLon||{lat:50.0755,lon:14.4378};
+    const p=window.__lastObserverLatLon;
+    if(!p) return;
     loadPlanets(p.lat,p.lon,{showBelow:$("pw-show-below").checked,label:labelFromPage()||"—"});
   });
   function labelFromPage(){
     const np=$("nowPlace"); if(np?.textContent?.trim() && np.textContent.trim()!=="—") return np.textContent.trim();
     const info=$("info-name"); return info?.textContent?.trim()?.split(",")[0]||null;
   }
-  const initial=window.__lastObserverLatLon||{lat:50.0755,lon:14.4378};
-  loadPlanets(initial.lat,initial.lon,{showBelow:false,label:labelFromPage()||"Praha"});
-  setInterval(()=>{ const p=window.__lastObserverLatLon||initial; loadPlanets(p.lat,p.lon,{showBelow:$("pw-show-below")?.checked,label:labelFromPage()||"—"}); },60000);
+  // Bez zvolené lokace nic astronomického nepředstíráme.
+  if($("pw-status")) $("pw-status").textContent="Vyber lokalitu nebo použij „Moje poloha“.";
+  if($("pw-grid")) $("pw-grid").innerHTML="";
+  if($("pw-meta")) $("pw-meta").textContent="Výpočet se spustí po výběru místa.";
+  try{ nsRenderObserve(); }catch(_){}
+  setInterval(()=>{
+    const p=window.__lastObserverLatLon;
+    if(!p || !window.__nsLocationReady) return;
+    loadPlanets(p.lat,p.lon,{showBelow:$("pw-show-below")?.checked,label:labelFromPage()||"—"});
+  },60000);
 })();
 </script>
 
