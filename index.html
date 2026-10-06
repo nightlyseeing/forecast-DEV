@@ -1348,6 +1348,25 @@ body{margin:0;background:#050b12;font-family:Inter,ui-sans-serif,system-ui,-appl
 @media(max-width:1100px){.top-row{grid-template-columns:1fr}#mapPanel{height:500px!important}}
 @media(max-width:700px){#leftTop{padding:11px}.ns-score-wrap>div:last-child{padding-right:0}.ns-score-wrap>div:last-child:after,.ns-score-wrap>div:last-child:before{display:none}#nsBestWindow{position:static;margin-top:8px;display:inline-block}.top-row{grid-template-columns:1fr}.loc-stat{padding:14px}.loc-stat .v{font-size:1.7rem}}
 
+
+/* ===== NightlySeeing v0.48 — Bortle + Space ===== */
+.bortle-card{padding:18px 22px!important;overflow:visible}
+.bortle-top{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:14px}
+.bortle-k{font-size:.82rem;font-weight:900;color:#eef6ff}
+.bortle-sub{font-size:.74rem;color:#8fa6ba;margin-top:4px}
+.bortle-value{font-size:2rem;font-weight:950;line-height:1;color:#59df79;white-space:nowrap}
+.bortle-scale{display:grid;grid-template-columns:repeat(9,1fr);gap:4px}
+.bortle-scale>div{height:35px;position:relative;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:950;color:#fff;border:2px solid transparent;box-sizing:border-box;text-shadow:0 1px 3px #000}
+.bortle-scale>div:nth-child(1){background:#111827}.bortle-scale>div:nth-child(2){background:#17345e}.bortle-scale>div:nth-child(3){background:#185a8d}.bortle-scale>div:nth-child(4){background:#147d72}.bortle-scale>div:nth-child(5){background:#6e8b35}.bortle-scale>div:nth-child(6){background:#a78a24}.bortle-scale>div:nth-child(7){background:#b96722}.bortle-scale>div:nth-child(8){background:#a83d2f}.bortle-scale>div:nth-child(9){background:#6e293d}
+.bortle-scale>div.active{border-color:#fff;transform:translateY(-2px);box-shadow:0 0 0 2px rgba(25,146,255,.8),0 6px 14px rgba(0,0,0,.4)}
+.bortle-scale span{position:absolute;font-size:.56rem;color:#a9bac9;text-shadow:none;top:39px;white-space:nowrap;font-weight:700}.bortle-scale>div:first-child span{left:0}.bortle-scale>div:last-child span{right:0}
+.bortle-note{margin-top:20px;font-size:.7rem;color:#7890a5;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ns-space-panel{min-height:470px}
+.space-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}.space-kicker{font-size:.66rem;color:#56a9ff;font-weight:900;letter-spacing:.12em}.space-title{font-size:1.3rem;font-weight:950;margin-top:3px}.space-live{font-size:.7rem;color:#91a6b9;border:1px solid #263c50;border-radius:999px;padding:5px 9px}.space-live span{display:inline-block;width:7px;height:7px;border-radius:50%;background:#59df79;margin-right:5px;box-shadow:0 0 9px #59df79}
+.space-launch-hero{background:linear-gradient(135deg,rgba(22,61,92,.7),rgba(9,24,38,.9));border:1px solid rgba(72,157,230,.25);border-radius:12px;padding:16px}.space-loading{color:#8fa6ba}.space-countdown{font-size:1.65rem;font-weight:950;color:#59df79;letter-spacing:-.03em}.space-mission{font-size:1.06rem;font-weight:900;margin-top:7px}.space-meta{color:#9eb1c3;font-size:.78rem;margin-top:6px;line-height:1.5}.space-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.space-badge{background:#10283b;border:1px solid #27475e;border-radius:999px;padding:4px 8px;font-size:.68rem;color:#d9e8f5}.space-section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:#8fa6ba;font-weight:900;margin:16px 0 8px}.space-launch-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.space-launch-item{background:#0a1723;border:1px solid #1d3345;border-radius:10px;padding:10px 12px;min-width:0}.space-launch-item b{display:block;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.space-launch-item span{display:block;font-size:.68rem;color:#8fa6ba;margin-top:4px}.space-foot{font-size:.64rem;color:#657d91;margin-top:12px}
+.space-iss{margin-top:14px;background:#0a1723;border:1px solid #1d3345;border-radius:12px;padding:13px 14px}.space-iss-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.space-iss-title{font-size:.84rem;font-weight:900}.space-iss-state{font-size:.66rem;color:#59df79}.space-iss-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}.space-iss-cell{background:#0d2030;border-radius:8px;padding:8px}.space-iss-cell small{display:block;color:#7890a5;font-size:.59rem}.space-iss-cell b{display:block;margin-top:3px;font-size:.76rem;color:#eaf5ff}@media(max-width:650px){.space-iss-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.bortle-card{padding:15px!important}.bortle-scale{gap:2px}.bortle-scale>div{height:31px}.space-launch-list{grid-template-columns:1fr}.space-countdown{font-size:1.35rem}}
+
 /* ===== v46: one dynamic information banner ===== */
 #leftTop{display:flex;flex-direction:column;min-height:626px}
 #nsMainTabs{flex:0 0 auto}
@@ -1457,6 +1476,7 @@ body{margin:0;background:#050b12;font-family:Inter,ui-sans-serif,system-ui,-appl
           <button class="ns-tab" data-target="observe">Co pozorovat</button>
           <button class="ns-tab" data-target="astro">Slunce a Měsíc</button>
           <button class="ns-tab" data-target="planets">Planety</button>
+          <button class="ns-tab" data-target="space">🚀 Vesmír</button>
         </div>
         <div class="ns-metrics">
           <div class="ns-metric"><span class="ico">☁️</span><span class="num" id="dashCloud">—</span><div class="lab">Oblačnost</div></div>
@@ -1475,6 +1495,21 @@ body{margin:0;background:#050b12;font-family:Inter,ui-sans-serif,system-ui,-appl
             <span><strong>Místní čas:</strong></span><span id="info-localtime">—</span>
             <span><strong>Mapa LP:</strong></span><span><a id="bortle-link" class="bortle-link" href="#" target="_blank" style="display:none">Zobrazit Bortle</a></span>
           </div>
+        </div>
+
+
+        <div class="panel info-panel ns-space-panel" data-ns-panel="space">
+          <div class="space-head">
+            <div><div class="space-kicker">LIVE · KOSMONAUTIKA</div><div class="space-title">🚀 Nejbližší start</div></div>
+            <div class="space-live"><span></span> živá data</div>
+          </div>
+          <div id="spaceLaunchHero" class="space-launch-hero">
+            <div class="space-loading">Načítám nejbližší start…</div>
+          </div>
+          <div class="space-section-title">Nadcházející starty</div>
+          <div id="spaceLaunchList" class="space-launch-list"></div>
+          <div class="space-iss" id="spaceIss"><div class="space-iss-head"><div class="space-iss-title">🛰️ ISS právě teď</div><div class="space-iss-state" id="issState">načítám…</div></div><div class="space-iss-grid"><div class="space-iss-cell"><small>šířka</small><b id="issLat">—</b></div><div class="space-iss-cell"><small>délka</small><b id="issLon">—</b></div><div class="space-iss-cell"><small>výška</small><b id="issAlt">—</b></div><div class="space-iss-cell"><small>rychlost</small><b id="issVel">—</b></div></div></div>
+          <div class="space-foot">Starty: NordAPI / Launch Library 2 · ISS: Where the ISS at? / NordAPI · časy v místním čase prohlížeče.</div>
         </div>
 
         <div class="panel info-panel" data-ns-panel="astro">
@@ -1591,17 +1626,18 @@ body{margin:0;background:#050b12;font-family:Inter,ui-sans-serif,system-ui,-appl
           <div class="map-tip">Klikni <b>pravým</b> na mapu pro zapnutí/vypnutí zoomu</div>
           <div class="map-compass" aria-hidden="true"></div>
         </div>
-        <div class="location-card" id="locationSummary">
-          <div class="loc-grid">
-            <div class="loc-stat">
-              <div class="k">💡 Bortle · světelné znečištění</div>
-              <div class="v" id="locBortle">—</div>
+        <div class="location-card bortle-card" id="locationSummary">
+          <div class="bortle-top">
+            <div>
+              <div class="bortle-k">💡 Světelné znečištění · Bortle</div>
+              <div class="bortle-sub" id="bortleDesc">Vyber lokalitu; třídu lze ověřit v mapě světelného znečištění.</div>
             </div>
-            <div class="loc-stat">
-              <div class="k">✨ NightlySeeing Index</div>
-              <div class="v accent" id="locNsScore">—</div>
-            </div>
+            <div class="bortle-value" id="locBortle">—</div>
           </div>
+          <div class="bortle-scale" id="bortleScale" aria-label="Bortle stupnice 1 až 9">
+            <div data-b="1"><b>1</b><span>nejtmavší</span></div><div data-b="2"><b>2</b></div><div data-b="3"><b>3</b></div><div data-b="4"><b>4</b></div><div data-b="5"><b>5</b></div><div data-b="6"><b>6</b></div><div data-b="7"><b>7</b></div><div data-b="8"><b>8</b></div><div data-b="9"><b>9</b><span>centrum</span></div>
+          </div>
+          <div class="bortle-note">Bortle 1 = mimořádně tmavá obloha · Bortle 9 = centrum velkoměsta · orientační odhad <a id="locBortleLink" class="loc-bortle-link" href="https://www.lightpollutionmap.info" target="_blank" rel="noopener">ověřit pro tuto lokaci ↗</a></div>
         </div>
       </div>
     </div>
@@ -1662,7 +1698,7 @@ body{margin:0;background:#050b12;font-family:Inter,ui-sans-serif,system-ui,-appl
 
 <script>
 const IPGEO_API_KEY="781aa2d69af74745906e01cc68c84207";
-const VERSION = "v 0.46 NightlySeeing"; // <--- ZMĚNA
+const VERSION = "v 0.48 NightlySeeing"; // <--- ZMĚNA
 /* ===== Menu ===== */
 function toggleMenu(){const m=document.getElementById("mainMenu");m.style.display=m.style.display==="block"?"none":"block"}
 document.addEventListener("click",(e)=>{const m=document.getElementById("mainMenu");const t=document.querySelector(".menu-toggle");if(m&&t&&!m.contains(e.target)&&!t.contains(e.target))m.style.display="none"});
@@ -1785,7 +1821,7 @@ async function reverseGeocode(lat,lon){
   }
 } 
 
-function updateLocationInfo(c){const name=c.name||"-";const country=c.country||"";const lat=typeof c.latitude==="number"?c.latitude:null;const lon=typeof c.longitude==="number"?c.longitude:null;$("info-name").innerHTML=country?`<span class="accent-text">${name}</span>, ${country}`:`<span class="accent-text">${name}</span>`;$("info-gps").textContent=(lat!=null&&lon!=null)?`${lat.toFixed(4)}, ${lon.toFixed(4)}`:"—";const link=$("bortle-link");if(lat!=null&&lon!=null){link.href=`https://www.lightpollutionmap.info/#zoom=9&lat=${lat}&lon=${lon}`;link.style.display="inline"}else{link.style.display="none"};const lp=$("locBortleLink");if(lp&&lat!=null&&lon!=null)lp.href=`https://www.lightpollutionmap.info/#zoom=11&lat=${lat}&lon=${lon}`;const np=$("nowPlace");if(np){np.textContent = name || "—";} updateLocationSummary();}
+function updateLocationInfo(c){const name=c.name||"-";const country=c.country||"";const lat=typeof c.latitude==="number"?c.latitude:null;const lon=typeof c.longitude==="number"?c.longitude:null;$("info-name").innerHTML=country?`<span class="accent-text">${name}</span>, ${country}`:`<span class="accent-text">${name}</span>`;$("info-gps").textContent=(lat!=null&&lon!=null)?`${lat.toFixed(4)}, ${lon.toFixed(4)}`:"—";const link=$("bortle-link");if(lat!=null&&lon!=null){link.href=`https://www.lightpollutionmap.info/#zoom=9&lat=${lat}&lon=${lon}`;link.style.display="inline"}else{link.style.display="none"};const lp=$("locBortleLink");if(lp&&lat!=null&&lon!=null)lp.href=`https://www.lightpollutionmap.info/#zoom=11&lat=${lat}&lon=${lon}`;const np=$("nowPlace");if(np){np.textContent = name || "—";} try{window.nsClearBortle?.(); window.nsLoadBortle?.(lat,lon); window.__nsObserver={lat,lon};}catch(_){} updateLocationSummary();}
 
 /* === NOVÉ: Map Layers Definition === */
 
@@ -2859,8 +2895,7 @@ function updateLocationSummary(){
   const dark=document.getElementById("locDark");
   const astro=document.getElementById("astro-night-label");
   if(dark) dark.textContent=(astro&&astro.textContent.trim())?astro.textContent:"—";
-  const bortle=document.getElementById("locBortle");
-  if(bortle) bortle.textContent="—";
+  // Bortle se zde záměrně nepřepisuje: hodnota vyžaduje samostatný zdroj světelného znečištění.
 }
 function updateMapPopup(){
   if(!marker) return;
@@ -3729,7 +3764,26 @@ function changeAllGraphModes(mode){
 })();
 </script>
 
+\n<script>
+/* NightlySeeing v0.48 — Bortle + launches + ISS */
+(function(){
+  const NORD='https://nordapi.ee/api/v1', LL='https://ll.thespacedevs.com/2.3.0/launches/upcoming/?limit=5&ordering=net&mode=normal', ISS='https://api.wheretheiss.at/v1/satellites/25544';
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  async function getJSON(url,ms=9000){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);try{const r=await fetch(url,{headers:{Accept:'application/json'},signal:c.signal,cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(t)}}
+  const names={1:'Vynikající tmavá obloha',2:'Typická opravdu tmavá obloha',3:'Venkovská obloha',4:'Venkovsko-příměstský přechod',5:'Příměstská obloha',6:'Jasná příměstská obloha',7:'Příměstsko-městský přechod',8:'Městská obloha',9:'Centrum velkoměsta'};
+  window.nsSetBortle=function(value,extra=''){const n=Math.max(1,Math.min(9,Math.round(Number(value))));if(!Number.isFinite(n))return;const o=document.getElementById('locBortle');if(o)o.textContent='Bortle '+n;const d=document.getElementById('bortleDesc');if(d)d.textContent=names[n]+(extra?' · '+extra:'');document.querySelectorAll('#bortleScale [data-b]').forEach(e=>e.classList.toggle('active',Number(e.dataset.b)===n));};
+  window.nsClearBortle=function(){const o=document.getElementById('locBortle');if(o)o.textContent='…';const d=document.getElementById('bortleDesc');if(d)d.textContent='Načítám odhad světelného znečištění podle GPS…';document.querySelectorAll('#bortleScale [data-b]').forEach(e=>e.classList.remove('active'));};
+  window.nsLoadBortle=async function(lat,lon){if(!Number.isFinite(lat)||!Number.isFinite(lon))return;window.nsClearBortle();try{const j=await getJSON(`${NORD}/lightpollution?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}`),d=j?.data||j?.light_pollution||j||{},b=d.bortle_class??d.bortle??d.bortleClass??d.class,sqm=d.sqm??d.sqm_estimate??d.sky_brightness_sqm;if(b==null)throw Error('missing');window.nsSetBortle(b,sqm!=null?`SQM ≈ ${Number(sqm).toFixed(1)} mag/arcsec² · odhad`:'orientační odhad')}catch(e){const o=document.getElementById('locBortle');if(o)o.textContent='nedostupné';const d=document.getElementById('bortleDesc');if(d)d.textContent='Odhad Bortle se nepodařilo načíst. Ověř hodnotu přes mapu světelného znečištění.';}};
+  const fmt=d=>{try{return new Intl.DateTimeFormat('cs-CZ',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(d))}catch(_){return String(d||'—')}};
+  function delta(iso){const ms=new Date(iso)-Date.now(),a=Math.abs(ms);if(!Number.isFinite(ms))return'termín neurčen';if(ms<0)return'termín právě probíhá';const days=Math.floor(a/86400000),hrs=Math.floor((a%86400000)/3600000),mins=Math.floor((a%3600000)/60000);return days?`T− ${days} d ${hrs} h`:`T− ${hrs} h ${mins} min`;}
+  function norm(x){return{name:x?.name||x?.mission_name||x?.mission?.name||'Nadcházející start',net:x?.net||x?.date||x?.launch_date||x?.window_start||x?.launchDate,rocket:x?.rocket?.configuration?.full_name||x?.rocket?.configuration?.name||x?.rocket_type||(typeof x?.rocket==='string'?x.rocket:''),provider:x?.launch_service_provider?.name||x?.provider||x?.agency||'',place:x?.pad?.location?.name||x?.pad?.name||x?.launch_site||(typeof x?.location==='string'?x.location:''),status:x?.status?.name||(typeof x?.status==='string'?x.status:'')}}
+  function render(raw){const src=Array.isArray(raw)?raw:(raw?.results||raw?.data?.results||raw?.data?.launches||raw?.data||raw?.launches||[]),arr=(Array.isArray(src)?src:[]).map(norm).filter(x=>x.net).sort((a,b)=>new Date(a.net)-new Date(b.net)),hero=document.getElementById('spaceLaunchHero'),list=document.getElementById('spaceLaunchList');if(!hero||!list||!arr.length)return false;const x=arr[0];hero.innerHTML=`<div class="space-countdown" data-launch-net="${esc(x.net)}">${delta(x.net)}</div><div class="space-mission">${esc(x.name)}</div><div class="space-meta">${esc(fmt(x.net))}${x.place?' · '+esc(x.place):''}</div><div class="space-badges">${x.rocket?`<span class="space-badge">🚀 ${esc(x.rocket)}</span>`:''}${x.provider?`<span class="space-badge">${esc(x.provider)}</span>`:''}${x.status?`<span class="space-badge">${esc(x.status)}</span>`:''}</div>`;list.innerHTML=arr.slice(1,5).map(y=>`<div class="space-launch-item"><b>${esc(y.name)}</b><span>${esc(fmt(y.net))}${y.place?' · '+esc(y.place):''}</span></div>`).join('');return true;}
+  async function loadLaunches(){const hero=document.getElementById('spaceLaunchHero');if(hero)hero.innerHTML='<div class="space-loading">Načítám aktuální starty…</div>';const key='ns48_launches';try{const c=JSON.parse(localStorage.getItem(key)||'null');if(c&&Date.now()-c.t<1800000&&render(c.data))return}catch(_){}for(const u of [`${NORD}/space/launches/upcoming`,LL]){try{const data=await getJSON(u);if(render(data)){try{localStorage.setItem(key,JSON.stringify({t:Date.now(),data}))}catch(_){}return}}catch(_){}}if(hero)hero.innerHTML='<div class="space-loading">⚠️ Starty se nepodařilo načíst z obou zdrojů. Zkus stránku za chvíli obnovit.</div>';}
+  async function loadISS(){const st=document.getElementById('issState');if(st)st.textContent='načítám…';let d=null;for(const u of [ISS,`${NORD}/iss/position`]){try{const j=await getJSON(u);d=j?.data||j;if(d?.latitude!=null&&d?.longitude!=null)break}catch(_){}}if(!d||d.latitude==null){if(st)st.textContent='nedostupné';return}const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};set('issLat',`${Number(d.latitude).toFixed(2)}°`);set('issLon',`${Number(d.longitude).toFixed(2)}°`);set('issAlt',d.altitude!=null?`${Number(d.altitude).toFixed(0)} km`:d.altitude_km!=null?`${Number(d.altitude_km).toFixed(0)} km`:'—');const v=d.velocity??d.velocity_kmh;set('issVel',v!=null?`${Number(v).toLocaleString('cs-CZ',{maximumFractionDigits:0})} km/h`:'—');if(st)st.textContent=d.visibility==='eclipsed'?'ve stínu Země':'živá poloha';}
+  window.nsLoadSpace=function(){loadLaunches();loadISS();};setInterval(()=>document.querySelectorAll('[data-launch-net]').forEach(e=>e.textContent=delta(e.dataset.launchNet)),30000);
+})();
 
+</script>\n
 <!-- ===== API DIAGNOSTIKA ===== -->
 <section id="api-diagnostics" style="margin-top:20px">
   </section>
@@ -3745,6 +3799,7 @@ function changeAllGraphModes(mode){
     const astro=document.querySelector('[data-ns-panel="astro"]');
     const planets=document.getElementById('planet-widget');
     const observe=document.getElementById('nsObserveCard');
+    const space=document.querySelector('[data-ns-panel="space"]');
     if(!left||!dash||!metrics) return;
 
     // Move reusable original components into one stable left-hand stage.
@@ -3756,7 +3811,7 @@ function changeAllGraphModes(mode){
     function hideAll(){
       metrics.classList.remove('ns46-active');
       dash.classList.remove('ns46-active');
-      [place,astro,planets,observe].forEach(el=>el&&el.classList.remove('ns46-active'));
+      [place,astro,planets,observe,space].forEach(el=>el&&el.classList.remove('ns46-active'));
     }
     function setTab(name){
       hideAll();
@@ -3768,6 +3823,7 @@ function changeAllGraphModes(mode){
       else if(name==='astro' && astro) astro.classList.add('ns46-active');
       else if(name==='planets' && planets) planets.classList.add('ns46-active');
       else if(name==='observe' && observe) observe.classList.add('ns46-active');
+      else if(name==='space' && space){ space.classList.add('ns46-active'); try{window.nsLoadSpace?.();}catch(_){} }
       setTimeout(()=>{try{window._leafletMap?.invalidateSize();}catch(_){}},60);
     }
     tabs.forEach(b=>b.addEventListener('click',()=>setTab(b.dataset.target)));
